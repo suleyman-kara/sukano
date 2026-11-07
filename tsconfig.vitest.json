@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.cloudflare.json",
+  "include": [
+    ".react-router/types/**/*",
+    "app/**/*",
+    "workers/**/*",
+    "worker-configuration.d.ts",
+    "tests/**/*",
+    "vitest.config.ts",
+    "vitest.workers.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["tests/workers/**/*"],
+  "compilerOptions": {
+    "types": ["vite/client", "node"]
+  }
+}
