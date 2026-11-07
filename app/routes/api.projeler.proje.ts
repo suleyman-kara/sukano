@@ -3,6 +3,7 @@ import { isProjectId, parseProjectIntent } from "~/domain/projects/validation";
 import { apiError, loaderError } from "~/lib/api-errors.server";
 import { getCloudflare } from "~/lib/context";
 import { projectsService } from "~/lib/projects.server";
+import { applyProjectIntentEffects } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/api.projeler.proje";
 
@@ -37,11 +38,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return data({ ok: false as const, error: "Proje bulunamadı" }, { status: 404 });
   const parsed = parseProjectIntent(Object.fromEntries(await request.formData()));
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
+  const { env, ctx } = getCloudflare(context);
   try {
-    const result = await projectsService(getCloudflare(context).env, user.id).run(
-      params.id,
-      parsed.value,
-    );
+    const result = await projectsService(env, user.id).run(params.id, parsed.value);
+    // Proje kanalına olay (proje, üyelik, silindi); yanıt beklemez.
+    ctx.waitUntil(applyProjectIntentEffects(env, user.id, params.id, parsed.value));
     return { ok: true as const, ...(result ?? {}) };
   } catch (error) {
     return apiError(error);

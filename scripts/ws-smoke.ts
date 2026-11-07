@@ -1,6 +1,7 @@
 /**
  * NoteRoom duman testi: tohum kullanıcısıyla giriş yapar, bir not odasına iki
- * WebSocket bağlantısı açar ve bir mesajın iki bağlantıya da yayınlandığını doğrular.
+ * WebSocket bağlantısı açar; ikisi de `hosgeldin` alır, `kaydet` iletisi `kaydedildi`
+ * ile yanıtlanır, oturumsuz bağlantı reddedilir.
  *
  *   npm run dev            # başka bir terminalde
  *   npx tsx scripts/ws-smoke.ts [http://localhost:5173]
@@ -20,7 +21,7 @@ const cookie = signIn.headers
   .map((c) => c.split(";")[0])
   .join("; ");
 
-const url = `${base.replace(/^http/, "ws")}/api/notes/lansman-hazirligi/ws`;
+const url = `${base.replace(/^http/, "ws")}/api/notlar/lansman-hazirligi/canli`;
 
 function open(): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
@@ -47,17 +48,17 @@ const nextMessage = (ws: WebSocket) =>
   });
 
 const [a, b] = await Promise.all([open(), open()]);
-const payload = `merhaba ${Date.now()}`;
-const received = Promise.all([nextMessage(a), nextMessage(b)]);
-a.send(payload);
-const [echo, broadcast] = await received;
+const [helloA, helloB] = await Promise.all([nextMessage(a), nextMessage(b)]);
+for (const hello of [helloA, helloB]) {
+  if (JSON.parse(hello).t !== "hosgeldin") throw new Error(`Beklenmeyen ilk ileti: ${hello}`);
+}
+const saved = nextMessage(a);
+a.send(JSON.stringify({ t: "kaydet" }));
+const reply = JSON.parse(await saved) as { t: string };
 a.close();
 b.close();
-
-if (echo !== payload || broadcast !== payload) {
-  throw new Error(`Beklenmeyen yanıt: ${echo} / ${broadcast}`);
-}
-console.log(`NoteRoom tamam: gönderen ve diğer bağlantı "${payload}" aldı.`);
+if (reply.t !== "kaydedildi") throw new Error(`Beklenmeyen yanıt: ${JSON.stringify(reply)}`);
+console.log("NoteRoom tamam: iki bağlantı karşılandı, kaydet yanıtlandı.");
 
 // Oturumsuz bağlantı reddedilmeli (el sıkışma açılmamalı).
 const anonOpened = await new Promise<boolean>((resolve) => {

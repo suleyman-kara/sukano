@@ -66,12 +66,17 @@
       "simple": { "limit": 5, "period": 60 },
     },
   ],
-  // Not başına bir oda: ortak düzenleme, varlık, canlı ızgara (Aşama 4).
+  // Not başına bir oda (ortak düzenleme, varlık, görev sırası) ve proje / kişisel alan
+  // başına bir yayın kanalı (canlı ızgara). Bkz. README → Gerçek zamanlı.
   "durable_objects": {
     "bindings": [
       {
         "name": "NOTE_ROOM",
         "class_name": "NoteRoom",
+      },
+      {
+        "name": "PROJECT_ROOM",
+        "class_name": "ProjectRoom",
       },
     ],
   },
@@ -79,6 +84,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["NoteRoom"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["ProjectRoom"],
     },
   ],
   // Dakikada bir: hatırlatıcı gönderimi, çöp / silinmiş proje / davet temizliği.

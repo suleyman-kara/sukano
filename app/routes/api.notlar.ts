@@ -3,6 +3,7 @@ import { parseNoteIntent } from "~/domain/notes/validation";
 import { apiError } from "~/lib/api-errors.server";
 import { getCloudflare } from "~/lib/context";
 import { noteAccess } from "~/lib/note-access.server";
+import { applyIntentEffects, noteIntentEffects, readIntentContext } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/api.notlar";
 
@@ -15,13 +16,22 @@ import type { Route } from "./+types/api.notlar";
  * `create-todo` ve `empty-trash` isteğe bağlı `projectId` alır. Proje notunda her
  * eylem rol denetiminden geçer (görüntüleyici → 403). Hatalar: 400 geçersiz form,
  * 403 yetki yok, 404 not/proje yok, 409 durum uygun değil.
+ *
+ * Başarılı eylemden sonra canlı katmana olay yayınlanır (yanıt beklemez): proje ya da
+ * kişisel alan kanalına ızgara olayı, açık not odasına başlık / renk / sıfırlama
+ * (bkz. `noteIntentEffects`).
  */
 export async function action({ request, context }: Route.ActionArgs) {
   const { user } = await requireUser(request, context);
   const parsed = parseNoteIntent(Object.fromEntries(await request.formData()));
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
+  const { env, ctx } = getCloudflare(context);
   try {
-    const result = await noteAccess(getCloudflare(context).env, user.id).run(parsed.value);
+    const before = await readIntentContext(env, user.id, parsed.value);
+    const result = await noteAccess(env, user.id).run(parsed.value);
+    ctx.waitUntil(
+      applyIntentEffects(env, user.id, noteIntentEffects(parsed.value, user.id, before)),
+    );
     return { ok: true as const, ...(result ?? {}) };
   } catch (error) {
     return apiError(error);

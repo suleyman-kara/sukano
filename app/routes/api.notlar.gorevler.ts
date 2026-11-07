@@ -1,7 +1,7 @@
 import { data } from "react-router";
 import { isNoteId } from "~/domain/notes/validation";
 import { parseTaskOps } from "~/domain/tasks/ops";
-import { apiError, loaderError } from "~/lib/api-errors.server";
+import { fail, loaderError } from "~/lib/api-errors.server";
 import { getCloudflare } from "~/lib/context";
 import { noteAccess } from "~/lib/note-access.server";
 import { requireUser } from "~/lib/session.server";
@@ -12,10 +12,13 @@ import type { Route } from "./+types/api.notlar.gorevler";
  * - GET: `{ tasks, assignees }` (düz liste, ağaç sırasında; `assignees` görev kimliği →
  *   kullanıcı kimlikleri, yalnızca proje notunda dolu).
  * - POST (JSON `{ ops: TaskOp[] }`, bkz. `app/domain/tasks/ops.ts`): işlemler tek batch'te
- *   uygulanır; yanıt `{ ok: true, tasks, assignees }`. Hatalar: 400 geçersiz gövde,
+ *   uygulanır; yanıt `{ ok: true, tasks, assignees, seq }`. Hatalar: 400 geçersiz gövde,
  *   403 yetki yok (görüntüleyici görev işaretleyemez, düzenleyemez), 404 not yok,
  *   409 işlem uygulanamadı (olmayan görev, döngü, üye olmayan atama, not çöpte …).
  *   Hata durumunda hiçbir işlem uygulanmaz.
+ *
+ * Yazım notun odasından (`NoteRoom.applyTaskOps`) geçer: oda tüm istekleri tek sıraya
+ * dizer, sonucu açık bağlantılara `gorevler` iletisiyle aynı `seq` ile yayınlar.
  */
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);
@@ -46,11 +49,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
   const parsed = parseTaskOps(body);
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
-  try {
-    const { tasks } = await noteAccess(getCloudflare(context).env, user.id).forNote(params.id);
-    const state = await tasks.apply(params.id, parsed.value);
-    return { ok: true as const, ...state };
-  } catch (error) {
-    return apiError(error);
-  }
+  const { env } = getCloudflare(context);
+  const result = await env.NOTE_ROOM.getByName(params.id).applyTaskOps(
+    params.id,
+    user.id,
+    parsed.value,
+  );
+  if (!result.ok) return fail(result.error, result.status, result.code);
+  return result;
 }

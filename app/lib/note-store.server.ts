@@ -9,7 +9,12 @@ import type { Database } from "~/db/client";
 import { noteVersions, taskAssignees, tasks } from "~/db/schema";
 import type { Task } from "~/domain/tasks/model";
 import { diffTasks } from "~/domain/tasks/ops";
-import { decideVersionWrite, MAX_VERSIONS, versionsToPrune } from "~/domain/notes/versions";
+import {
+  decideCollabVersionWrite,
+  decideVersionWrite,
+  MAX_VERSIONS,
+  versionsToPrune,
+} from "~/domain/notes/versions";
 
 export type Batch = BatchItem<"sqlite">[];
 
@@ -57,6 +62,54 @@ export async function versionWriteOps(
       title,
       snapshot,
       authorId: userId,
+      createdAt: now,
+      updatedAt: now,
+    }),
+  ];
+  const prune = versionsToPrune([...existing, { id: "__new__", createdAt: now }], MAX_VERSIONS);
+  if (prune.length) ops.push(db.delete(noteVersions).where(inArray(noteVersions.id, prune)));
+  return ops;
+}
+
+/**
+ * Ortak düzenlemenin (NoteRoom) periyodik yazımında sürüm adımları: `editors` son
+ * yazımdan bu yana düzenleyenler (en son düzenleyen sonda); bkz. `decideCollabVersionWrite`.
+ */
+export async function collabVersionWriteOps(
+  db: Database,
+  noteId: string,
+  kind: "text" | "todo",
+  title: string,
+  snapshot: unknown,
+  editors: readonly string[],
+  now: Date,
+): Promise<Batch> {
+  const existing = await db
+    .select({
+      id: noteVersions.id,
+      authorId: noteVersions.authorId,
+      createdAt: noteVersions.createdAt,
+    })
+    .from(noteVersions)
+    .where(eq(noteVersions.noteId, noteId))
+    .orderBy(desc(noteVersions.createdAt), desc(noteVersions.id));
+  const decision = decideCollabVersionWrite(existing[0] ?? null, editors, now);
+  if (decision.action === "none") return [];
+  if (decision.action === "update") {
+    return [
+      db
+        .update(noteVersions)
+        .set({ kind, title, snapshot, updatedAt: now })
+        .where(eq(noteVersions.id, decision.versionId)),
+    ];
+  }
+  const ops: Batch = [
+    db.insert(noteVersions).values({
+      noteId,
+      kind,
+      title,
+      snapshot,
+      authorId: decision.authorId,
       createdAt: now,
       updatedAt: now,
     }),

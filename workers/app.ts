@@ -1,10 +1,10 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
-import { getAuth } from "~/lib/auth.server";
 import { cloudflareContext } from "~/lib/context";
-import { routeToNoteRoom } from "./note-room";
+import { routeLive } from "./live-routes";
 import { runScheduled } from "./scheduled";
 
 export { NoteRoom } from "./note-room";
+export { ProjectRoom } from "./project-room";
 
 const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
@@ -13,12 +13,10 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    // WebSocket odaları React Router'dan önce ele alınır (101 yanıtı doğrudan döner).
-    const room = await routeToNoteRoom(request, env, async (req) => {
-      const session = await getAuth(env).api.getSession({ headers: req.headers });
-      return session?.user.id ?? null;
-    });
-    if (room) return room;
+    // Canlı WebSocket yolları (not odası, proje / kişisel kanal) React Router'dan önce
+    // ele alınır: yetki denetlenir, 101 yanıtı Durable Object'ten doğrudan döner.
+    const live = await routeLive(request, env);
+    if (live) return live;
 
     // `v8_middleware` açık: yükleme bağlamı bir RouterContextProvider'dır.
     // Loader/action/middleware içinde `getCloudflare(context)` ile okunur.
