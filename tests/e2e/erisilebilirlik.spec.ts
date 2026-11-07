@@ -17,10 +17,6 @@ const SAYFALAR = [
 async function ciddiIhlaller(page: Page) {
   const { violations } = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    // Deneysel kural: oturum açıkken kabuktaki baş harfli avatar düğmesi ("AD" /
-    // "Hesap menüsü") ve rozetli Davetler bağlantısı için tetikleniyor. Kabukta
-    // ayrıca ele alınacak (notlar.spec.ts de aynı kuralı kapatıyor).
-    .disableRules(["label-content-name-mismatch"])
     .analyze();
   return violations
     .filter((v) => v.impact === "critical" || v.impact === "serious")

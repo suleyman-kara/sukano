@@ -24,10 +24,12 @@ export function AccountMenu({ user }: { user: ShellUser }) {
       <form ref={signOutForm} method="post" action="/cikis" hidden />
       <DropdownMenuTrigger
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:size-9"
-        aria-label="Hesap menüsü"
         title={user.name}
       >
+        {/* Ad içerikten gelir; baş harfler süs (aria-hidden), aria-label yok
+            (axe label-content-name-mismatch). */}
         <Avatar name={user.name} color={user.avatarColor} src={user.avatarUrl} size={34} />
+        <span className="sr-only">Hesap menüsü</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={6} className="w-[260px] rounded-xl p-1.5">
         <div className="flex items-center gap-2.5 px-2.5 py-2">

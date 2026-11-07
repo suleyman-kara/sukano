@@ -80,9 +80,6 @@ async function renkVer(page: Page, k: Locator, renk: string) {
 async function ciddiIhlaller(page: Page) {
   const { violations } = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    // Deneysel kural; kabuktaki baş harfli avatar düğmesi ("SK" / "Hesap menüsü") ve
-    // rozetli Davetler bağlantısı için tetikleniyor (kabuk, bu testin konusu değil).
-    .disableRules(["label-content-name-mismatch"])
     .analyze();
   return violations
     .filter((v) => v.impact === "critical" || v.impact === "serious")

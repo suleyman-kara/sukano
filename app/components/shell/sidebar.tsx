@@ -118,21 +118,23 @@ export function SidebarNav({ projects, pendingInviteCount, variant, onNavigate }
         onClick={onNavigate}
         className={item}
         title="Davetler"
-        aria-label={
-          pendingInviteCount > 0 ? `Davetler, ${pendingInviteCount} bekleyen davet` : "Davetler"
-        }
       >
+        {/* Erişilebilir ad görünür metinden gelir (axe label-content-name-mismatch):
+            "Davetler, 1 bekleyen davet". Rayda etiket görünmez ama okunur. */}
         <Inbox className={ICON} strokeWidth={1.75} aria-hidden="true" />
-        <span className={rc(LABEL)}>Davetler</span>
+        <span className={rc("min-w-0 truncate railed:sr-only")}>Davetler</span>
         {pendingInviteCount > 0 && (
-          <span
-            className={rc(
-              "ml-auto rounded-full bg-primary px-[7px] py-px text-[11px] font-semibold text-primary-foreground railed:absolute railed:top-1.5 railed:right-1.5 railed:m-0 railed:size-2 railed:p-0 railed:text-[0px] railed:leading-none",
-            )}
-            aria-hidden="true"
-          >
-            {pendingInviteCount}
-          </span>
+          <>
+            <span
+              className={rc(
+                "ml-auto rounded-full bg-primary px-[7px] py-px text-[11px] font-semibold text-primary-foreground railed:absolute railed:top-1.5 railed:right-1.5 railed:m-0 railed:size-2 railed:p-0 railed:text-[0px] railed:leading-none",
+              )}
+              aria-hidden="true"
+            >
+              {pendingInviteCount}
+            </span>
+            <span className="sr-only">, {pendingInviteCount} bekleyen davet</span>
+          </>
         )}
       </NavLink>
 
