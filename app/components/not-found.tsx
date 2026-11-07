@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { Link } from "react-router";
 import { Logo } from "~/components/logo";
 import { buttonVariants } from "~/components/ui/button";
@@ -15,7 +16,7 @@ export function NotFoundView() {
         <p className="m-0 max-w-[300px] text-muted-foreground">
           Not silinmiş, proje silinmiş ya da projeden çıkarılmış olabilirsin.
         </p>
-        <Link to="/" className={buttonVariants({ variant: "outline", className: "mt-2" })}>
+        <Link to="/" className={cn(buttonVariants({ variant: "outline" }), "mt-2")}>
           Notlarıma dön
         </Link>
       </main>
