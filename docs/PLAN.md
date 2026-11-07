@@ -271,3 +271,22 @@ Tasarım tuvali: https://claude.ai/artifact/UeHrCw2oY651GfEmHzFCBF (76 artboard;
 - Giriş ekranı arka planı: A "Yükselen ızgara" (2×2 kare matrisleri, 5–11 sn döngü, yalnızca transform ve opacity; üretimde genlik önizlemenin yaklaşık yarısı). `prefers-reduced-motion` ve Ayarlar'daki "Hareketi azalt" seçeneğine uyulur.
 - Süre ölçeği: micro 120, small 180, medium 240, large 320 ms, ambient 8–14 s; giriş ease-out-quart, çıkış ease-in-quart, spring hissi `cubic-bezier(.2,.8,.2,1)`.
 - Kütüphane: Motion (`motion/react`), yalnızca çıkış animasyonları (`AnimatePresence`), paylaşılan geçişler (`layout`/`layoutId`) ve `MotionConfig reducedMotion="user"` için; geri kalanı düz CSS.
+
+---
+
+## 11. Test stratejisi (onaylandı, 7 Kasım 2026)
+
+Dört katman; her özellik kendi katmanlarında testlerle birlikte gelir, testler geçmeden önizleme yayınlanmaz.
+
+| Katman | Araç | Kapsam | Ne zaman |
+|---|---|---|---|
+| Birim | Vitest | Saf mantık: görev ağacı işlemleri (girinti, taşıma, zincirleme tamamlanma/geri açma), tarih çözümleme ve aralık metni, yetki kuralları (rol × eylem), hatırlatıcı alıcı kuralı, sözlük yardımcıları | **Önce test** (TDD); prototipteki senaryolar taşınır |
+| Bileşen | Vitest + Testing Library (jsdom) | Yapılacaklar notu klavye akışı, tarih seçici, toast ve geri al, kısayol kartı, sol panel, görünüm kapsülü | Özellikle birlikte |
+| Worker / API | Vitest `@cloudflare/vitest-pool-workers` (Miniflare, yerel D1) | Kimlik doğrulama, her uç noktada yetki kontrolü (TDD), taşıma/kopyalama, çöp ve silinmiş proje temizliği, cron, Durable Object mesajlaşması | Yetki için önce test; diğerleri özellikle birlikte |
+| Uçtan uca | Playwright (+ axe-core) | Kritik akışlar üç görünümde (1440 / 834 / 390): kayıt ve giriş, not oluşturma, yapılacaklar klavye akışı, projeye taşıma, davet ve kabul, iki tarayıcıda gerçek zamanlı düzenleme, hatırlatıcı bildirimi | Her aşama issue'sunun kabul ölçütü |
+
+- **CI:** her push'ta typecheck + lint + birim + bileşen (hedef 1–2 dk); PR'da Worker testleri + uçtan uca duman seti (5–8 dk); `main`'de tam uçtan uca. Kapsam eşiği yalnızca mantık modüllerinde %85.
+- **Test hesapları ve tohum verisi:** `ayse@test.sukano`, `mehmet@test.sukano`, `zeynep@test.sukano`, `can@test.sukano`, `suleyman@test.sukano` (tasarımdaki örnek veri: Web Sitesi Yenileme projesi, Lansman hazırlığı notu vb.); tohum betiği hem testlerde hem geliştirmede kullanılır.
+- Google girişi uçtan uca test edilmez (e-posta + şifre ile test kullanıcıları); e-posta gönderimi testte sahte servise gider; Turnstile test anahtarlarıyla geçer.
+- Test adları Türkçe, davranış cümlesi olarak ("alt görevlerin hepsi tamamlanınca üst görev kendiliğinden tamamlanır").
+- Görsel regresyon ilk sürümde yok.
