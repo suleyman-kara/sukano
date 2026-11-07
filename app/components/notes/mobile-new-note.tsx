@@ -49,6 +49,9 @@ export function MobileNewNote({
             side="top"
             align="end"
             sideOffset={12}
+            // Seçim not al görünümünü açar: menü kapanırken odağı FAB'a geri vermesin
+            // (açık diyaloğun odak tuzağı alanı seçip yazılanı silerdi).
+            onCloseAutoFocus={(e) => e.preventDefault()}
             aria-label="Yeni not"
             className="min-w-0 border-0 bg-transparent p-0 shadow-none ring-0"
           >
