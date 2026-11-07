@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { cn } from "cn";
 import { Avatar } from "~/components/avatar";
 import { ProjectMark, RoleChip } from "~/components/projects/project-meta";
-import { useProjectAction } from "~/components/projects/use-project-action";
+import { useProjectRequest } from "~/components/projects/use-project-action";
 import { Button } from "~/components/ui/button";
 import type { InvitationStatus, ProjectColor, ProjectRole } from "~/db/schema";
 import { relativeAgo } from "~/domain/auth/format";
@@ -41,19 +41,20 @@ const shortDate = (iso: string) =>
 export function InviteCard({ invite, now }: { invite: InviteCardData; now: Date }) {
   const navigate = useNavigate();
   const pending = invite.status === "beklemede";
-  const respond = useProjectAction("/api/davetler", {
-    key: `davet-yanit-${invite.id}`,
-    onSuccess: (res) => {
-      if (res.projectId) {
-        toast.success("Davet kabul edildi");
-        navigate(`/proje/${res.projectId}`, {
-          state: {
-            joined: { role: roleLabel(invite.role), invitedBy: invite.invitedBy?.name ?? null },
-          },
-        });
-      } else toast("Davet reddedildi");
-    },
-  });
+  const request = useProjectRequest();
+  const respond = async (intent: "accept" | "decline") => {
+    const res = await request.send("/api/davetler", { intent, id: invite.id });
+    if (!res.ok) return;
+    if (intent === "accept" && res.projectId) {
+      toast.success("Davet kabul edildi");
+      await navigate(`/proje/${res.projectId}`, {
+        state: {
+          joined: { role: roleLabel(invite.role), invitedBy: invite.invitedBy?.name ?? null },
+        },
+      });
+    } else toast("Davet reddedildi");
+    await request.refresh();
+  };
   const by = invite.invitedBy?.name ?? "Silinmiş kullanıcı";
   const when = pending
     ? relativeAgo(new Date(invite.createdAt), now)
@@ -105,16 +106,16 @@ export function InviteCard({ invite, now }: { invite: InviteCardData; now: Date 
         <div className="flex gap-2 max-md:[&>*]:h-11 max-md:[&>*]:flex-1">
           <Button
             variant="outline"
-            disabled={respond.busy}
+            disabled={request.busy}
             aria-label={`Reddet: ${invite.project.name}`}
-            onClick={() => void respond.submit({ intent: "decline", id: invite.id })}
+            onClick={() => void respond("decline")}
           >
             Reddet
           </Button>
           <Button
-            disabled={respond.busy}
+            disabled={request.busy}
             aria-label={`Kabul et: ${invite.project.name}`}
-            onClick={() => void respond.submit({ intent: "accept", id: invite.id })}
+            onClick={() => void respond("accept")}
           >
             Kabul et
           </Button>

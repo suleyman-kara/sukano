@@ -10,7 +10,7 @@ import { MESSAGES, roleLabel } from "~/domain/projects/permissions";
 import { SHEET_DIALOG } from "./dialog-styles";
 import { InviteForm } from "./invite-form";
 import { ProjectMark } from "./project-meta";
-import { projectAction, useProjectAction } from "./use-project-action";
+import { projectAction, useProjectRequest } from "./use-project-action";
 
 type ProjectRef = { id: string; name: string; color: ProjectColor; emoji: string | null };
 
@@ -44,12 +44,14 @@ export function LeaveProjectDialog({
   onGoToSettings: () => void;
 }) {
   const navigate = useNavigate();
-  const leave = useProjectAction(projectAction(project.id), {
-    onSuccess: () => {
-      toast(`${project.name} projesinden ayrıldın`);
-      navigate("/");
-    },
-  });
+  const request = useProjectRequest();
+  const leave = async () => {
+    const res = await request.send(projectAction(project.id), { intent: "leave" });
+    if (!res.ok) return;
+    toast(`${project.name} projesinden ayrıldın`);
+    await navigate("/");
+    await request.refresh();
+  };
   return (
     <ConfirmDialog
       open={open}
@@ -80,7 +82,7 @@ export function LeaveProjectDialog({
           </AlertDialog.Cancel>
         ) : undefined
       }
-      onConfirm={() => void leave.submit({ intent: "leave" })}
+      onConfirm={() => void leave()}
     >
       {isLastManager && (
         <p
@@ -110,14 +112,16 @@ export function DeleteProjectDialog({
   memberCount: number;
 }) {
   const navigate = useNavigate();
-  const del = useProjectAction(projectAction(project.id), {
-    onSuccess: () => {
-      toast(`${project.name} silindi · 7 gün içinde Silinmiş projeler'den geri getirebilirsin`, {
-        duration: 8000,
-      });
-      navigate("/");
-    },
-  });
+  const request = useProjectRequest();
+  const del = async () => {
+    const res = await request.send(projectAction(project.id), { intent: "delete" });
+    if (!res.ok) return;
+    toast(`${project.name} silindi · 7 gün içinde Silinmiş projeler'den geri getirebilirsin`, {
+      duration: 8000,
+    });
+    await navigate("/");
+    await request.refresh();
+  };
   return (
     <ConfirmDialog
       open={open}
@@ -127,7 +131,7 @@ export function DeleteProjectDialog({
       chip={<ProjectChip project={project} detail={`${noteCount} not · ${memberCount} üye`} />}
       description="Proje 7 gün boyunca silinmiş olarak bekler; bu sürede yöneticiler projeyi geri getirebilir. Sonra notlar, dosyalar ve sürümler kalıcı olarak silinir. Üyelere bildirim gider."
       confirmLabel="Projeyi sil"
-      onConfirm={() => void del.submit({ intent: "delete" })}
+      onConfirm={() => void del()}
     />
   );
 }

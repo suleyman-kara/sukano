@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import type { ProjectColor } from "~/db/schema";
 import { ProjectMark } from "./project-meta";
-import { projectAction, useProjectAction } from "./use-project-action";
+import { projectAction, useProjectRequest } from "./use-project-action";
 
 export type DeletedProjectRowData = {
   id: string;
@@ -26,12 +26,14 @@ const shortDate = (iso: string) =>
 /** Silinmiş proje satırı (States2): kim, ne zaman sildi, kalan gün; "Projeyi geri getir". */
 export function DeletedProjectRow({ project }: { project: DeletedProjectRowData }) {
   const navigate = useNavigate();
-  const restore = useProjectAction(projectAction(project.id), {
-    onSuccess: () => {
-      toast.success(`${project.name} geri getirildi`);
-      navigate(`/proje/${project.id}`);
-    },
-  });
+  const request = useProjectRequest();
+  const restore = async () => {
+    const res = await request.send(projectAction(project.id), { intent: "restore" });
+    if (!res.ok) return;
+    toast.success(`${project.name} geri getirildi`);
+    await navigate(`/proje/${project.id}`);
+    await request.refresh();
+  };
   const who = project.deletedByMe
     ? "Sen sildin"
     : `${project.deletedBy?.name ?? "Silinmiş kullanıcı"} sildi`;
@@ -47,8 +49,8 @@ export function DeletedProjectRow({ project }: { project: DeletedProjectRowData 
       </span>
       <Button
         variant="outline"
-        disabled={restore.busy}
-        onClick={() => void restore.submit({ intent: "restore" })}
+        disabled={request.busy}
+        onClick={() => void restore()}
         aria-label={`Projeyi geri getir: ${project.name}`}
         className="max-sm:ml-[26px]"
       >

@@ -1,5 +1,5 @@
 import { Archive, Info, LayoutGrid, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { data, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { ConfirmDialog } from "~/components/notes/confirm-dialog";
@@ -120,10 +120,18 @@ type ViewProps = {
   base: string;
 };
 
+const noopSubscribe = () => () => {};
+
 function JoinedBanner({ projectName }: { projectName: string }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const joined = (location.state as JoinedState | null)?.joined;
+  // Gezinme durumu yalnızca tarayıcıda var (yenilemede de korunur): hidrasyondan sonra oku.
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+  const joined = hydrated ? (location.state as JoinedState | null)?.joined : undefined;
   if (!joined) return null;
   return (
     <div
