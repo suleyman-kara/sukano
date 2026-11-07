@@ -46,11 +46,12 @@ import { runBatch, type Batch } from "./note-store.server";
 import { deleteNotes, scopedNotes } from "./notes.server";
 import {
   assertCan,
+  ForbiddenError,
   memberRole,
   ProjectNotFoundError,
   ProjectRuleError,
 } from "./project-access.server";
-import { avatarColorFor } from "./shell.server";
+import { avatarColorFor } from "./avatar";
 
 type Env = Cloudflare.Env;
 
@@ -152,8 +153,15 @@ const permissionsOf = (role: ProjectRole): ProjectPermissions => ({
   canManage: can(role, "project.manageMembers"),
 });
 
+/** Kural ihlalini hataya çevirir: yetki eksikliği 403, diğer ihlaller 409. */
+function ruleError(result: Extract<RuleResult, { ok: false }>) {
+  return result.code === "yetki_yok"
+    ? new ForbiddenError(result.message)
+    : new ProjectRuleError(result.code, result.message);
+}
+
 function enforce(result: RuleResult) {
-  if (!result.ok) throw new ProjectRuleError(result.code, result.message);
+  if (!result.ok) throw ruleError(result);
 }
 
 async function membersOf(db: Database, projectId: string) {
@@ -493,7 +501,7 @@ export function projectsService(env: Env, userId: string, clock: () => Date = ()
         pendingInvite: pending ?? null,
         now,
       });
-      if (!check.ok) throw new ProjectRuleError(check.code, check.message);
+      if (!check.ok) throw ruleError(check);
       const invitationId = crypto.randomUUID();
       const ops: Batch = [];
       if (pending) {

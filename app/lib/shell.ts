@@ -8,6 +8,7 @@ import type { ShellData } from "~/components/shell/types";
 export const emptyShell: ShellData = {
   user: { name: "Misafir", email: "", avatarColor: "#5F5D57", avatarUrl: null },
   projects: [],
+  deletedProjectCount: 0,
   pendingInviteCount: 0,
   unreadNotificationCount: 0,
 };

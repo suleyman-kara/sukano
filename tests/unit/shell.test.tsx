@@ -16,6 +16,7 @@ const shellData: ShellData = {
     avatarColor: hesaplar.ayse.avatarRengi,
   },
   projects: ornekProjeler.map(({ id, ad, renk }) => ({ id, name: ad, color: renk })),
+  deletedProjectCount: 0,
   pendingInviteCount: 1,
   unreadNotificationCount: 2,
 };

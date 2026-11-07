@@ -15,11 +15,17 @@ export type ShellProject = {
   id: string;
   name: string;
   color: ProjectColor;
+  /** İsteğe bağlı simge (emoji); yoksa baş harf. */
+  emoji?: string | null;
+  /** Kullanıcının bu projedeki rolü. */
+  role?: "yonetici" | "duzenleyici" | "goruntuleyici";
 };
 
 export type ShellData = {
   user: ShellUser;
   projects: ShellProject[];
+  /** Yönetici olunan silinmiş projeler ("Silinmiş projeler (n)"; 0 ise bağlantı gizli). */
+  deletedProjectCount: number;
   pendingInviteCount: number;
   unreadNotificationCount: number;
 };

@@ -19,7 +19,7 @@ import { checkRespond, invitationStatus } from "~/domain/projects/permissions";
 import type { InviteIntent } from "~/domain/projects/validation";
 import { runBatch } from "./note-store.server";
 import { InvitationNotFoundError, ProjectRuleError } from "./project-access.server";
-import { avatarColorFor } from "./shell.server";
+import { avatarColorFor } from "./avatar";
 
 export type IncomingInvite = {
   id: string;
