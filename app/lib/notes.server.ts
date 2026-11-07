@@ -3,16 +3,31 @@
  * başka kullanıcının notu ya da olmayan not `NoteNotFoundError` fırlatır (rota 404
  * döner). Proje notları Aşama 3'te; burada yalnızca `owner_user_id` kullanılır.
  */
-import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, type SQL } from "drizzle-orm";
-import type { BatchItem } from "drizzle-orm/batch";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, lte, type SQL } from "drizzle-orm";
 import { createDb, type Database } from "~/db/client";
 import { attachments, noteVersions, notes, tasks, user, type NoteColor } from "~/db/schema";
 import { htmlToText } from "~/domain/notes/html";
-import type { CardTask, NoteCardData, NoteView } from "~/domain/notes/optimistic";
+import {
+  CARD_TASK_LIMIT,
+  type CardTask,
+  type NoteCardData,
+  type NoteView,
+} from "~/domain/notes/optimistic";
 import { planMove, topPosition } from "~/domain/notes/ordering";
 import { matchesQuery, normalizeTr, queryTerms } from "~/domain/notes/search";
 import type { NoteIntent } from "~/domain/notes/validation";
-import { decideVersionWrite, MAX_VERSIONS, versionsToPrune } from "~/domain/notes/versions";
+import { ATTACHMENT_BLOCK_MESSAGE, todoSnapshot, type TodoSnapshot } from "~/domain/tasks/convert";
+import { treeOrder, type Task } from "~/domain/tasks/model";
+import {
+  loadTasks,
+  NoteConflictError,
+  runBatch,
+  taskWriteOps,
+  versionWriteOps,
+  type Batch,
+} from "./note-store.server";
+
+export { NoteConflictError };
 
 export class NoteNotFoundError extends Error {
   constructor() {
@@ -20,8 +35,7 @@ export class NoteNotFoundError extends Error {
   }
 }
 
-/** Kartta görünen en çok üst seviye görev sayısı. */
-export const CARD_TASK_LIMIT = 5;
+export { CARD_TASK_LIMIT };
 /** "Kopyasını oluştur" geri alınabilir süre (sn); bu süreden sonra `discard` reddedilir. */
 const DISCARD_WINDOW_MS = 2 * 60 * 1000;
 const TRASH_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -38,7 +52,10 @@ export type NoteDetail = {
   color: NoteColor;
   pinned: boolean;
   bodyHtml: string;
+  /** Üst seviye görevler (Aşama 1 salt okunur görünüm). */
   tasks: DetailTask[];
+  /** Yapılacaklar notunun tüm görev ağacı (düz liste, ağaç sırasında); metin notunda boş. */
+  todoTasks: Task[];
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
@@ -69,7 +86,7 @@ export type SearchResult = {
   archived: boolean;
 };
 
-const bodyTextOf = (title: string, html: string) =>
+export const bodyTextOf = (title: string, html: string) =>
   [title.trim(), htmlToText(html)].filter(Boolean).join("\n");
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
@@ -83,13 +100,6 @@ function viewFilter(view: NoteView): SQL {
     case "cop":
       return isNotNull(notes.trashedAt);
   }
-}
-
-type Batch = BatchItem<"sqlite">[];
-
-async function runBatch(db: Database, ops: Batch) {
-  const [first, ...rest] = ops;
-  if (first) await db.batch([first, ...rest]);
 }
 
 /** Kişisel not işlemleri; `userId` oturumdaki kullanıcıdır. */
@@ -107,6 +117,26 @@ export function personalNotes(
     return row;
   }
 
+  async function versionRow(id: string, versionId: string) {
+    await owned(id);
+    const v = await db
+      .select()
+      .from(noteVersions)
+      .where(and(eq(noteVersions.id, versionId), eq(noteVersions.noteId, id)))
+      .get();
+    if (!v) throw new NoteNotFoundError();
+    return v;
+  }
+
+  async function attachmentCount(id: string) {
+    const r = await db
+      .select({ n: count() })
+      .from(attachments)
+      .where(eq(attachments.noteId, id))
+      .get();
+    return r?.n ?? 0;
+  }
+
   async function allPositions(): Promise<number[]> {
     const rows = await db
       .select({ position: notes.position })
@@ -116,46 +146,15 @@ export function personalNotes(
   }
 
   /** Not içeriği değiştiğinde sürüm penceresine göre sürüm yazma adımları. */
-  async function versionOps(
+  function versionOps(
     noteId: string,
     kind: "text" | "todo",
     title: string,
-    snapshot: VersionSnapshot,
+    snapshot: VersionSnapshot | TodoSnapshot,
     now: Date,
     forceNew = false,
   ): Promise<Batch> {
-    const existing = await db
-      .select({
-        id: noteVersions.id,
-        authorId: noteVersions.authorId,
-        createdAt: noteVersions.createdAt,
-      })
-      .from(noteVersions)
-      .where(eq(noteVersions.noteId, noteId))
-      .orderBy(desc(noteVersions.createdAt), desc(noteVersions.id));
-    const decision = decideVersionWrite(existing[0] ?? null, userId, now, { forceNew });
-    if (decision.action === "update") {
-      return [
-        db
-          .update(noteVersions)
-          .set({ title, snapshot, updatedAt: now })
-          .where(eq(noteVersions.id, decision.versionId)),
-      ];
-    }
-    const ops: Batch = [
-      db.insert(noteVersions).values({
-        noteId,
-        kind,
-        title,
-        snapshot,
-        authorId: userId,
-        createdAt: now,
-        updatedAt: now,
-      }),
-    ];
-    const prune = versionsToPrune([...existing, { id: "__new__", createdAt: now }], MAX_VERSIONS);
-    if (prune.length) ops.push(db.delete(noteVersions).where(inArray(noteVersions.id, prune)));
-    return ops;
+    return versionWriteOps(db, userId, noteId, kind, title, snapshot, now, forceNew);
   }
 
   async function cardTasks(noteIds: string[]) {
@@ -222,17 +221,11 @@ export function personalNotes(
 
     async get(id: string): Promise<NoteDetail> {
       const row = await owned(id);
+      const todoTasks = row.kind === "todo" ? treeOrder(await loadTasks(db, id)) : [];
       // Aşama 1: yapılacaklar notunun üst seviye görevleri salt okunur gösterilir.
-      const detailTasks: DetailTask[] =
-        row.kind === "todo"
-          ? (
-              await db
-                .select({ id: tasks.id, title: tasks.title, completedAt: tasks.completedAt })
-                .from(tasks)
-                .where(and(eq(tasks.noteId, id), isNull(tasks.parentId)))
-                .orderBy(asc(tasks.position))
-            ).map((t) => ({ id: t.id, title: t.title, done: Boolean(t.completedAt), depth: 0 }))
-          : [];
+      const detailTasks: DetailTask[] = todoTasks
+        .filter((t) => t.parentId === null)
+        .map((t) => ({ id: t.id, title: t.title, done: t.completedAt !== null, depth: 0 }));
       return {
         id: row.id,
         kind: row.kind,
@@ -241,6 +234,7 @@ export function personalNotes(
         pinned: row.pinned,
         bodyHtml: row.bodyHtml ?? "",
         tasks: detailTasks,
+        todoTasks,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
         archivedAt: iso(row.archivedAt),
@@ -326,6 +320,10 @@ export function personalNotes(
             { html: bodyHtml, text: htmlToText(bodyHtml) },
             now,
           )),
+        );
+      } else {
+        ops.push(
+          ...(await versionOps(id, row.kind, title, todoSnapshot(await loadTasks(db, id)), now)),
         );
       }
       await runBatch(db, ops);
@@ -557,13 +555,7 @@ export function personalNotes(
     },
 
     async getVersion(id: string, versionId: string): Promise<VersionPreview> {
-      await owned(id);
-      const v = await db
-        .select()
-        .from(noteVersions)
-        .where(and(eq(noteVersions.id, versionId), eq(noteVersions.noteId, id)))
-        .get();
-      if (!v) throw new NoteNotFoundError();
+      const v = await versionRow(id, versionId);
       const snap = v.snapshot as Partial<VersionSnapshot> | null;
       return {
         id: v.id,
@@ -573,31 +565,57 @@ export function personalNotes(
       };
     },
 
-    /** Sürümü geri yükler; geri yükleme her zaman yeni bir sürüm olarak kaydedilir. */
+    /**
+     * Sürümü geri yükler; geri yükleme her zaman yeni bir sürüm olarak kaydedilir.
+     * Yapılacaklar sürümünde görev ağacı aynen geri yazılır; sürümün türü notun
+     * türünden farklıysa not o türe döner.
+     */
     async restoreVersion(id: string, versionId: string) {
       const row = await owned(id);
-      const v = await this.getVersion(id, versionId);
+      const v = await versionRow(id, versionId);
       const now = clock();
-      await runBatch(db, [
-        db
-          .update(notes)
-          .set({
-            title: v.title,
-            bodyHtml: v.html,
-            bodyText: bodyTextOf(v.title, v.html),
-            updatedBy: userId,
-            updatedAt: now,
-          })
-          .where(mine(id)),
-        ...(await versionOps(
-          id,
-          row.kind,
-          v.title,
-          { html: v.html, text: htmlToText(v.html) },
-          now,
-          true,
-        )),
-      ]);
+      const current = row.kind === "todo" ? await loadTasks(db, id) : [];
+      const ops: Batch = [];
+      if (v.kind === "todo") {
+        if (row.kind === "text" && (await attachmentCount(id)) > 0) {
+          throw new NoteConflictError(ATTACHMENT_BLOCK_MESSAGE);
+        }
+        const restored = (v.snapshot as Partial<TodoSnapshot> | null)?.tasks ?? [];
+        ops.push(
+          db
+            .update(notes)
+            .set({
+              kind: "todo",
+              title: v.title,
+              bodyHtml: null,
+              bodyJson: null,
+              bodyText: bodyTextOf(v.title, ""),
+              updatedBy: userId,
+              updatedAt: now,
+            })
+            .where(mine(id)),
+          ...taskWriteOps(db, id, current, restored, userId, now),
+          ...(await versionOps(id, "todo", v.title, todoSnapshot(restored), now, true)),
+        );
+      } else {
+        const html = (v.snapshot as Partial<VersionSnapshot> | null)?.html ?? "";
+        ops.push(
+          db
+            .update(notes)
+            .set({
+              kind: "text",
+              title: v.title,
+              bodyHtml: html,
+              bodyText: bodyTextOf(v.title, html),
+              updatedBy: userId,
+              updatedAt: now,
+            })
+            .where(mine(id)),
+          ...taskWriteOps(db, id, current, [], userId, now),
+          ...(await versionOps(id, "text", v.title, { html, text: htmlToText(html) }, now, true)),
+        );
+      }
+      await runBatch(db, ops);
     },
 
     /** Form eylemini çalıştırır. */
