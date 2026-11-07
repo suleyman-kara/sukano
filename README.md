@@ -263,14 +263,16 @@ Resend anahtarı yokken **ve** geliştirme sunucusunda ya da `BETTER_AUTH_URL` y
 
 Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
 
-| Yol                            | Açıklama                                                                                                                                                 |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                            | Notlarım: not al alanı, Sabitlenmiş + Diğerleri masonry ızgarası                                                                                         |
-| `/not/:id`, `/arsiv/not/:id`   | Açık not (ızgaranın üstünde modal, mobilde tam ekran); `?surumler` ile sürüm geçmişi açık                                                                |
-| `/arsiv`, `/cop`               | Arşiv; çöp (7 gün, kalan gün, Geri yükle, Kalıcı olarak sil, Çöpü boşalt)                                                                                |
-| `/ara?q=`                      | Türkçe harf ve aksan duyarsız arama (başlık, metin, görev başlıkları)                                                                                    |
-| `POST /api/notlar`             | Not eylemleri (`intent`: create, update, color, pin, archive, unarchive, trash, restore, delete, discard, empty-trash, duplicate, move, restore-version) |
-| `GET /api/notlar/:id/surumler` | Sürüm listesi; `?surum=<id>` ile önizleme                                                                                                                |
+| Yol                             | Açıklama                                                                                                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                             | Notlarım: not al alanı, Sabitlenmiş + Diğerleri masonry ızgarası                                                                                                               |
+| `/not/:id`, `/arsiv/not/:id`    | Açık not (ızgaranın üstünde modal, mobilde tam ekran); `?surumler` ile sürüm geçmişi açık                                                                                      |
+| `/arsiv`, `/cop`                | Arşiv; çöp (7 gün, kalan gün, Geri yükle, Kalıcı olarak sil, Çöpü boşalt)                                                                                                      |
+| `/ara?q=`                       | Türkçe harf ve aksan duyarsız arama (başlık, metin, görev başlıkları)                                                                                                          |
+| `POST /api/notlar`              | Not eylemleri (`intent`: create, create-todo, update, convert, color, pin, archive, unarchive, trash, restore, delete, discard, empty-trash, duplicate, move, restore-version) |
+| `GET /api/notlar/:id/surumler`  | Sürüm listesi; `?surum=<id>` ile önizleme                                                                                                                                      |
+| `GET /api/notlar/:id/gorevler`  | Yapılacaklar notunun görevleri (`{ tasks }`, düz liste, ağaç sırasında)                                                                                                        |
+| `POST /api/notlar/:id/gorevler` | Toplu görev işlemleri (JSON `{ ops }`; tek batch, hepsi ya da hiçbiri; 400 / 404 / 409 / 415)                                                                                  |
 
 - **Katmanlar:** saf kurallar `app/domain/notes/` (sıralama, sürüm penceresi, arama
   normalizasyonu, HTML→metin, doğrulama, iyimser arayüz); D1 sorguları
@@ -281,7 +283,15 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   350 ms basılı tutma); klavyede odaklı kartta Alt+ok.
 - **Sürümler:** aynı kişinin sürümün açılışından itibaren 5 dk içindeki düzenlemeleri aynı
   sürümü günceller; en çok 50 sürüm; geri yükleme her zaman yeni sürüm. Renk/sabitleme sürüm
-  üretmez. Yapılacaklar notunun sürümleri Aşama 2'de.
+  üretmez. Yapılacaklar notunda anlık görüntü görev ağacıdır (`TodoSnapshot`: düz liste +
+  önizleme HTML'i); geri yükleme ağacı ve notun türünü geri getirir.
+- **Yapılacaklar (Aşama 2, sunucu):** saf görev ağacı `app/domain/tasks/` (`tree.ts` ekle/böl,
+  girinti, taşıma, sürükle-bırak, görünür satırlar; `completion.ts` zincirleme tamamlanma;
+  `ops.ts` işlem biçimi, doğrulama, uygulama, fark; `dates.ts` doğal yazım ve aralık metni;
+  `undo.ts` toast ve Ctrl+Z yığını; `convert.ts` metin ↔ yapılacaklar). D1 tarafı
+  `app/lib/tasks.server.ts` (`personalTasks(env, userId)`): işlemler aynı saf kodla uygulanır,
+  tamamlanma zinciri sunucuda yeniden hesaplanır, fark not güncellemesi ve sürümle tek batch'te
+  yazılır. Eki olan metin notu yapılacaklara dönüştürülemez (409).
 - **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt; not al alanı kapatınca kaydeder,
   boşsa kaydetmez. Arşivle, çöpe at ve kopyasını oluştur "Geri al" toast'ı gösterir (6 sn).
 - **Cron:** `purgeTrashedNotes` 7 günden eski kişisel çöp notlarını sürüm ve ekleriyle siler.
