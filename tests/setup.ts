@@ -15,6 +15,12 @@ if (typeof window !== "undefined") {
   Element.prototype.scrollIntoView ??= function () {};
   Element.prototype.hasPointerCapture ??= () => false;
   Element.prototype.releasePointerCapture ??= () => {};
+  Element.prototype.setPointerCapture ??= () => {};
+  // ProseMirror (Tiptap) seçimi kaydırırken metin aralıklarının konumunu sorar.
+  const emptyRects = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;
+  Range.prototype.getClientRects ??= emptyRects;
+  Range.prototype.getBoundingClientRect ??= () => new DOMRect();
+  document.elementFromPoint ??= () => null;
 }
 
 beforeEach(() => {

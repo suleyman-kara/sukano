@@ -1,12 +1,12 @@
 /**
- * jsdom'da `window.matchMedia` yok. Bu sahte uygulama iki sorgu türünü
- * anlar: `(prefers-color-scheme: dark)` ve `(min-width: Npx)` /
- * `(max-width: Npx)`. Durum `setMedia` ile değiştirilir; eşleşmesi değişen
+ * jsdom'da `window.matchMedia` yok. Bu sahte uygulama şu sorguları
+ * anlar: `(prefers-color-scheme: dark)`, `(min-width: Npx)` /
+ * `(max-width: Npx)` ve `(pointer: coarse|fine)`. Durum `setMedia` ile değiştirilir; eşleşmesi değişen
  * sorguların dinleyicilerine `change` olayı gönderilir.
  */
-type MediaState = { width: number; dark: boolean };
+type MediaState = { width: number; dark: boolean; coarse: boolean };
 
-const state: MediaState = { width: 1440, dark: false };
+const state: MediaState = { width: 1440, dark: false, coarse: false };
 const lists = new Set<FakeMediaQueryList>();
 
 function evaluate(query: string): boolean {
@@ -16,6 +16,7 @@ function evaluate(query: string): boolean {
       if (name === "prefers-color-scheme") return (raw === "dark") === state.dark;
       if (name === "min-width") return state.width >= parseFloat(raw);
       if (name === "max-width") return state.width <= parseFloat(raw);
+      if (name === "pointer") return (raw === "coarse") === state.coarse;
       return false;
     }),
   );
@@ -70,5 +71,6 @@ export function setMedia(next: Partial<MediaState>) {
 export function resetMedia() {
   state.width = 1440;
   state.dark = false;
+  state.coarse = false;
   lists.clear();
 }
