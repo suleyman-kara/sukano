@@ -434,11 +434,7 @@ export default function Ayarlar({ loaderData }: Route.ComponentProps) {
               <ThemePicker />
             </section>
 
-            <section
-              id="bildirim"
-              className={cn(PANEL, "opacity-70")}
-              aria-labelledby="bildirim-baslik"
-            >
+            <section id="bildirim" className={PANEL} aria-labelledby="bildirim-baslik">
               <h2
                 id="bildirim-baslik"
                 className="m-0 flex items-center gap-2 text-base font-semibold"
