@@ -271,7 +271,7 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
 | `/ara?q=`                       | Türkçe harf ve aksan duyarsız arama (başlık, metin, görev başlıkları)                                                                                                          |
 | `POST /api/notlar`              | Not eylemleri (`intent`: create, create-todo, update, convert, color, pin, archive, unarchive, trash, restore, delete, discard, empty-trash, duplicate, move, restore-version) |
 | `GET /api/notlar/:id/surumler`  | Sürüm listesi; `?surum=<id>` ile önizleme                                                                                                                                      |
-| `GET /api/notlar/:id/gorevler`  | Yapılacaklar notunun görevleri (`{ tasks }`, düz liste, ağaç sırasında)                                                                                                        |
+| `GET /api/notlar/:id/gorevler`  | Yapılacaklar notunun görevleri (`{ tasks, assignees }`, düz liste, ağaç sırasında)                                                                                             |
 | `POST /api/notlar/:id/gorevler` | Toplu görev işlemleri (JSON `{ ops }`; tek batch, hepsi ya da hiçbiri; 400 / 404 / 409 / 415)                                                                                  |
 
 - **Katmanlar:** saf kurallar `app/domain/notes/` (sıralama, sürüm penceresi, arama
@@ -294,7 +294,8 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   yazılır. Eki olan metin notu yapılacaklara dönüştürülemez (409).
 - **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt; not al alanı kapatınca kaydeder,
   boşsa kaydetmez. Arşivle, çöpe at ve kopyasını oluştur "Geri al" toast'ı gösterir (6 sn).
-- **Cron:** `purgeTrashedNotes` 7 günden eski kişisel çöp notlarını sürüm ve ekleriyle siler.
+- **Cron:** `purgeTrashedNotes` 7 günden eski çöp notlarını (kişisel ve proje) sürüm ve ekleriyle
+  siler (`purgeExpiredTrash`).
 - **Yapılacaklar (Aşama 2, arayüz):** `app/components/tasks/` — `TodoEditor` (satırlar
   `visibleRows`'tan; klavye akışı yalnızca editör içinde, katmanlı Esc, Ctrl+Z, Ctrl+/ kısayol
   kartı), `TaskRow`, `TaskDetail` akordeonu, `DatePicker`, not içi toast yığını, dokunmatik araç
@@ -302,8 +303,122 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   `task-sync.ts` kuyruğuyla sırayla gönderilir (aynı anda tek istek, ardışık güncellemeler
   birleşir, 409'da liste yeniden yüklenir); aç/kapa durumu `localStorage`'da
   (`sukano:gorevler:<notId>`). Karttan işaretleme `use-card-task-toggle.ts`.
-- **Devre dışı yer tutucular:** taşı veya kopyala, kişi seçici (Aşama 3), not ve görev
-  hatırlatıcısı, dosya ekleme (Aşama 5).
+- **Devre dışı yer tutucular:** taşı veya kopyala, kişi seçici (sunucusu Aşama 3a'da hazır, bkz.
+  [Projeler](#projeler-roller-davetler)), not ve görev hatırlatıcısı, dosya ekleme (Aşama 5).
+
+## Projeler, roller, davetler
+
+Aşama 3a: projelerin alan mantığı ve sunucusu (arayüz Aşama 3b). Kurallar PLAN §2 ve §4;
+metinler tasarımdan (`Forms`, `Dialogs2`, `ProjectSettings`, `Invites`, `States2`).
+
+**Katmanlar.**
+
+- `app/domain/projects/` (saf, birim testli): `permissions.ts` — rol × eylem matrisi
+  (`can(role, action)`; eylemler `PROJECT_ACTIONS`), son yönetici kuralları (`checkRoleChange`,
+  `checkLeave`, `checkRemoveMember`), davet edilebilirlik (`checkInvite`: yetki → adres → hesap
+  yok → doğrulanmamış → zaten üye → bekleyen davet), davet yanıtı (`checkRespond`,
+  `invitationStatus`), hesap silme (`soleManagerProjects`, `checkAccountDeletion`), rol adları
+  (`roleLabel`, `ROLE_DESCRIPTIONS`), Türkçe hata metinleri (`MESSAGES`). `lifecycle.ts` — 7 gün
+  silinmiş proje (`purgeDaysLeft`, `purgeLabel`: "5 gün kaldı" / "yarın silinecek"), davet
+  geçerlilik metni (`inviteExpiryLabel`), taşıma geri alma penceresi (`MOVE_UNDO_MS` 10 sn + 5 sn
+  ağ payı, `canUndoMove`). `members.ts` — üye sırası (sen → rol → ad, `sortMembers`), kişiye özel
+  proje sırası (`orderProjects`, `reorderIds`). `validation.ts` — form eylemlerinin doğrulanması.
+- `app/lib/project-access.server.ts`: `memberRole` (üye değil ya da proje silinmiş → 404),
+  hata sınıfları (`ProjectNotFoundError` 404, `ForbiddenError` 403, `ProjectRuleError` 409 +
+  `code`, `InvitationNotFoundError` 404). `app/lib/api-errors.server.ts`: ortak eşleme
+  (`apiError`, `loaderError`).
+- Notlar alan bazında: `scopedNotes(env, userId, scope)` ve `scopedTasks(...)` aynı makineyi
+  kişisel alanda (`{ kind: "personal" }`) ve projede (`{ kind: "project", projectId, role }`)
+  çalıştırır; projede her işlem `can` ile denetlenir. `personalNotes` / `personalTasks` kişisel
+  alanın kısayoludur. `app/lib/note-access.server.ts` → `noteAccess(env, userId)`: `forNote(id)`
+  ve `forProject(id)` alanı çözer (üyelik + rol), `moveToProject`, `undoMove`, `copyTo`, `run`.
+- `app/lib/projects.server.ts` → `projectsService(env, userId)`; `app/lib/invitations.server.ts`
+  → `invitationsService(env, userId)`; `app/lib/account.server.ts` → hesap silme.
+
+**Roller** (her istekte sunucuda denetlenir):
+
+| Eylem                                                                   | Yönetici | Düzenleyici | Görüntüleyici |
+| ----------------------------------------------------------------------- | :------: | :---------: | :-----------: |
+| Notları okuma, arama, sürüm geçmişi, üye listesi                        |    ✓     |      ✓      |       ✓       |
+| Not oluşturma, düzenleme, sabitleme, renk, sıra, arşiv, çöp, kalıcı sil |    ✓     |      ✓      |       —       |
+| Görev işaretleme, atama, sürüm geri yükleme, Kopyala…, projeye taşıma   |    ✓     |      ✓      |       —       |
+| Ayarlar, davet, rol verme, üye çıkarma, proje silme / geri getirme      |    ✓     |      —      |       —       |
+
+Üye olmayan için proje ve notları yoktur (404). Son yönetici kendini indiremez ve ayrılamaz
+(409 `son_yonetici`) ama projeyi silebilir. Görüntüleyiciye görev atanabilir, işaretleyemez.
+
+**Uçlar.** Tümü oturum ister; form eylemleri `intent` alanıyla seçilir (diziler JSON metni).
+Hata gövdesi `{ ok: false, error, code? }` (`error` arayüzde aynen gösterilecek Türkçe metin).
+
+| Uç                              | İş                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/projeler`             | Sol menü: `{ projects: SidebarProject[], deletedCount }`                                                                              |
+| `GET /api/projeler?silinmis=1`  | `{ deleted: DeletedProject[] }` (yalnızca yönetici olunan silinmiş projeler)                                                          |
+| `POST /api/projeler`            | `create` (`name`, `color?`, `description?`, `emoji?`, `id?` UUID) → `{ ok, id }`                                                      |
+|                                 | `reorder` (`order`: JSON proje kimlikleri) → `{ ok }`                                                                                 |
+| `GET /api/projeler/:id`         | `ProjectPageData` (`?gorunum=notlar\|arsiv\|cop`); `?ayarlar=1` → `ProjectSettingsData`                                               |
+| `POST /api/projeler/:id`        | `update` (`name?`, `color?`, `description?`, `emoji?`), `delete`, `restore`, `leave`                                                  |
+|                                 | `invite` (`email`, `role` = düzenleyici) → `{ ok, invitationId }`                                                                     |
+|                                 | `revoke-invite` (`invitationId`), `set-role` (`userId`, `role`), `remove-member` (`userId`)                                           |
+| `GET /api/projeler/:id/uyeler`  | `{ members: ProjectMember[] }` (kişi seçici; sen önce)                                                                                |
+| `GET /api/davetler`             | `{ pending: IncomingInvite[], history: IncomingInvite[] }`                                                                            |
+| `POST /api/davetler`            | `accept` (`id`) → `{ ok, projectId }`; `decline` (`id`)                                                                               |
+| `POST /api/notlar`              | Proje notu için: `create` / `create-todo` / `empty-trash` + `projectId`; diğer eylemlerde alan nottan çözülür                         |
+|                                 | `move-to-project` (`id`, `projectId`), `undo-move` (`id`), `copy-to` (`id`, `newId`, `projectId?`; yoksa kişisel alan) → `{ ok, id }` |
+| `POST /api/notlar/:id/gorevler` | Proje notunda ayrıca `{ op: "assign", id, userIds }` (tam liste); yanıt `{ ok, tasks, assignees }`                                    |
+| `POST /ayarlar`                 | `delete-account` (`email`: onay için yazılan adres) → `/giris?durum=hesap-silindi`                                                    |
+
+Kural kodları (`code`): `son_yonetici`, `kendini_cikaramaz`, `uye_yok`, `hesap_yok`,
+`dogrulanmamis`, `zaten_uye`, `bekleyen_davet`, `gecersiz_eposta`, `suresi_doldu`,
+`gecersiz_davet`, `tek_yonetici`, `eposta_uyusmuyor`. Yetki eksikliği her zaman 403'tür.
+
+**Loader işlevleri** (3b sayfaları için; tipler `projects.server.ts` / `invitations.server.ts`):
+`projectsService(env, user.id).page(projectId, view)` (proje, `myRole`, `permissions`
+{ canWrite, canManage }, üyeler, notlar), `.settings(projectId)` (üyeler, `managerCount`,
+`isLastManager`, yöneticiye bekleyen davetler), `.members(projectId)`, `.sidebar()`, `.deleted()`;
+`invitationsService(env, user.id).list()`; proje notu ayrıntısı
+`(await noteAccess(env, user.id).forNote(noteId)).notes.get(noteId)` (`createdBy` / `updatedBy`
+null ise "Silinmiş kullanıcı", `assignees`); birleşik arama `searchAccessible(env, user.id, q)`
+(her sonuçta `source`); hesap silme engeli `accountDeletionBlockers` (Ayarlar loader'ında
+`deletionBlockers`). Kabuk verisinde `projects[].role`, `projects[].emoji` ve
+`deletedProjectCount` vardır.
+
+**Davetler.** Yalnızca yönetici, kayıtlı ve e-postası doğrulanmış hesaba, tam adresle. Davet
+uygulama içi bildirim (`notifications`, tür `davet`) ve e-posta (`invitationEmail`, bağlantı
+`/davetler`) olarak gider; 14 gün geçerli; yönetici geri çekebilir; süresi geçmiş bekleyen
+davetin yerine yenisi gönderilebilir. Kabulde davetteki rolle üye olunur.
+
+**Taşıma ve kopyalama.** Kişisel not projeye taşınır (hedefte düzenleyici ve üstü): kişisel
+alandan kalkar, projenin en üstüne eklenir, arşivden çıkar; geri alma bilgisi
+`notes.move_origin`'de (migration `0001`) tutulur ve yalnızca taşıyan 10 sn içinde geri alabilir
+(sonra 409). Proje notu taşınamaz, yalnızca kopyalanır (`copy-to`; kaynakta düzenleyici ve üstü).
+Kopya hedefte en üste, sabitlenmemiş oluşur; görev ağacı kopyalanır, sürüm geçmişi kopyalanmaz;
+atamalar yalnızca hedef projenin üyelerine kopyalanır (kişisel alanda atama yok).
+
+**Üyelik değişiklikleri.** Rol değişince (`rol_degisti`) ve çıkarılınca (`projeden_cikarildi`)
+kişiye bildirim gider. Ayrılan/çıkarılan kişinin projedeki görev atamaları kaldırılır; notlar
+ve oluşturan/son düzenleyen bilgisi kalır.
+
+**Proje silme.** Yönetici siler; proje 7 gün "silinmiş" bekler, üyelere `proje_silindi`
+bildirimi gider, kimse erişemez; yöneticiler "Projeyi geri getir" ile döndürebilir. Cron
+(`purgeDeletedProjects`) süre dolunca notları (R2 ekleri dahil), görevleri, sürümleri,
+üyelikleri ve davetleri kalıcı siler; `expireInvitations` süresi dolan davetleri işaretler.
+
+**Hesap silme.** Tek yönetici olunan (silinmemiş) proje varsa engellenir (`tek_yonetici`, proje
+adlarıyla). Onay için e-posta adresi yazılır. Kişisel notlar ekleri ve sürümleriyle silinir;
+proje notları kalır, oluşturan/son düzenleyen `null` olur ("Silinmiş kullanıcı"); üyelikler,
+atamalar, oturumlar zincirleme silinir, adrese bekleyen davetler geri çekilir.
+
+**Testler.** Birim: `tests/unit/projects/` (yetki matrisi, son yönetici, davet edilebilirlik,
+süreler, sıralar, doğrulama). Worker: `tests/workers/projeler.test.ts`,
+`davetler.test.ts`, `proje-notlari.test.ts` (her not eyleminde ve görev işleminde yönetici /
+düzenleyici / görüntüleyici / üye olmayan matrisi, taşıma + geri alma, kopyalama, atama),
+`hesap-silme.test.ts`. Yardımcılar `tests/workers/proje-yardimcilar.ts` (tohum hesabıyla giriş:
+`loginAs("can")`).
+
+**Tohum verisi.** Web Sitesi Yenileme (5 üye, üç rol), Ev Taşınma ve Kitap Kulübü (Süleyman
+tek yönetici; Ayşe'nin Kitap Kulübü'ne bekleyen daveti), Fotoğraf Arşivi (Ayşe ve Zeynep
+yönetici; Süleyman'ın bekleyen daveti), silinmiş Bütçe 2026 (Ayşe 2 gün önce sildi).
 
 ## Cloudflare tarafında yapılacaklar
 
