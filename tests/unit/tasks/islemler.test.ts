@@ -244,3 +244,37 @@ describe("fark (diffTasks)", () => {
     ]);
   });
 });
+
+describe("atama işlemi (proje notu)", () => {
+  it("atama tam kişi listesini taşır; boş liste atamaları kaldırır", () => {
+    expect(
+      parseTaskOps({ ops: [{ op: "assign", id: "t1", userIds: ["user-ayse", "user-can"] }] }),
+    ).toEqual({
+      ok: true,
+      value: [{ op: "assign", id: "t1", userIds: ["user-ayse", "user-can"] }],
+    });
+    expect(parseTaskOps({ ops: [{ op: "assign", id: "t1", userIds: [] }] })).toMatchObject({
+      ok: true,
+    });
+  });
+
+  it("geçersiz, yinelenen ya da çok uzun kişi listesi reddedilir", () => {
+    for (const userIds of [
+      "user-ayse",
+      ["user-ayse", "user-ayse"],
+      ["boşluk var"],
+      Array.from({ length: 51 }, (_, i) => `u${i}`),
+    ]) {
+      expect(parseTaskOps({ ops: [{ op: "assign", id: "t1", userIds }] })).toEqual({
+        ok: false,
+        error: "Geçersiz atama",
+      });
+    }
+  });
+
+  it("atama görev ağacını değiştirmez ama görev var olmalı", () => {
+    const before = initial();
+    expect(apply([{ op: "assign", id: "t1", userIds: ["x"] }], before)).toEqual(before);
+    expect(() => apply([{ op: "assign", id: "yok", userIds: [] }])).toThrow(TaskOpError);
+  });
+});

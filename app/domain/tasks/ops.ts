@@ -58,7 +58,15 @@ export type TaskOp =
   /** Tamamlamayı geri al: tam olarak bu görevleri aç (+ tamamlanmış üstleri). */
   | { op: "reopen"; ids: string[] }
   | { op: "delete"; id: string; withSubtree?: boolean }
-  | { op: "clearCompleted" };
+  | { op: "clearCompleted" }
+  /**
+   * Proje notunda göreve atananları belirler (tam liste; boş dizi atamaları kaldırır).
+   * Görev ağacını değiştirmez; sunucu üyelik denetimiyle `task_assignees`'e yazar.
+   */
+  | { op: "assign"; id: string; userIds: string[] };
+
+/** Bir göreve en çok bu kadar kişi atanabilir. */
+export const MAX_ASSIGNEES = 50;
 
 export type OpContext = { now: number; userId: string };
 
@@ -174,6 +182,17 @@ function parseOne(raw: unknown): TaskOp {
     }
     case "clearCompleted":
       return { op: "clearCompleted" };
+    case "assign": {
+      const users = o.userIds;
+      if (
+        !Array.isArray(users) ||
+        users.length > MAX_ASSIGNEES ||
+        !users.every(isTaskId) ||
+        new Set(users).size !== users.length
+      )
+        bad("Geçersiz atama");
+      return { op: "assign", id: id(), userIds: [...(users as string[])] };
+    }
     default:
       return bad("Bilinmeyen işlem");
   }
@@ -284,6 +303,10 @@ function applyOne(tasks: Task[], op: TaskOp, ctx: OpContext): Task[] {
     }
     case "clearCompleted":
       return clearCompleted(tasks).tasks;
+    case "assign":
+      // Atamalar görev listesinde tutulmaz; yalnızca görevin varlığı denetlenir.
+      need(tasks, op.id);
+      return tasks;
   }
 }
 

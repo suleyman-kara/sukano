@@ -5,7 +5,7 @@ import { createDb } from "~/db/client";
 import { seedDatabase, seedUserId } from "~/db/seed";
 import { noteVersions, notes, tasks } from "~/db/schema";
 import { VERSION_WINDOW_MS } from "~/domain/notes/versions";
-import { NoteNotFoundError, personalNotes, purgeTrashedPersonalNotes } from "~/lib/notes.server";
+import { NoteNotFoundError, personalNotes, purgeExpiredTrash } from "~/lib/notes.server";
 import { purgeTrashedNotes } from "../../workers/scheduled";
 import { hesaplar } from "../fixtures/hesaplar";
 import { ornekKisiselAlanlar, ornekProjeler } from "../fixtures/ornek-veri";
@@ -341,7 +341,7 @@ describe("cron: çöp temizliği", () => {
       .update(notes)
       .set({ trashedAt: new Date(t.getTime() - 6 * DAY) })
       .where(eq(notes.id, fresh));
-    const deleted = await purgeTrashedPersonalNotes(env, t);
+    const deleted = await purgeExpiredTrash(env, t);
     expect(deleted).toBeGreaterThanOrEqual(1);
     expect(await db().select().from(notes).where(eq(notes.id, old))).toEqual([]);
     expect(await db().select().from(noteVersions).where(eq(noteVersions.noteId, old))).toEqual([]);

@@ -1,0 +1,1 @@
+ALTER TABLE `notes` ADD `move_origin` text;

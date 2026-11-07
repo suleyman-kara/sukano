@@ -6,7 +6,7 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import type { Database } from "~/db/client";
-import { noteVersions, tasks } from "~/db/schema";
+import { noteVersions, taskAssignees, tasks } from "~/db/schema";
 import type { Task } from "~/domain/tasks/model";
 import { diffTasks } from "~/domain/tasks/ops";
 import { decideVersionWrite, MAX_VERSIONS, versionsToPrune } from "~/domain/notes/versions";
@@ -142,6 +142,7 @@ export function taskWriteOps(
   }
   for (let i = 0; i < d.deleted.length; i += 50) {
     ops.push(
+      db.delete(taskAssignees).where(inArray(taskAssignees.taskId, d.deleted.slice(i, i + 50))),
       db
         .delete(tasks)
         .where(and(eq(tasks.noteId, noteId), inArray(tasks.id, d.deleted.slice(i, i + 50)))),

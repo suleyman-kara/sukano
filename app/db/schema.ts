@@ -284,6 +284,16 @@ export const invitations = sqliteTable(
 /* Notlar ve görevler                                                  */
 /* ------------------------------------------------------------------ */
 
+/** Projeye taşınan kişisel notun geri alma bilgisi (`notes.move_origin`). */
+export type NoteMoveOrigin = {
+  userId: string;
+  /** Taşıma zamanı (ms). */
+  at: number;
+  position: number;
+  pinned: boolean;
+  archivedAt: number | null;
+};
+
 export const notes = sqliteTable(
   "notes",
   {
@@ -308,6 +318,11 @@ export const notes = sqliteTable(
     bodyJson: text("body_json", { mode: "json" }).$type<unknown>(),
     /** Arama için düz metin kopyası (başlık + gövde). */
     bodyText: text("body_text").default("").notNull(),
+    /**
+     * Kişisel alandan projeye taşındıysa geri alma bilgisi (taşıyan, zaman, eski konum).
+     * Yalnızca "Geri al" penceresi için; geri alınınca ya da sonraki taşımada değişir.
+     */
+    moveOrigin: text("move_origin", { mode: "json" }).$type<NoteMoveOrigin>(),
     ...timestamps(),
   },
   (t) => [
