@@ -259,7 +259,9 @@ export const TaskRow = memo(function TaskRow({
             tabIndex={-1}
             className={cn(
               HOV,
-              whoOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
+              // Dokunmatikte satır dar: kişi seçici araç çubuğundan ve ayrıntıdan açılır.
+              "pointer-coarse:hidden",
+              whoOpen && "opacity-100",
             )}
             onClick={() => onOpenWho?.(id)}
             aria-label="Kişiye ata"
