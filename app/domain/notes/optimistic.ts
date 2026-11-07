@@ -12,7 +12,8 @@ export type NoteView = "notlar" | "arsiv" | "cop";
 /** Kartta görünen en çok üst seviye görev sayısı. */
 export const CARD_TASK_LIMIT = 5;
 
-export type CardTask = { title: string; done: boolean };
+/** Kartta görünen görev; `id` null ise henüz sunucuya ulaşmamış (iyimser) görevdir. */
+export type CardTask = { id: string | null; title: string; done: boolean };
 
 /** Izgaradaki kartın verisi (loader'dan gelir). */
 export type NoteCardData = {
@@ -87,7 +88,9 @@ export function applyPendingIntents(
             pinned: p.pinned,
             position: topPosition(list.map((n) => n.position)),
             preview: "",
-            tasks: titles.slice(0, CARD_TASK_LIMIT).map((title) => ({ title, done: false })),
+            tasks: titles
+              .slice(0, CARD_TASK_LIMIT)
+              .map((title) => ({ id: null, title, done: false })),
             moreTasks: Math.max(0, titles.length - CARD_TASK_LIMIT),
             updatedAt: now.toISOString(),
             archivedAt: null,
@@ -149,7 +152,7 @@ function convertCard(n: NoteCardData, to: NoteKind): NoteCardData {
       ...n,
       kind: "todo",
       preview: "",
-      tasks: lines.slice(0, CARD_TASK_LIMIT).map((title) => ({ title, done: false })),
+      tasks: lines.slice(0, CARD_TASK_LIMIT).map((title) => ({ id: null, title, done: false })),
       moreTasks: Math.max(0, lines.length - CARD_TASK_LIMIT),
     };
   }

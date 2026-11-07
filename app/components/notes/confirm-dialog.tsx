@@ -16,6 +16,8 @@ type ConfirmDialogProps = {
   /** Açıklamanın altındaki bilgi kutusu. */
   note?: React.ReactNode;
   tone?: "danger" | "primary";
+  /** Onay engelli (ör. eki olan not yapılacaklara dönüştürülemez). */
+  confirmDisabled?: boolean;
 };
 
 /**
@@ -33,6 +35,7 @@ export function ConfirmDialog({
   chipStyle,
   note,
   tone = "danger",
+  confirmDisabled = false,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -91,6 +94,7 @@ export function ConfirmDialog({
             <AlertDialog.Action asChild>
               <Button
                 onClick={onConfirm}
+                disabled={confirmDisabled}
                 className={cn(
                   tone === "danger" &&
                     "bg-danger text-white hover:bg-danger/90 dark:text-[#141413]",

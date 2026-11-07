@@ -15,11 +15,14 @@ import { Link } from "react-router";
 import { cn } from "cn";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { checkboxLabel } from "~/components/tasks/task-row";
+import { useCardTaskToggle } from "~/components/tasks/use-card-task-toggle";
 import { trashDaysLeft, trashLeftLabel } from "~/domain/notes/dates";
-import type { NoteCardData, NoteView } from "~/domain/notes/optimistic";
+import type { CardTask, NoteCardData, NoteView } from "~/domain/notes/optimistic";
 import { useMediaQuery } from "~/hooks/use-media-query";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
+import { useConvertNote } from "./convert-note";
 import { NoteMoreMenuContent, NoteSheet } from "./note-menu";
 import type { NoteActions } from "./use-note-actions";
 
@@ -79,8 +82,13 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const label = note.title || note.preview.split("\n")[0] || "Başlıksız not";
-  const versionsDisabled = note.kind === "todo";
+  const versionsDisabled = false;
   const keepBar = paletteOpen || menuOpen;
+  const convert = useConvertNote();
+  const onConvert =
+    view === "cop" || overlay
+      ? undefined
+      : () => convert.ask({ id: note.id, to: note.kind === "text" ? "todo" : "text" });
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (!onKeyMove || !e.altKey) return;
@@ -176,10 +184,12 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           onSheet={() => setSheetOpen(true)}
           onVersions={() => onVersions(note.id)}
           versionsDisabled={versionsDisabled}
+          onConvert={onConvert}
           onRequestDelete={onRequestDelete}
           keepBar={keepBar}
         />
       )}
+      {!overlay && convert.dialog}
 
       {coarse && view !== "cop" && (
         <NoteSheet
@@ -199,6 +209,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           onDuplicate={() => actions.duplicate(note.id)}
           onVersions={() => onVersions(note.id)}
           versionsDisabled={versionsDisabled}
+          onConvert={onConvert}
         />
       )}
     </article>
@@ -206,21 +217,48 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
 });
 
 function CardBody({ note, view }: { note: NoteCardData; view: NoteView }) {
+  const toggle = useCardTaskToggle();
+  const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set());
   if (note.kind === "todo") {
-    if (note.tasks.length === 0) {
+    const tasks = note.tasks.filter((t) => !t.id || !gone.has(t.id));
+    if (tasks.length === 0) {
       return note.moreTasks > 0 && view === "arsiv" ? (
         <p className="m-0 text-[13px] text-muted-foreground md:text-sm">Tüm görevler tamamlandı</p>
       ) : null;
     }
+    const tickable = view !== "cop";
+    const tick = (t: CardTask) => {
+      const id = t.id!;
+      toggle(note.id, t, {
+        hide: () => setGone((s) => new Set(s).add(id)),
+        show: () =>
+          setGone((s) => {
+            const next = new Set(s);
+            next.delete(id);
+            return next;
+          }),
+      });
+    };
     return (
       <>
         <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[13px] md:gap-1.5 md:text-sm">
-          {note.tasks.map((t, i) => (
-            <li key={i} className="flex items-start gap-2 md:gap-2.5">
-              <span
-                className="mt-0.5 size-4 shrink-0 rounded-[5px] border-[1.5px] border-muted-foreground opacity-80"
-                aria-hidden="true"
-              />
+          {tasks.map((t, i) => (
+            <li key={t.id ?? `i${i}`} className="flex items-start gap-2 md:gap-2.5">
+              {tickable && t.id ? (
+                <input
+                  type="checkbox"
+                  className="task-cb pointer-events-auto relative z-[1] !mx-0 !mt-0.5 !size-4 opacity-80 hover:opacity-100 pointer-coarse:!size-[18px]"
+                  checked={false}
+                  onChange={() => tick(t)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={checkboxLabel(t.title)}
+                />
+              ) : (
+                <span
+                  className="mt-0.5 size-4 shrink-0 rounded-[5px] border-[1.5px] border-muted-foreground opacity-80"
+                  aria-hidden="true"
+                />
+              )}
               <span className="min-w-0 break-words">{t.title}</span>
             </li>
           ))}
@@ -253,6 +291,7 @@ type CardActionsProps = {
   onSheet: () => void;
   onVersions: () => void;
   versionsDisabled: boolean;
+  onConvert?: () => void;
   onRequestDelete?: (note: NoteCardData) => void;
   keepBar: boolean;
 };
@@ -272,6 +311,7 @@ function CardActions({
   onSheet,
   onVersions,
   versionsDisabled,
+  onConvert,
   onRequestDelete,
   keepBar,
 }: CardActionsProps) {
@@ -390,6 +430,7 @@ function CardActions({
           onDuplicate={() => actions.duplicate(note.id)}
           onVersions={onVersions}
           versionsDisabled={versionsDisabled}
+          onConvert={onConvert}
         />
       </DropdownMenu>
       {view === "arsiv" && (

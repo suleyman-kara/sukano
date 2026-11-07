@@ -5,7 +5,9 @@ import { cn } from "cn";
 import { Avatar } from "~/components/avatar";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
+import { VersionTaskTree } from "~/components/tasks/version-task-tree";
 import { formatRelativeDateTime } from "~/domain/notes/dates";
+import type { Task } from "~/domain/tasks/model";
 import type { VersionListItem, VersionPreview } from "~/lib/notes.server";
 import { ConfirmDialog } from "./confirm-dialog";
 import { NoteEditorContent, useNoteEditor } from "./note-editor";
@@ -177,7 +179,12 @@ export function VersionHistory({
             )}
             <div className="min-h-[160px] flex-1 overflow-y-auto px-5 pt-4 pb-5">
               {shown ? (
-                <VersionBody key={shown.id} title={shown.title} html={shown.html} />
+                <VersionBody
+                  key={shown.id}
+                  title={shown.title}
+                  html={shown.html}
+                  tasks={shown.tasks}
+                />
               ) : (
                 selectedItem && <p className="m-0 text-muted-foreground">Yükleniyor…</p>
               )}
@@ -222,12 +229,16 @@ export function VersionHistory({
   );
 }
 
-function VersionBody({ title, html }: { title: string; html: string }) {
-  const editor = useNoteEditor({ initialHtml: html, editable: false, label: "Sürüm önizlemesi" });
+function VersionBody({ title, html, tasks }: { title: string; html: string; tasks?: Task[] }) {
   return (
     <div className="flex flex-col gap-2">
       {title && <b className="text-[17px] font-semibold">{title}</b>}
-      <NoteEditorContent editor={editor} />
+      {tasks ? <VersionTaskTree tasks={tasks} /> : <VersionHtml html={html} />}
     </div>
   );
+}
+
+function VersionHtml({ html }: { html: string }) {
+  const editor = useNoteEditor({ initialHtml: html, editable: false, label: "Sürüm önizlemesi" });
+  return <NoteEditorContent editor={editor} />;
 }

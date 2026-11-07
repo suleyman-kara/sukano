@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Composer, type ComposerDraft } from "./composer";
+import { Composer, type ComposerDraft, type ComposerMode } from "./composer";
 
 /**
  * Mobil (< 768 px) alt çubuk: "Not al…" alanı ve yeni not FAB'ı (MHome).
@@ -16,12 +16,14 @@ import { Composer, type ComposerDraft } from "./composer";
 export function MobileNewNote({
   onSave,
   open,
-  onOpenChange: setOpen,
+  onOpenChange,
 }: {
   onSave: (draft: ComposerDraft) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** Açıksa hangi modda (metin / yapılacaklar). */
+  open: ComposerMode | false;
+  onOpenChange: (open: ComposerMode | false) => void;
 }) {
+  const setOpen = (o: boolean | ComposerMode) => onOpenChange(o === true ? "text" : o);
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-center gap-2.5 bg-gradient-to-t from-bg from-70% to-transparent px-4 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] md:hidden">
@@ -61,7 +63,10 @@ export function MobileNewNote({
                 <FileText className="size-5" aria-hidden="true" />
               </span>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled className={cn("justify-end gap-2.5 p-1")}>
+            <DropdownMenuItem
+              onSelect={() => setOpen("todo")}
+              className={cn("justify-end gap-2.5 bg-transparent p-1 focus:bg-transparent")}
+            >
               <span className="rounded-lg border border-line bg-surface px-2.5 py-1 text-[13px] font-semibold shadow-elevated">
                 Yapılacaklar notu
               </span>
@@ -73,20 +78,23 @@ export function MobileNewNote({
         </DropdownMenu>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open !== false} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton={false}
           onEscapeKeyDown={(e) => e.preventDefault()}
           className="inset-0 top-0 left-0 flex h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none bg-bg p-3 pt-[max(12px,env(safe-area-inset-top))] ring-0 sm:max-w-none"
         >
-          <DialogTitle className="sr-only">Yeni not</DialogTitle>
+          <DialogTitle className="sr-only">
+            {open === "todo" ? "Yeni yapılacaklar notu" : "Yeni not"}
+          </DialogTitle>
           <DialogDescription className="sr-only">Kapatınca kaydedilir.</DialogDescription>
-          {open && (
+          {open !== false && (
             <Composer
               defaultOpen
+              defaultMode={open}
               onSave={onSave}
               onClose={() => setOpen(false)}
-              className="max-w-none flex-1 [&>div:nth-child(3)]:flex-1"
+              className="max-w-none flex-1 [&_[data-grow]]:flex-1"
             />
           )}
         </DialogContent>

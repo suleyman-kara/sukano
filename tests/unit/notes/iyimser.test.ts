@@ -164,8 +164,8 @@ describe("iyimser arayüz: yapılacaklar", () => {
     )[0]!;
     expect(todo).toMatchObject({ kind: "todo", preview: "", moreTasks: 0 });
     expect(todo.tasks).toEqual([
-      { title: "Süt", done: false },
-      { title: "Ekmek", done: false },
+      { id: null, title: "Süt", done: false },
+      { id: null, title: "Ekmek", done: false },
     ]);
     const back = applyPendingIntents(
       [todo],

@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
-import { Composer, type ComposerDraft } from "~/components/notes/composer";
+import { Composer, type ComposerDraft, type ComposerMode } from "~/components/notes/composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
@@ -29,11 +29,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const actions = useNoteActions();
   const navigate = useNavigate();
   const pending = usePendingNoteIntents();
-  const [mobileComposer, setMobileComposer] = useState(false);
+  const [mobileComposer, setMobileComposer] = useState<ComposerMode | false>(false);
   const notes = applyPendingIntents(loaderData.notes, pending, "notlar");
   const { pinned, others } = splitPinned(notes);
 
-  const save = (draft: ComposerDraft) => actions.create(draft);
+  const save = ({ kind, tasks, ...draft }: ComposerDraft) =>
+    kind === "todo"
+      ? actions.createTodo({
+          title: draft.title,
+          color: draft.color,
+          pinned: draft.pinned,
+          tasks,
+        })
+      : actions.create(draft);
   const grid = {
     view: "notlar" as const,
     actions,
@@ -42,7 +50,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   };
   const openComposer = () => {
     if (window.matchMedia("(min-width: 768px)").matches) document.getElementById("not-al")?.click();
-    else setMobileComposer(true);
+    else setMobileComposer("text");
   };
 
   return (

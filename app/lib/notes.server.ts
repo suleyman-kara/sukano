@@ -56,6 +56,8 @@ export type NoteDetail = {
   tasks: DetailTask[];
   /** Yapılacaklar notunun tüm görev ağacı (düz liste, ağaç sırasında); metin notunda boş. */
   todoTasks: Task[];
+  /** Ek sayısı (eki olan metin notu yapılacaklara dönüştürülemez). */
+  attachmentCount: number;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
@@ -72,7 +74,14 @@ export type VersionListItem = {
   current: boolean;
 };
 
-export type VersionPreview = { id: string; title: string; html: string; updatedAt: string };
+export type VersionPreview = {
+  id: string;
+  title: string;
+  html: string;
+  updatedAt: string;
+  /** Yapılacaklar sürümünde görev ağacı (önizleme için). */
+  tasks?: Task[];
+};
 
 export type SearchResult = {
   id: string;
@@ -161,7 +170,12 @@ export function personalNotes(
     const byNote = new Map<string, { tasks: CardTask[]; total: number }>();
     if (noteIds.length === 0) return byNote;
     const rows = await db
-      .select({ noteId: tasks.noteId, title: tasks.title, completedAt: tasks.completedAt })
+      .select({
+        id: tasks.id,
+        noteId: tasks.noteId,
+        title: tasks.title,
+        completedAt: tasks.completedAt,
+      })
       .from(tasks)
       .where(and(inArray(tasks.noteId, noteIds), isNull(tasks.parentId)))
       .orderBy(asc(tasks.noteId), asc(tasks.position));
@@ -169,7 +183,7 @@ export function personalNotes(
       const entry = byNote.get(r.noteId) ?? { tasks: [], total: 0 };
       entry.total++;
       if (!r.completedAt && entry.tasks.length < CARD_TASK_LIMIT) {
-        entry.tasks.push({ title: r.title, done: false });
+        entry.tasks.push({ id: r.id, title: r.title, done: false });
       }
       byNote.set(r.noteId, entry);
     }
@@ -235,6 +249,7 @@ export function personalNotes(
         bodyHtml: row.bodyHtml ?? "",
         tasks: detailTasks,
         todoTasks,
+        attachmentCount: row.kind === "text" ? await attachmentCount(id) : 0,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
         archivedAt: iso(row.archivedAt),
@@ -556,12 +571,13 @@ export function personalNotes(
 
     async getVersion(id: string, versionId: string): Promise<VersionPreview> {
       const v = await versionRow(id, versionId);
-      const snap = v.snapshot as Partial<VersionSnapshot> | null;
+      const snap = v.snapshot as Partial<VersionSnapshot & TodoSnapshot> | null;
       return {
         id: v.id,
         title: v.title,
         html: snap?.html ?? "",
         updatedAt: v.updatedAt.toISOString(),
+        ...(v.kind === "todo" ? { tasks: snap?.tasks ?? [] } : {}),
       };
     },
 

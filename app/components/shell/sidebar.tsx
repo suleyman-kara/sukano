@@ -113,12 +113,7 @@ export function SidebarNav({ projects, pendingInviteCount, variant, onNavigate }
 
       <div className="flex-1" />
 
-      <NavLink
-        to="/davetler"
-        onClick={onNavigate}
-        className={item}
-        title="Davetler"
-      >
+      <NavLink to="/davetler" onClick={onNavigate} className={item} title="Davetler">
         {/* Erişilebilir ad görünür metinden gelir (axe label-content-name-mismatch):
             "Davetler, 1 bekleyen davet". Rayda etiket görünmez ama okunur. */}
         <Inbox className={ICON} strokeWidth={1.75} aria-hidden="true" />

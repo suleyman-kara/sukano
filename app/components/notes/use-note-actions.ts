@@ -41,6 +41,11 @@ export function useNoteActions() {
         void run({ intent: "create", id, ...note });
         return id;
       },
+      createTodo(note: Omit<Extract<NoteIntent, { intent: "create-todo" }>, "intent" | "id">) {
+        const id = newId();
+        void run({ intent: "create-todo", id, ...note });
+        return id;
+      },
       setColor: (id: string, color: Extract<NoteIntent, { intent: "color" }>["color"]) =>
         void run({ intent: "color", id, color }),
       setPinned: (id: string, pinned: boolean) => void run({ intent: "pin", id, pinned }),

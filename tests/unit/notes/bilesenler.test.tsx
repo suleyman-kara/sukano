@@ -106,7 +106,7 @@ describe("NoteCard", () => {
     expect(actions.setColor).toHaveBeenCalledWith("n1", "mor");
   });
 
-  it("⋯ menüsü kanonik sırayla: Kopyasını oluştur, Sürüm geçmişi, Dönüştür (devre dışı)", async () => {
+  it("⋯ menüsü kanonik sırayla: Kopyasını oluştur, Sürüm geçmişi, Dönüştür (onaylı)", async () => {
     const actions = fakeActions();
     const onVersions = vi.fn();
     const user = userEvent.setup();
@@ -126,7 +126,7 @@ describe("NoteCard", () => {
       "Sürüm geçmişi",
       "Yapılacaklar notuna dönüştür",
     ]);
-    expect(items[2]).toHaveAttribute("data-disabled");
+    expect(items[2]).not.toHaveAttribute("data-disabled");
     await user.click(items[0]!);
     expect(actions.duplicate).toHaveBeenCalledWith("n1");
     await user.click(screen.getByRole("button", { name: "Diğer" }));
@@ -159,7 +159,7 @@ describe("NoteCard", () => {
         note={note({
           kind: "todo",
           preview: "",
-          tasks: [{ title: "Süt", done: false }],
+          tasks: [{ id: "g1", title: "Süt", done: false }],
           moreTasks: 3,
         })}
         view="notlar"
@@ -263,8 +263,10 @@ describe("Composer", () => {
     await user.click(await screen.findByRole("button", { name: "Sarı" }));
     await user.click(screen.getByRole("button", { name: "Kapat" }));
     expect(onSave).toHaveBeenCalledWith({
+      kind: "text",
       title: "Market listesi",
       bodyHtml: "",
+      tasks: [],
       color: "sari",
       pinned: true,
     });

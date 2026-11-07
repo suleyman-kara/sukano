@@ -49,7 +49,11 @@ describe("not listeleme", () => {
   it("yapılacaklar kartı ilk 5 tamamlanmamış üst görevi ve kalan sayıyı taşır", async () => {
     const plan = (await svc().list("notlar")).find((n) => n.id === "haftalik-plan")!;
     expect(plan.tasks).toHaveLength(5);
-    expect(plan.tasks[0]).toEqual({ title: "Spor salonu üyeliğini yenile", done: false });
+    expect(plan.tasks[0]).toEqual({
+      id: "haftalik-plan-g1",
+      title: "Spor salonu üyeliğini yenile",
+      done: false,
+    });
     expect(plan.moreTasks).toBe(3);
   });
 

@@ -6,6 +6,7 @@ import {
   Copy,
   FolderInput,
   History,
+  Keyboard,
   ListChecks,
   MoreVertical,
   Palette,
@@ -14,19 +15,27 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { useFetcher, useNavigate, useSubmit } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFetcher, useNavigate, useRevalidator, useSubmit } from "react-router";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import {
+  COARSE_QUERY,
+  editorHandlesEscape,
+  TodoEditor,
+  type TodoEditorHandle,
+} from "~/components/tasks/todo-editor";
 import type { NoteColor } from "~/db/schema";
 import { formatShortDateTime } from "~/domain/notes/dates";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import type { NoteDetail } from "~/lib/notes.server";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
-import { NoteSheet } from "./note-menu";
+import { useConvertNote } from "./convert-note";
+import { NoteMoreMenuContent, NoteSheet, type TodoMenuHandlers } from "./note-menu";
 import { FormattingToolbar, NoteEditorContent, useNoteEditor } from "./note-editor";
 import { NOTES_ACTION, useNoteActions } from "./use-note-actions";
 import { VersionHistory } from "./version-history";
@@ -53,7 +62,13 @@ const IB =
 export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteDialogProps) {
   const navigate = useNavigate();
   const actions = useNoteActions();
+  const revalidator = useRevalidator();
   const tabletUp = useMediaQuery(TABLET_UP_QUERY, true);
+  const coarse = useMediaQuery(COARSE_QUERY, false);
+  const todoRef = useRef<TodoEditorHandle>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const convert = useConvertNote();
+  const isTodo = note.kind === "todo";
   const [revision, setRevision] = useState(0);
   const [versionsOpen, setVersionsOpen] = useState(initialVersionsOpen);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -65,14 +80,22 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
   const saver = useAutosave(note.id);
   const [openedAt] = useState(() => (typeof performance === "undefined" ? 0 : performance.now()));
 
+  /** Bekleyen görev işlemleri bitince ızgara yeniden doğrulanır (kart güncel kalsın). */
+  const flushTasks = useCallback(() => {
+    const pending = todoRef.current?.flush();
+    if (pending) void pending.then(() => revalidator.revalidate());
+    return pending ?? Promise.resolve();
+  }, [revalidator]);
+
   const close = useCallback(() => {
     saver.flush();
+    void flushTasks();
     navigate(closeTo, { preventScrollReset: true });
-  }, [saver, navigate, closeTo]);
+  }, [saver, flushTasks, navigate, closeTo]);
 
   const leave = (fn: () => void) => {
     saver.flush();
-    fn();
+    void flushTasks().then(fn);
     navigate(closeTo, { preventScrollReset: true });
   };
 
@@ -91,15 +114,39 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
   const onTrash = () => leave(() => actions.trash(note.id));
   const onDuplicate = () => {
     saver.flush();
-    actions.duplicate(note.id);
+    void flushTasks().then(() => actions.duplicate(note.id));
   };
-  const versionsDisabled = note.kind === "todo";
+  const openVersions = () => {
+    saver.flush();
+    void flushTasks().then(() => setVersionsOpen(true));
+  };
+  const onConvert = () =>
+    convert.ask({
+      id: note.id,
+      to: isTodo ? "text" : "todo",
+      attachmentCount: note.attachmentCount,
+      before: async () => {
+        await waitForSaver(saver);
+        await flushTasks();
+      },
+    });
+  const todoMenu: TodoMenuHandlers | undefined = isTodo
+    ? {
+        onExpandAll: () => todoRef.current?.expandAll(),
+        onCollapseAll: () => todoRef.current?.collapseAll(),
+        onClearCompleted: () => todoRef.current?.clearCompleted(),
+      }
+    : undefined;
 
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
+        onEscapeKeyDown={(e) => {
+          // Görev satırı, ayrıntı ve seçicide Esc katmanlıdır; not kapanmaz.
+          if (editorHandlesEscape(e.target)) e.preventDefault();
+        }}
         onInteractOutside={(e) => {
           // Dokunmatikte kartı açan dokunuşun gecikmiş işaretçi olayları diyaloğu
           // hemen kapatmasın.
@@ -113,7 +160,11 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
         className={cn(
           "flex flex-col gap-0 overflow-hidden p-0 text-fg ring-0",
           tabletUp
-            ? "top-[60px] max-h-[calc(100dvh-120px)] w-[calc(100%-2rem)] max-w-[680px] translate-y-0 rounded-2xl shadow-elevated sm:max-w-[680px]"
+            ? cn(
+                "top-[60px] max-h-[calc(100dvh-120px)] w-[calc(100%-2rem)] max-w-[680px] translate-y-0 rounded-2xl shadow-elevated sm:max-w-[680px]",
+                // Tamamlananlar inince diyalog kısalmasın (TodoNote min-height:640px).
+                isTodo && "h-[min(760px,calc(100dvh-100px))] max-h-[calc(100dvh-100px)]",
+              )
             : "inset-0 top-0 left-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 rounded-none sm:max-w-none",
         )}
         style={{ background: noteBg(color) }}
@@ -123,8 +174,10 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
           {editable ? "Değişiklikler otomatik kaydedilir." : "Çöpteki not salt okunurdur."}
         </DialogDescription>
         <NoteBody
-          key={`${note.id}:${revision}`}
+          key={`${note.id}:${note.kind}:${revision}`}
           note={note}
+          todoRef={todoRef}
+          onHelpChange={setHelpOpen}
           editable={editable}
           tabletUp={tabletUp}
           saver={saver}
@@ -167,7 +220,7 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
           }
           footer={
             tabletUp ? (
-              <div className="relative flex flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]">
+              <div className="relative flex shrink-0 flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]">
                 <ColorButton color={color} onChange={changeColor} />
                 <button
                   type="button"
@@ -178,15 +231,17 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                 >
                   <Bell aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  className={IB}
-                  disabled
-                  aria-label="Dosya ekle"
-                  title="Dosya ekle (yakında)"
-                >
-                  <Paperclip aria-hidden="true" />
-                </button>
+                {!isTodo && (
+                  <button
+                    type="button"
+                    className={IB}
+                    disabled
+                    aria-label="Dosya ekle"
+                    title="Dosya ekle (yakında)"
+                  >
+                    <Paperclip aria-hidden="true" />
+                  </button>
+                )}
                 <button
                   type="button"
                   className={IB}
@@ -210,23 +265,21 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                   className={IB}
                   aria-label="Sürüm geçmişi"
                   title="Sürüm geçmişi"
-                  disabled={versionsDisabled}
-                  onClick={() => {
-                    saver.flush();
-                    setVersionsOpen(true);
-                  }}
+                  onClick={openVersions}
                 >
                   <History aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  className={IB}
-                  disabled
-                  aria-label="Dönüştür"
-                  title="Dönüştür (yakında)"
-                >
-                  <ListChecks aria-hidden="true" />
-                </button>
+                {!isTodo && (
+                  <button
+                    type="button"
+                    className={IB}
+                    aria-label="Yapılacaklar notuna dönüştür"
+                    title="Yapılacaklar notuna dönüştür"
+                    onClick={onConvert}
+                  >
+                    <ListChecks aria-hidden="true" />
+                  </button>
+                )}
                 <span
                   className="mx-1.5 h-5 w-px bg-[color-mix(in_srgb,var(--fg)_16%,transparent)]"
                   aria-hidden="true"
@@ -253,6 +306,35 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                 >
                   <Trash2 aria-hidden="true" />
                 </button>
+                {isTodo && !coarse && (
+                  <button
+                    type="button"
+                    className={cn(IB, helpOpen && "bg-primary-soft text-primary")}
+                    aria-label="Klavye kısayolları (Ctrl+/)"
+                    title="Kısayollar (Ctrl+/)"
+                    aria-expanded={helpOpen}
+                    onClick={() => todoRef.current?.toggleHelp()}
+                  >
+                    <Keyboard aria-hidden="true" />
+                  </button>
+                )}
+                {isTodo && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className={IB} aria-label="Diğer" title="Diğer">
+                        <MoreVertical aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <NoteMoreMenuContent
+                      kind={note.kind}
+                      todo={todoMenu}
+                      onDuplicate={onDuplicate}
+                      onVersions={openVersions}
+                      onConvert={onConvert}
+                      dialog={{ archived, onArchive, onTrash }}
+                    />
+                  </DropdownMenu>
+                )}
                 <span className="flex-1 px-3 text-right text-xs text-muted-foreground">
                   {edited}
                 </span>
@@ -289,11 +371,9 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
             onArchive={onArchive}
             onTrash={onTrash}
             onDuplicate={onDuplicate}
-            onVersions={() => {
-              saver.flush();
-              setVersionsOpen(true);
-            }}
-            versionsDisabled={versionsDisabled}
+            onVersions={openVersions}
+            onConvert={onConvert}
+            todo={todoMenu}
             footer={<p className="m-0 px-1.5 pt-1 text-xs text-muted-foreground">{edited}</p>}
           />
         )}
@@ -305,6 +385,7 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
           onOpenChange={setVersionsOpen}
           onRestored={() => setRevision((r) => r + 1)}
         />
+        {convert.dialog}
       </DialogContent>
     </Dialog>
   );
@@ -403,6 +484,14 @@ export function createSaver(noteId: string, delay = AUTOSAVE_DELAY_MS) {
 
 type Saver = ReturnType<typeof createSaver>;
 
+/** Bekleyen kayıt gönderilip yanıtlanana kadar bekler (dönüşümden önce; en çok ~3 sn). */
+async function waitForSaver(saver: Saver) {
+  saver.flush();
+  for (let i = 0; i < 60 && (saver.busy || saver.pending); i++) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
 /**
  * Debounce'lu otomatik kayıt. Aynı anda tek istek uçar; uçarken gelen değişiklik
  * istek bitince gönderilir (sıra korunur).
@@ -432,6 +521,8 @@ function useAutosave(noteId: string): Saver {
 
 type NoteBodyProps = {
   note: NoteDetail;
+  todoRef: React.Ref<TodoEditorHandle>;
+  onHelpChange: (open: boolean) => void;
   editable: boolean;
   tabletUp: boolean;
   saver: Saver;
@@ -443,6 +534,8 @@ type NoteBodyProps = {
 
 function NoteBody({
   note,
+  todoRef,
+  onHelpChange,
   editable,
   tabletUp,
   saver,
@@ -480,7 +573,12 @@ function NoteBody({
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            editor?.commands.focus("start");
+            if (note.kind === "todo") {
+              e.currentTarget
+                .closest("[role=dialog]")
+                ?.querySelector<HTMLInputElement>("[data-task-input]")
+                ?.focus();
+            } else editor?.commands.focus("start");
           }
         }}
         placeholder="Başlık"
@@ -512,39 +610,35 @@ function NoteBody({
       </FormattingToolbar>
     ) : null;
 
-  const body =
-    note.kind === "text" ? (
-      <NoteEditorContent editor={editor} />
-    ) : (
-      <div className="flex flex-col gap-2">
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {note.tasks.map((t) => (
-            <li
-              key={t.id}
-              className={cn(
-                "flex items-start gap-2.5",
-                t.done && "text-muted-foreground line-through",
-              )}
-            >
-              <span
-                className={cn(
-                  "mt-0.5 size-[18px] shrink-0 rounded-[5px] border-[1.5px] border-muted-foreground",
-                  t.done && "border-primary bg-primary",
-                )}
-                aria-hidden="true"
-              />
-              <span>
-                {t.title}
-                <span className="sr-only">{t.done ? " (tamamlandı)" : ""}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="m-0 text-[13px] text-muted-foreground">
-          Görevleri düzenleme yapılacaklar notuyla birlikte yakında geliyor.
-        </p>
-      </div>
+  if (note.kind === "todo") {
+    const editorEl = (
+      <TodoEditor
+        ref={todoRef}
+        noteId={note.id}
+        initialTasks={note.todoTasks}
+        editable={editable}
+        onHelpChange={onHelpChange}
+        header={tabletUp ? undefined : <div className="px-5 pt-2 pb-1">{titleInput}</div>}
+        footer={tabletUp ? undefined : <div className="px-5 pb-4">{mobileExtras(null)}</div>}
+      />
     );
+    return tabletUp ? (
+      <>
+        {header(titleInput)}
+        {editorEl}
+        <div className="border-t border-[color-mix(in_srgb,var(--fg)_10%,transparent)]">
+          {footer}
+        </div>
+      </>
+    ) : (
+      <>
+        {header(null)}
+        {editorEl}
+      </>
+    );
+  }
+
+  const body = <NoteEditorContent editor={editor} />;
 
   if (tabletUp) {
     return (
