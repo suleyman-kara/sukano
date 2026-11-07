@@ -8,6 +8,11 @@
  *   bir gecikmeyle gönderilir (yazarken her tuşta istek gitmez); yapısal işlemler hemen.
  * - 409 / 400 / 404: sunucudaki liste yeniden yüklenir, kuyruk boşaltılır.
  * - Ağ hatası: işlemler kuyruğun başına geri konur, kısa bir süre sonra yeniden denenir.
+ * - Canlı yayın (`remote`): not odası her yazımın sonucunu sıra numarasıyla (`seq`) tüm
+ *   açık sekmelere yollar. Eski numaralı durum yok sayılır; istek uçarken gelen durum
+ *   bekletilir ve yanıttan büyük numaralıysa (yani bizim işlemimizi de içeriyorsa) yanıtın
+ *   yerine kullanılır. Kuyruktaki (henüz gönderilmemiş) işlemler her zaman gelen durumun
+ *   üstüne yeniden uygulanır: yazılan ama gönderilmemiş metin ezilmez.
  *
  * React'ten bağımsızdır; `useTodoTasks` bunu bileşene bağlar.
  */
@@ -22,7 +27,11 @@ const RETRY_MS = 3000;
 export type AssigneeMap = Record<string, string[]>;
 
 export type SendResult =
-  { ok: true; tasks: Task[]; assignees?: AssigneeMap } | { ok: false; status: number };
+  | { ok: true; tasks: Task[]; assignees?: AssigneeMap; seq?: number }
+  | { ok: false; status: number };
+
+/** Not odasının yayınladığı yetkili durum (bkz. `TaskBroadcast`). */
+export type RemoteTaskState = { tasks: Task[]; assignees: AssigneeMap; seq: number };
 
 /** `assign` işlemlerini atama haritasına uygular (tam liste; boş liste atamayı kaldırır). */
 export function applyAssignOps(map: AssigneeMap, ops: readonly TaskOp[]): AssigneeMap {
@@ -81,6 +90,30 @@ export function createTaskSync(options: TaskSyncOptions) {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let disposed = false;
   let waiters: (() => void)[] = [];
+  /** Uygulanan en büyük sıra numarası (yanıt ya da yayın). */
+  let lastSeq = 0;
+  /** İstek uçarken gelen en yeni yayın. */
+  let buffered: RemoteTaskState | null = null;
+
+  /** Yetkili durumu benimser; kuyruktaki işlemler üstüne yeniden uygulanır. */
+  function adopt(state: RemoteTaskState) {
+    lastSeq = Math.max(lastSeq, state.seq);
+    buffered = null;
+    options.onAssignees?.(applyAssignOps(state.assignees, queue));
+    if (queue.length === 0) {
+      options.onTasks(state.tasks);
+      return;
+    }
+    try {
+      options.onTasks(applyTaskOps(state.tasks, queue, { now: Date.now(), userId: "" }));
+    } catch {
+      // Gönderilmemiş işlem artık uygulanamıyor (görev başka yerde silindi …).
+      queue = [];
+      clearTimer();
+      options.onConflict?.(409);
+      options.onTasks(state.tasks);
+    }
+  }
 
   const clearTimer = () => {
     if (timer) clearTimeout(timer);
@@ -119,20 +152,28 @@ export function createTaskSync(options: TaskSyncOptions) {
     if (result === null) {
       // Ağ hatası: sırayı koruyarak geri koy, sonra yeniden dene.
       queue = mergeOps(ops, queue);
+      if (buffered) adopt(buffered);
       timer = setTimeout(() => void flush(), RETRY_MS);
       return;
     }
     if (!result.ok) {
+      buffered = null;
       await reloadAll(result.status);
       settleIdle();
       return;
     }
-    if (result.assignees) options.onAssignees?.(applyAssignOps(result.assignees, queue));
+    let base: { tasks: Task[]; assignees?: AssigneeMap } = result;
+    if (result.seq !== undefined) {
+      if (buffered && buffered.seq > result.seq) base = buffered;
+      lastSeq = Math.max(lastSeq, result.seq, buffered?.seq ?? 0);
+    }
+    buffered = null;
+    if (base.assignees) options.onAssignees?.(applyAssignOps(base.assignees, queue));
     if (queue.length === 0) {
-      options.onTasks(result.tasks);
+      options.onTasks(base.tasks);
     } else {
       try {
-        options.onTasks(applyTaskOps(result.tasks, queue, { now: Date.now(), userId: "" }));
+        options.onTasks(applyTaskOps(base.tasks, queue, { now: Date.now(), userId: "" }));
       } catch {
         await reloadAll(409);
         settleIdle();
@@ -157,6 +198,22 @@ export function createTaskSync(options: TaskSyncOptions) {
       }
     },
     flush: () => flush(),
+    /**
+     * Not odasından gelen yetkili durum. Eski numaralı yok sayılır; istek uçarken
+     * bekletilir (yanıt gelince hangisi yeniyse o kullanılır).
+     */
+    remote(state: RemoteTaskState) {
+      if (disposed || state.seq <= lastSeq) return;
+      if (inflight) {
+        if (!buffered || state.seq > buffered.seq) buffered = state;
+        return;
+      }
+      adopt(state);
+    },
+    /** Uygulanan son sıra numarası. */
+    get seq() {
+      return lastSeq;
+    },
     /** Bekleyen her şey gönderilip yanıtlanınca çözülür. */
     whenIdle(): Promise<void> {
       if (!inflight && queue.length === 0) return Promise.resolve();

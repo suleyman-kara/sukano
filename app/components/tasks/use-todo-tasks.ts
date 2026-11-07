@@ -8,9 +8,18 @@ import {
   applyAssignOps,
   createTaskSync,
   type AssigneeMap,
+  type RemoteTaskState,
   type SendResult,
   type TaskSync,
 } from "./task-sync";
+
+/**
+ * Canlı görev kaynağı (not odası): yetkili durum yayınları. Bkz. `useLiveNote` →
+ * `live.tasks`.
+ */
+export type LiveTaskSource = {
+  subscribe: (listener: (state: RemoteTaskState) => void) => () => void;
+};
 
 export const tasksUrl = (noteId: string) => `/api/notlar/${encodeURIComponent(noteId)}/gorevler`;
 
@@ -27,11 +36,19 @@ export async function postTaskOps(
     ...init,
   });
   if (!res.ok) return { ok: false, status: res.status };
-  const data = (await res.json()) as { ok: boolean; tasks?: Task[]; assignees?: AssigneeMap };
+  const data = (await res.json()) as {
+    ok: boolean;
+    tasks?: Task[];
+    assignees?: AssigneeMap;
+    seq?: number;
+  };
   if (!data.ok || !data.tasks) return { ok: false, status: 500 };
-  return data.assignees
-    ? { ok: true, tasks: data.tasks, assignees: data.assignees }
-    : { ok: true, tasks: data.tasks };
+  return {
+    ok: true,
+    tasks: data.tasks,
+    ...(data.assignees ? { assignees: data.assignees } : {}),
+    ...(typeof data.seq === "number" ? { seq: data.seq } : {}),
+  };
 }
 
 async function loadState(
@@ -56,6 +73,7 @@ export function useTodoTasks(
   noteId: string,
   initial: Task[],
   initialAssignees: AssigneeMap = EMPTY_ASSIGNEES,
+  live?: LiveTaskSource | null,
 ) {
   const [tasks, setTasks] = useState<Task[]>(initial);
   const ref = useRef<Task[]>(initial);
@@ -112,6 +130,9 @@ export function useTodoTasks(
       onHide();
     };
   }, [noteId]);
+
+  // Başka sekme / kişinin görev yazımları: kuyruktaki yerel işlemler korunarak benimsenir.
+  useEffect(() => live?.subscribe((state) => getSync().remote(state)), [live, getSync]);
 
   const apply = useCallback(
     (edit: TreeEdit | null) => {
