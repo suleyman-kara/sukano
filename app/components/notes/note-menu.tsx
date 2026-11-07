@@ -7,6 +7,7 @@ import {
   Copy,
   FileText,
   FolderInput,
+  FolderOutput,
   History,
   ListChecks,
   ListX,
@@ -39,7 +40,22 @@ export type NoteMenuHandlers = {
   versionsDisabled?: boolean;
   /** Metin ↔ yapılacaklar (onaylı). */
   onConvert?: () => void;
+  /**
+   * "Taşı veya kopyala…" (kişisel not) ya da "Kopyala…" (proje notu). Verilmezse
+   * kişisel not menüsünde devre dışı görünür; `null` ise hiç görünmez.
+   */
+  moveCopy?: MoveCopyEntry | null;
 };
+
+export type MoveCopyEntry = { label: "Taşı veya kopyala…" | "Kopyala…"; onSelect: () => void };
+
+function MoveCopyIcon({ label }: { label: MoveCopyEntry["label"] }) {
+  return label === "Kopyala…" ? (
+    <FolderOutput aria-hidden="true" />
+  ) : (
+    <FolderInput aria-hidden="true" />
+  );
+}
 
 export const convertLabel = (kind: "text" | "todo") =>
   kind === "text" ? "Yapılacaklar notuna dönüştür" : "Metin notuna dönüştür";
@@ -54,6 +70,7 @@ export function NoteMoreMenuContent({
   onVersions,
   versionsDisabled,
   onConvert,
+  moveCopy,
   kind,
   todo,
   dialog,
@@ -86,10 +103,18 @@ export function NoteMoreMenuContent({
           <DropdownMenuSeparator />
         </>
       )}
-      <DropdownMenuItem className={ITEM} onSelect={onDuplicate}>
-        <Copy aria-hidden="true" />
-        Kopyasını oluştur
-      </DropdownMenuItem>
+      {moveCopy && (
+        <DropdownMenuItem className={ITEM} onSelect={moveCopy.onSelect}>
+          <MoveCopyIcon label={moveCopy.label} />
+          {moveCopy.label}
+        </DropdownMenuItem>
+      )}
+      {onDuplicate && (
+        <DropdownMenuItem className={ITEM} onSelect={onDuplicate}>
+          <Copy aria-hidden="true" />
+          Kopyasını oluştur
+        </DropdownMenuItem>
+      )}
       {dialog ? (
         <DropdownMenuItem className={ITEM} onSelect={onConvert} disabled={!onConvert}>
           {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
@@ -164,6 +189,7 @@ export function NoteSheet({
   onVersions,
   versionsDisabled,
   onConvert,
+  moveCopy,
   todo,
   footer,
 }: NoteSheetProps) {
@@ -261,10 +287,19 @@ export function NoteSheet({
             <Bell aria-hidden="true" />
             Not hatırlatıcısı
           </button>
-          <button type="button" role="menuitem" className={ROW} disabled>
-            <FolderInput aria-hidden="true" />
-            Taşı veya kopyala…
-          </button>
+          {moveCopy ? (
+            <button type="button" role="menuitem" className={ROW} onClick={act(moveCopy.onSelect)}>
+              <MoveCopyIcon label={moveCopy.label} />
+              {moveCopy.label}
+            </button>
+          ) : (
+            moveCopy === undefined && (
+              <button type="button" role="menuitem" className={ROW} disabled>
+                <FolderInput aria-hidden="true" />
+                Taşı veya kopyala…
+              </button>
+            )
+          )}
           <button type="button" role="menuitem" className={ROW} onClick={act(onDuplicate)}>
             <Copy aria-hidden="true" />
             Kopyasını oluştur

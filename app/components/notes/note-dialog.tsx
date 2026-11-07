@@ -5,9 +5,11 @@ import {
   Bell,
   Copy,
   FolderInput,
+  FolderOutput,
   History,
   Keyboard,
   ListChecks,
+  Lock,
   MoreVertical,
   Palette,
   Paperclip,
@@ -15,13 +17,14 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher, useNavigate, useRevalidator, useSubmit } from "react-router";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import type { TodoPeople } from "~/components/tasks/person-picker";
 import {
   COARSE_QUERY,
   editorHandlesEscape,
@@ -29,13 +32,21 @@ import {
   type TodoEditorHandle,
 } from "~/components/tasks/todo-editor";
 import type { NoteColor } from "~/db/schema";
+import { authorshipLine } from "~/domain/notes/authorship";
 import { formatShortDateTime } from "~/domain/notes/dates";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import type { NoteDetail } from "~/lib/notes.server";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
 import { useConvertNote } from "./convert-note";
-import { NoteMoreMenuContent, NoteSheet, type TodoMenuHandlers } from "./note-menu";
+import { MoveCopyDialog } from "./move-copy";
+import { canWriteNote, PERSONAL_ACCESS, type MoveTarget, type NoteAccessInfo } from "./note-access";
+import {
+  NoteMoreMenuContent,
+  NoteSheet,
+  type MoveCopyEntry,
+  type TodoMenuHandlers,
+} from "./note-menu";
 import { FormattingToolbar, NoteEditorContent, useNoteEditor } from "./note-editor";
 import { NOTES_ACTION, useNoteActions } from "./use-note-actions";
 import { VersionHistory } from "./version-history";
@@ -49,7 +60,13 @@ type NoteDialogProps = {
   closeTo: string;
   /** Sürüm geçmişi açık başlasın (`?surumler`). */
   initialVersionsOpen?: boolean;
+  /** Notun alanı ve rol (varsayılan: kişisel not). */
+  access?: NoteAccessInfo;
+  /** "Taşı veya kopyala…" / "Kopyala…" hedefleri (üyesi olunan projeler). */
+  targets?: readonly MoveTarget[];
 };
+
+const NO_TARGETS: readonly MoveTarget[] = [];
 
 const IB =
   "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] [&_svg]:size-5 pointer-coarse:size-11";
@@ -59,7 +76,13 @@ const IB =
  * gövde 800 ms sonra kendiliğinden kaydedilir; kapatırken bekleyen değişiklik
  * hemen gönderilir.
  */
-export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteDialogProps) {
+export function NoteDialog({
+  note,
+  closeTo,
+  initialVersionsOpen = false,
+  access = PERSONAL_ACCESS,
+  targets = NO_TARGETS,
+}: NoteDialogProps) {
   const navigate = useNavigate();
   const actions = useNoteActions();
   const revalidator = useRevalidator();
@@ -75,7 +98,15 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
   const [color, setColor] = useState<NoteColor>(note.color);
   const [pinned, setPinned] = useState(note.pinned);
   const archived = note.archivedAt !== null;
-  const editable = note.trashedAt === null;
+  const project = access.kind === "project" ? access : null;
+  const canWrite = canWriteNote(access);
+  const viewer = !canWrite;
+  const editable = note.trashedAt === null && canWrite;
+  const [moveOpen, setMoveOpen] = useState(false);
+  const people = useMemo(
+    () => (project ? { members: project.members, canAssign: canWrite } : undefined),
+    [project, canWrite],
+  );
 
   const saver = useAutosave(note.id);
   const [openedAt] = useState(() => (typeof performance === "undefined" ? 0 : performance.now()));
@@ -109,6 +140,24 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
   };
 
   const edited = `Düzenlendi ${formatShortDateTime(new Date(note.updatedAt))}`;
+  const moveCopy: MoveCopyEntry | null = editable
+    ? {
+        label: project ? "Kopyala…" : "Taşı veya kopyala…",
+        onSelect: () => {
+          saver.flush();
+          setMoveOpen(true);
+        },
+      }
+    : null;
+  const meta = project ? (
+    <p
+      className="m-0 truncate text-xs text-muted-foreground"
+      data-testid="not-yazarlari"
+      suppressHydrationWarning
+    >
+      {authorshipLine(note.createdBy, note.updatedBy, new Date(note.updatedAt))}
+    </p>
+  ) : null;
   const onArchive = () =>
     leave(() => (archived ? actions.unarchive(note.id) : actions.archive(note.id)));
   const onTrash = () => leave(() => actions.trash(note.id));
@@ -171,7 +220,11 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
       >
         <DialogTitle className="sr-only">{note.title || "Başlıksız not"}</DialogTitle>
         <DialogDescription className="sr-only">
-          {editable ? "Değişiklikler otomatik kaydedilir." : "Çöpteki not salt okunurdur."}
+          {editable
+            ? "Değişiklikler otomatik kaydedilir."
+            : viewer
+              ? "Salt okunur. Okur ve arar; not ekleyemez, görev işaretleyemez."
+              : "Çöpteki not salt okunurdur."}
         </DialogDescription>
         <NoteBody
           key={`${note.id}:${note.kind}:${revision}`}
@@ -185,6 +238,7 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
             tabletUp ? (
               <div className="flex items-center gap-2.5 pt-[18px] pr-5 pb-1 pl-7">
                 {titleInput}
+                {viewer && <ViewerBadge />}
                 <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
                 <button
                   type="button"
@@ -202,24 +256,56 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                   <ArrowLeft aria-hidden="true" />
                 </button>
                 <span className="flex-1" />
-                <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
-                <button type="button" className={IB} disabled aria-label="Not hatırlatıcısı">
-                  <Bell aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label="Diğer"
-                  aria-haspopup="dialog"
-                  onClick={() => setSheetOpen(true)}
-                >
-                  <MoreVertical aria-hidden="true" />
-                </button>
+                {viewer ? (
+                  <>
+                    <ViewerBadge />
+                    <button
+                      type="button"
+                      className={IB}
+                      aria-label="Sürüm geçmişi"
+                      onClick={openVersions}
+                    >
+                      <History aria-hidden="true" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
+                    <button type="button" className={IB} disabled aria-label="Not hatırlatıcısı">
+                      <Bell aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className={IB}
+                      aria-label="Diğer"
+                      aria-haspopup="dialog"
+                      onClick={() => setSheetOpen(true)}
+                    >
+                      <MoreVertical aria-hidden="true" />
+                    </button>
+                  </>
+                )}
               </div>
             )
           }
           footer={
-            tabletUp ? (
+            tabletUp && viewer ? (
+              <div className="flex shrink-0 items-center gap-0.5 border-t border-line pt-2.5 pr-3.5 pb-3 pl-[18px]">
+                <button
+                  type="button"
+                  className={IB}
+                  aria-label="Sürüm geçmişi"
+                  title="Sürüm geçmişi"
+                  onClick={openVersions}
+                >
+                  <History aria-hidden="true" />
+                </button>
+                <span className="flex-1" />
+                <Button variant="outline" onClick={close}>
+                  Kapat
+                </Button>
+              </div>
+            ) : tabletUp ? (
               <div className="relative flex shrink-0 flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]">
                 <ColorButton color={color} onChange={changeColor} />
                 <button
@@ -242,15 +328,22 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                     <Paperclip aria-hidden="true" />
                   </button>
                 )}
-                <button
-                  type="button"
-                  className={IB}
-                  disabled
-                  aria-label="Taşı veya kopyala…"
-                  title="Taşı veya kopyala… (yakında)"
-                >
-                  <FolderInput aria-hidden="true" />
-                </button>
+                {moveCopy && (
+                  <button
+                    type="button"
+                    className={IB}
+                    aria-label={moveCopy.label}
+                    title={moveCopy.label}
+                    aria-haspopup="dialog"
+                    onClick={moveCopy.onSelect}
+                  >
+                    {project ? (
+                      <FolderOutput aria-hidden="true" />
+                    ) : (
+                      <FolderInput aria-hidden="true" />
+                    )}
+                  </button>
+                )}
                 <button
                   type="button"
                   className={IB}
@@ -331,12 +424,13 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
                       onDuplicate={onDuplicate}
                       onVersions={openVersions}
                       onConvert={onConvert}
+                      moveCopy={moveCopy}
                       dialog={{ archived, onArchive, onTrash }}
                     />
                   </DropdownMenu>
                 )}
                 <span className="flex-1 px-3 text-right text-xs text-muted-foreground">
-                  {edited}
+                  {project ? null : edited}
                 </span>
                 <Button
                   variant="outline"
@@ -350,14 +444,22 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
           }
           mobileExtras={(toolbar) => (
             <>
-              <p className="m-0 mt-4 text-xs text-muted-foreground">{edited}</p>
+              {viewer && (
+                <p className="m-0 mt-3 text-[13px] text-muted-foreground">
+                  Sana atanan görevi de işaretleyemezsin; rol için proje yöneticisine yaz.
+                </p>
+              )}
+              {!project && <p className="m-0 mt-4 text-xs text-muted-foreground">{edited}</p>}
               {toolbar}
             </>
           )}
+          meta={meta}
+          lockbar={viewer ? <LockBar /> : null}
+          people={people}
           colorButton={<ColorButton color={color} onChange={changeColor} />}
         />
 
-        {!tabletUp && (
+        {!tabletUp && !viewer && (
           <NoteSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
@@ -374,7 +476,12 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
             onVersions={openVersions}
             onConvert={onConvert}
             todo={todoMenu}
-            footer={<p className="m-0 px-1.5 pt-1 text-xs text-muted-foreground">{edited}</p>}
+            moveCopy={moveCopy}
+            footer={
+              <p className="m-0 px-1.5 pt-1 text-xs text-muted-foreground">
+                {project ? meta : edited}
+              </p>
+            }
           />
         )}
 
@@ -384,8 +491,23 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
           open={versionsOpen}
           onOpenChange={setVersionsOpen}
           onRestored={() => setRevision((r) => r + 1)}
+          canRestore={canWrite}
         />
         {convert.dialog}
+        {moveCopy && (
+          <MoveCopyDialog
+            open={moveOpen}
+            onOpenChange={setMoveOpen}
+            note={{ id: note.id, title: note.title, color }}
+            source={project ? { kind: "project", project: project.project } : { kind: "personal" }}
+            targets={targets}
+            before={async () => {
+              await waitForSaver(saver);
+              await flushTasks();
+            }}
+            onMoved={() => navigate(closeTo, { preventScrollReset: true })}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -412,6 +534,32 @@ function PinButton({
     >
       <Pin fill={pinned ? "currentColor" : "none"} aria-hidden="true" />
     </button>
+  );
+}
+
+/** "Görüntüleyici" kilitli rozeti (States2, TViewerNote `.role.ro`). */
+function ViewerBadge() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-hover px-2.5 py-[3px] text-xs font-semibold whitespace-nowrap text-muted-foreground">
+      <Lock className="size-3.5" aria-hidden="true" />
+      Görüntüleyici
+    </span>
+  );
+}
+
+/** Salt okunur açıklaması (TViewerNote `.lockbar`). */
+function LockBar() {
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-2.5 rounded-xl bg-hover px-3.5 py-3 text-[13px] text-muted-foreground"
+    >
+      <Lock className="mt-px size-[18px] shrink-0" aria-hidden="true" />
+      <span>
+        <b className="font-semibold text-fg">Salt okunur.</b> Okur ve arar; not ekleyemez, görev
+        işaretleyemez.
+      </span>
+    </div>
   );
 }
 
@@ -530,6 +678,11 @@ type NoteBodyProps = {
   footer: React.ReactNode;
   mobileExtras: (toolbar: React.ReactNode) => React.ReactNode;
   colorButton: React.ReactNode;
+  /** Proje notu: oluşturan / son düzenleyen satırı. */
+  meta?: React.ReactNode;
+  /** Görüntüleyici: salt okunur açıklaması. */
+  lockbar?: React.ReactNode;
+  people?: TodoPeople;
 };
 
 function NoteBody({
@@ -543,6 +696,9 @@ function NoteBody({
   footer,
   mobileExtras,
   colorButton,
+  meta,
+  lockbar,
+  people,
 }: NoteBodyProps) {
   const [title, setTitle] = useState(note.title);
   const editor = useNoteEditor({
@@ -610,21 +766,49 @@ function NoteBody({
       </FormattingToolbar>
     ) : null;
 
+  const top =
+    meta || lockbar ? (
+      <div className={cn("flex flex-col gap-2", tabletUp ? "px-7 pb-2" : "pt-1 pb-2")}>
+        {meta}
+        {lockbar}
+      </div>
+    ) : null;
+
   if (note.kind === "todo") {
     const editorEl = (
       <TodoEditor
         ref={todoRef}
         noteId={note.id}
         initialTasks={note.todoTasks}
+        initialAssignees={note.assignees}
+        people={people}
         editable={editable}
         onHelpChange={onHelpChange}
-        header={tabletUp ? undefined : <div className="px-5 pt-2 pb-1">{titleInput}</div>}
-        footer={tabletUp ? undefined : <div className="px-5 pb-4">{mobileExtras(null)}</div>}
+        header={
+          tabletUp ? undefined : (
+            <div className="px-5 pt-2 pb-1">
+              {titleInput}
+              {top}
+            </div>
+          )
+        }
+        footer={
+          tabletUp ? (
+            lockbar ? (
+              <p className="m-0 px-7 pb-3 text-[13px] text-muted-foreground">
+                Sana atanan görevi de işaretleyemezsin; rol için proje yöneticisine yaz.
+              </p>
+            ) : undefined
+          ) : (
+            <div className="px-5 pb-4">{mobileExtras(null)}</div>
+          )
+        }
       />
     );
     return tabletUp ? (
       <>
         {header(titleInput)}
+        {top}
         {editorEl}
         <div className="border-t border-[color-mix(in_srgb,var(--fg)_10%,transparent)]">
           {footer}
@@ -644,6 +828,7 @@ function NoteBody({
     return (
       <>
         {header(titleInput)}
+        {top}
         {toolbar}
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pt-1.5 pb-3">{body}</div>
         {footer}
@@ -656,6 +841,7 @@ function NoteBody({
       {header(null)}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-1 pb-0">
         <div className="pt-1 pb-2">{titleInput}</div>
+        {top}
         {body}
         {mobileExtras(toolbar)}
       </div>

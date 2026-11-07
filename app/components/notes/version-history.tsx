@@ -22,6 +22,8 @@ type VersionHistoryProps = {
   onOpenChange: (open: boolean) => void;
   /** Geri yükleme sunucuda tamamlanınca. */
   onRestored?: () => void;
+  /** Geri yükleme yetkisi (görüntüleyicide yok: yalnızca okur). */
+  canRestore?: boolean;
 };
 
 /**
@@ -34,6 +36,7 @@ export function VersionHistory({
   open,
   onOpenChange,
   onRestored,
+  canRestore = true,
 }: VersionHistoryProps) {
   const list = useFetcher<VersionsData>();
   const preview = useFetcher<VersionsData>();
@@ -147,7 +150,7 @@ export function VersionHistory({
                 Kapat
               </Button>
               <Button
-                disabled={!selectedItem || isCurrent || restoring}
+                disabled={!canRestore || !selectedItem || isCurrent || restoring}
                 onClick={() => setConfirming(true)}
               >
                 Bu sürümü geri yükle
@@ -195,7 +198,7 @@ export function VersionHistory({
               </Button>
               <Button
                 className="flex-[2]"
-                disabled={!selectedItem || isCurrent || restoring}
+                disabled={!canRestore || !selectedItem || isCurrent || restoring}
                 onClick={() => setConfirming(true)}
               >
                 Bu sürümü geri yükle
