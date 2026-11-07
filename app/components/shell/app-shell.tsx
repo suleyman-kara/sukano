@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { Avatar } from "~/components/avatar";
+import { NewProjectDialog } from "~/components/projects/new-project-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/ui/sheet";
 import { DESKTOP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import { useNavMode } from "~/lib/nav-state";
 import { Sidebar, SidebarNav } from "./sidebar";
 import { Topbar } from "./topbar";
 import type { ShellData } from "./types";
+import type { ViewSwitchTarget } from "./view-switch";
 
 type AppShellProps = ShellData & {
   /** "Notlar · Arşiv · Çöp" kapsülü yalnızca alan sayfalarında (Notlarım, proje). */
   showViewSwitch?: boolean;
+  /** Kapsülün alanı (varsayılan Notlarım; projede `/proje/:id`). */
+  viewSwitch?: ViewSwitchTarget;
+  /** Mobilde üst çubuk gizlensin mi (kendi başlığı olan alt sayfalar: proje ayarları). */
+  hideMobileTopbar?: boolean;
   children: React.ReactNode;
 };
 
@@ -24,13 +30,21 @@ export function AppShell({
   user,
   projects,
   pendingInviteCount,
+  deletedProjectCount,
   unreadNotificationCount,
   showViewSwitch = false,
+  viewSwitch,
+  hideMobileTopbar = false,
   children,
 }: AppShellProps) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const { mode, toggle } = useNavMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const openNewProject = () => {
+    setDrawerOpen(false);
+    setNewProjectOpen(true);
+  };
 
   const onMenuClick = () => {
     if (window.matchMedia(DESKTOP_QUERY).matches) toggle();
@@ -39,7 +53,13 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh bg-bg text-fg">
-      <Sidebar projects={projects} pendingInviteCount={pendingInviteCount} />
+      <Sidebar
+        projects={projects}
+        pendingInviteCount={pendingInviteCount}
+        deletedProjectCount={deletedProjectCount}
+        onNewProject={openNewProject}
+      />
+      <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} />
 
       <Sheet open={drawerOpen && !isDesktop} onOpenChange={setDrawerOpen}>
         <SheetContent
@@ -55,6 +75,8 @@ export function AppShell({
             variant="drawer"
             projects={projects}
             pendingInviteCount={pendingInviteCount}
+            deletedProjectCount={deletedProjectCount}
+            onNewProject={openNewProject}
             onNavigate={() => setDrawerOpen(false)}
           />
           <div className="mt-2 flex items-center gap-3 border-t border-line px-3.5 pt-3.5">
@@ -72,6 +94,8 @@ export function AppShell({
           user={user}
           unreadNotificationCount={unreadNotificationCount}
           showViewSwitch={showViewSwitch}
+          viewSwitch={viewSwitch}
+          className={hideMobileTopbar ? "max-md:hidden" : undefined}
           menuExpanded={isDesktop ? mode === "open" : drawerOpen}
           onMenuClick={onMenuClick}
         />

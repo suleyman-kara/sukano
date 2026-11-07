@@ -17,8 +17,11 @@ export function MobileNewNote({
   onSave,
   open,
   onOpenChange,
+  label = "Not al…",
 }: {
   onSave: (draft: ComposerDraft) => void;
+  /** Alt çubuktaki alanın metni (proje sayfasında "Projeye not ekle…"). */
+  label?: string;
   /** Açıksa hangi modda (metin / yapılacaklar). */
   open: ComposerMode | false;
   onOpenChange: (open: ComposerMode | false) => void;
@@ -32,7 +35,7 @@ export function MobileNewNote({
           onClick={() => setOpen(true)}
           className="pointer-events-auto flex h-12 min-w-0 flex-1 items-center rounded-[14px] border border-line bg-surface px-4 text-left text-[15px] text-muted-foreground shadow-elevated outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          Not al…
+          {label}
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

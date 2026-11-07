@@ -1,7 +1,8 @@
-import { FileText, Inbox, Plus, Settings } from "lucide-react";
+import { FileText, Inbox, Plus, Settings, Trash2 } from "lucide-react";
 import { Link, NavLink } from "react-router";
 import { cn } from "cn";
 import { LogoMark } from "~/components/logo";
+import { SidebarProjects } from "./sidebar-projects";
 import type { ShellProject } from "./types";
 
 type Variant = "responsive" | "drawer";
@@ -9,6 +10,10 @@ type Variant = "responsive" | "drawer";
 type SidebarNavProps = {
   projects: ShellProject[];
   pendingInviteCount: number;
+  /** Yönetici olunan silinmiş projeler; 0 ise "Silinmiş projeler" bağlantısı gizli. */
+  deletedProjectCount?: number;
+  /** "Yeni proje" düğmesi (diyaloğu kabuk açar). */
+  onNewProject?: () => void;
   /**
    * "responsive": kalıcı sol panel; tablette ve masaüstünde `data-nav="rail"`
    * iken 72 px ray olur (CSS `railed:` varyantı).
@@ -33,7 +38,14 @@ const NAV_ACTIVE = "bg-primary-soft text-primary hover:bg-primary-soft";
 const LABEL = "min-w-0 truncate railed:hidden";
 const ICON = "size-5 shrink-0";
 
-export function SidebarNav({ projects, pendingInviteCount, variant, onNavigate }: SidebarNavProps) {
+export function SidebarNav({
+  projects,
+  pendingInviteCount,
+  deletedProjectCount = 0,
+  onNewProject,
+  variant,
+  onNavigate,
+}: SidebarNavProps) {
   const rc = (classes: string) => railClasses(variant, classes);
   const item = ({ isActive }: { isActive: boolean }) => cn(rc(NAV_ITEM), isActive && NAV_ACTIVE);
 
@@ -74,42 +86,41 @@ export function SidebarNav({ projects, pendingInviteCount, variant, onNavigate }
         Projeler
       </div>
 
-      {projects.map((project) => (
-        <NavLink
-          key={project.id}
-          to={`/p/${project.id}`}
-          onClick={onNavigate}
-          className={item}
-          title={project.name}
-          aria-label={project.name}
-        >
-          <span
-            className={rc("mx-[5px] size-2.5 shrink-0 rounded-full railed:hidden")}
-            style={{ background: `var(--p-${project.color})` }}
-            aria-hidden="true"
-          />
-          <span
-            className={rc(
-              "hidden size-7 shrink-0 items-center justify-center rounded-full text-xs leading-none font-semibold text-white railed:inline-flex",
-            )}
-            style={{ background: `var(--p-${project.color})` }}
-            aria-hidden="true"
-          >
-            {project.name.trim().charAt(0).toLocaleUpperCase("tr-TR")}
-          </span>
-          <span className={rc(LABEL)}>{project.name}</span>
-        </NavLink>
-      ))}
+      <SidebarProjects
+        projects={projects}
+        itemClass={item}
+        rc={rc}
+        labelClass={rc(LABEL)}
+        onNavigate={onNavigate}
+      />
 
       <button
         type="button"
+        onClick={onNewProject}
         className={cn(rc(NAV_ITEM), "text-muted-foreground")}
-        title="Yeni proje (yakında)"
+        title="Yeni proje"
         aria-label="Yeni proje"
+        aria-haspopup="dialog"
       >
         <Plus className={ICON} strokeWidth={1.75} aria-hidden="true" />
         <span className={rc(LABEL)}>Yeni proje</span>
       </button>
+
+      {deletedProjectCount > 0 && (
+        <NavLink
+          to="/silinmis-projeler"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn(item({ isActive }), !isActive && "text-muted-foreground", "text-[13px]")
+          }
+          title={`Silinmiş projeler (${deletedProjectCount})`}
+        >
+          <Trash2 className={cn(ICON, "size-[18px]")} strokeWidth={1.75} aria-hidden="true" />
+          <span className={rc("min-w-0 truncate railed:sr-only")}>
+            Silinmiş projeler ({deletedProjectCount})
+          </span>
+        </NavLink>
+      )}
 
       <div className="flex-1" />
 

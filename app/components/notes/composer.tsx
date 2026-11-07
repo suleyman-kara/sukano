@@ -51,6 +51,8 @@ type ComposerProps = {
   defaultMode?: ComposerMode;
   /** Kapandıktan sonra (kaydetsin ya da kaydetmesin). */
   onClose?: () => void;
+  /** Kapalı alanın metni (proje sayfasında "Projeye not ekle…"). */
+  label?: string;
   className?: string;
 };
 
@@ -67,6 +69,7 @@ export function Composer({
   defaultOpen = false,
   defaultMode = "text",
   onClose,
+  label = "Not al…",
   className,
 }: ComposerProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -230,7 +233,7 @@ export function Composer({
           onClick={() => setOpen(true)}
           className="h-11 min-w-0 flex-1 cursor-text text-left text-[15px] text-muted-foreground outline-none focus-visible:text-fg"
         >
-          Not al…
+          {label}
         </button>
         <button
           type="button"

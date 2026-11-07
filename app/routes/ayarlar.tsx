@@ -10,6 +10,7 @@ import {
   ChangePasswordDialog,
   type SettingsActionData,
 } from "~/components/settings/account-dialogs";
+import { BlockerLinks, DeleteAccountDialog } from "~/components/settings/delete-account-dialog";
 import { AppShell } from "~/components/shell/app-shell";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
@@ -552,29 +553,23 @@ export default function Ayarlar({ loaderData }: Route.ComponentProps) {
               className={cn(PANEL, "border-danger-soft")}
               aria-labelledby="tehlike-baslik"
             >
-              <h2
-                id="tehlike-baslik"
-                className="m-0 flex items-center gap-2 text-base font-semibold"
-              >
+              <h2 id="tehlike-baslik" className="m-0 text-base font-semibold">
                 Hesabı sil
-                <span className="rounded-full bg-hover px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  Yakında
-                </span>
               </h2>
               <p className="m-0 text-muted-foreground">
                 Kişisel notların silinir. Proje notları projede kalır ve adın &ldquo;silinmiş
-                kullanıcı&rdquo; olarak görünür. Tek yönetici olduğun projeleri önce devretmen ya da
-                silmen gerekir.
+                kullanıcı&rdquo; olarak görünür.{" "}
+                {loaderData.deletionBlockers.length > 0 ? (
+                  <>
+                    Tek yönetici olduğun projeleri önce devretmen ya da silmen gerekir:{" "}
+                    <BlockerLinks blockers={loaderData.deletionBlockers} />.
+                  </>
+                ) : (
+                  "Tek yönetici olduğun projeleri önce devretmen ya da silmen gerekir."
+                )}
               </p>
               <div>
-                <Button
-                  variant="outline"
-                  disabled
-                  className="border-danger bg-surface text-danger"
-                  title="Yakında"
-                >
-                  Hesabımı sil
-                </Button>
+                <DeleteAccountDialog email={user.email} blockers={loaderData.deletionBlockers} />
               </div>
             </section>
           </div>

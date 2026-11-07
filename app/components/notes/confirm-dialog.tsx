@@ -18,6 +18,12 @@ type ConfirmDialogProps = {
   tone?: "danger" | "primary";
   /** Onay engelli (ör. eki olan not yapılacaklara dönüştürülemez). */
   confirmDisabled?: boolean;
+  /** Başlık simgesi (varsayılan uyarı üçgeni). */
+  icon?: React.ReactNode;
+  /** "Vazgeç" yerine ikincil eylem (ör. "Proje ayarlarına git"). */
+  cancel?: React.ReactNode;
+  /** Açıklamanın altında ek içerik (ör. onay için e-posta alanı). */
+  children?: React.ReactNode;
 };
 
 /**
@@ -36,6 +42,9 @@ export function ConfirmDialog({
   note,
   tone = "danger",
   confirmDisabled = false,
+  icon,
+  cancel,
+  children,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -56,7 +65,7 @@ export function ConfirmDialog({
               )}
               aria-hidden="true"
             >
-              <TriangleAlert className="size-5" />
+              {icon ?? <TriangleAlert className="size-5" />}
             </span>
             <AlertDialog.Title className="m-0 flex-1 pt-1.5 text-lg font-semibold">
               {title}
@@ -87,10 +96,13 @@ export function ConfirmDialog({
               {note}
             </div>
           )}
+          {children}
           <div className="flex justify-end gap-2 pt-1 max-sm:[&>*]:flex-1">
-            <AlertDialog.Cancel asChild>
-              <Button variant="outline">Vazgeç</Button>
-            </AlertDialog.Cancel>
+            {cancel ?? (
+              <AlertDialog.Cancel asChild>
+                <Button variant="outline">Vazgeç</Button>
+              </AlertDialog.Cancel>
+            )}
             <AlertDialog.Action asChild>
               <Button
                 onClick={onConfirm}

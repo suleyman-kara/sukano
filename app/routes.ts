@@ -11,6 +11,17 @@ export default [
   route("arsiv", "routes/arsiv.tsx", [route("not/:id", "routes/not.tsx", { id: "arsiv-not" })]),
   route("cop", "routes/cop.tsx"),
   route("ara", "routes/ara.tsx"),
+  // Proje alanı: Notlar · Arşiv · Çöp (açık not alt rotada) ve ayarlar.
+  route("proje/:projeId", "routes/proje.tsx", [
+    route("not/:id", "routes/not.tsx", { id: "proje-not" }),
+  ]),
+  route("proje/:projeId/arsiv", "routes/proje.tsx", { id: "proje-arsiv" }, [
+    route("not/:id", "routes/not.tsx", { id: "proje-arsiv-not" }),
+  ]),
+  route("proje/:projeId/cop", "routes/proje.tsx", { id: "proje-cop" }),
+  route("proje/:projeId/ayarlar", "routes/proje.ayarlar.tsx"),
+  route("davetler", "routes/davetler.tsx"),
+  route("silinmis-projeler", "routes/silinmis-projeler.tsx"),
   route("api/notlar", "routes/api.notlar.ts"),
   route("api/notlar/:id/surumler", "routes/api.notlar.surumler.ts"),
   route("api/notlar/:id/gorevler", "routes/api.notlar.gorevler.ts"),

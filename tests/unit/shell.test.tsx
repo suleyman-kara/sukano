@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
+import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "~/components/shell/app-shell";
 import type { ShellData } from "~/components/shell/types";
@@ -22,13 +22,17 @@ const shellData: ShellData = {
 };
 
 function renderShell() {
-  return render(
-    <MemoryRouter initialEntries={["/"]}>
-      <AppShell {...shellData} showViewSwitch>
-        <h1>Notlarım</h1>
-      </AppShell>
-    </MemoryRouter>,
-  );
+  const Stub = createRoutesStub([
+    {
+      path: "/",
+      Component: () => (
+        <AppShell {...shellData} showViewSwitch>
+          <h1>Notlarım</h1>
+        </AppShell>
+      ),
+    },
+  ]);
+  return render(<Stub initialEntries={["/"]} />);
 }
 
 describe("uygulama kabuğu", () => {

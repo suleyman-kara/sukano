@@ -47,6 +47,8 @@ export type NoteCardProps = {
   dragging?: boolean;
   dropTarget?: boolean;
   overlay?: boolean;
+  /** Görüntüleyici: eylem yok, görevler madde işaretli (States2 → Görüntüleyici). */
+  readOnly?: boolean;
   className?: string;
   style?: React.CSSProperties;
 } & Omit<React.HTMLAttributes<HTMLElement>, "style" | "className">;
@@ -70,6 +72,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
     dragging,
     dropTarget,
     overlay,
+    readOnly = false,
     className,
     style,
     ...rest
@@ -132,7 +135,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
         />
       )}
 
-      {view !== "cop" && (!coarse || note.pinned) && (
+      {view !== "cop" && !readOnly && (!coarse || note.pinned) && (
         <button
           type="button"
           className={cn(
@@ -163,7 +166,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
             {label}
           </h3>
         )}
-        <CardBody note={note} view={view} />
+        <CardBody note={note} view={view} readOnly={readOnly} />
         {view === "cop" && note.trashedAt && (
           <p className="m-0 text-xs text-muted-foreground">
             {trashLeftLabel(trashDaysLeft(new Date(note.trashedAt), now))}
@@ -171,7 +174,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
         )}
       </div>
 
-      {!overlay && (
+      {!overlay && !readOnly && (
         <CardActions
           note={note}
           view={view}
@@ -191,7 +194,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
       )}
       {!overlay && convert.dialog}
 
-      {coarse && view !== "cop" && (
+      {coarse && view !== "cop" && !readOnly && (
         <NoteSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
@@ -216,7 +219,15 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
   );
 });
 
-function CardBody({ note, view }: { note: NoteCardData; view: NoteView }) {
+function CardBody({
+  note,
+  view,
+  readOnly,
+}: {
+  note: NoteCardData;
+  view: NoteView;
+  readOnly: boolean;
+}) {
   const toggle = useCardTaskToggle();
   const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set());
   if (note.kind === "todo") {
@@ -226,7 +237,7 @@ function CardBody({ note, view }: { note: NoteCardData; view: NoteView }) {
         <p className="m-0 text-[13px] text-muted-foreground md:text-sm">Tüm görevler tamamlandı</p>
       ) : null;
     }
-    const tickable = view !== "cop";
+    const tickable = view !== "cop" && !readOnly;
     const tick = (t: CardTask) => {
       const id = t.id!;
       toggle(note.id, t, {
@@ -252,6 +263,11 @@ function CardBody({ note, view }: { note: NoteCardData; view: NoteView }) {
                   onChange={() => tick(t)}
                   onClick={(e) => e.stopPropagation()}
                   aria-label={checkboxLabel(t.title)}
+                />
+              ) : readOnly ? (
+                <span
+                  className="mx-1 mt-[7px] size-1.5 shrink-0 rounded-full border border-muted-foreground"
+                  aria-hidden="true"
                 />
               ) : (
                 <span

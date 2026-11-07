@@ -1,14 +1,17 @@
 import { Bell, Menu, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
+import { cn } from "cn";
 import { AccountMenu } from "./account-menu";
 import type { ShellUser } from "./types";
-import { ViewSwitch } from "./view-switch";
+import { ViewSwitch, type ViewSwitchTarget } from "./view-switch";
 
 type TopbarProps = {
   user: ShellUser;
   unreadNotificationCount: number;
   showViewSwitch: boolean;
+  viewSwitch?: ViewSwitchTarget;
   menuExpanded: boolean;
+  className?: string;
   onMenuClick: () => void;
 };
 
@@ -16,8 +19,10 @@ export function Topbar({
   user,
   unreadNotificationCount,
   showViewSwitch,
+  viewSwitch,
   menuExpanded,
   onMenuClick,
+  className,
 }: TopbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +30,12 @@ export function Topbar({
     location.pathname === "/ara" ? (new URLSearchParams(location.search).get("q") ?? "") : "";
 
   return (
-    <header className="flex items-center gap-1 px-2 pt-3 pb-2 md:gap-2 md:pt-3 md:pr-5 md:pb-2 md:pl-4 lg:gap-3 lg:px-8 lg:pt-3.5 lg:pb-1.5">
+    <header
+      className={cn(
+        "flex items-center gap-1 px-2 pt-3 pb-2 md:gap-2 md:pt-3 md:pr-5 md:pb-2 md:pl-4 lg:gap-3 lg:px-8 lg:pt-3.5 lg:pb-1.5",
+        className,
+      )}
+    >
       <button
         type="button"
         onClick={onMenuClick}
@@ -68,7 +78,7 @@ export function Topbar({
         />
       </form>
 
-      {showViewSwitch && <ViewSwitch className="hidden md:inline-flex" />}
+      {showViewSwitch && <ViewSwitch className="hidden md:inline-flex" {...viewSwitch} />}
 
       <div className="hidden flex-1 lg:block" />
 
