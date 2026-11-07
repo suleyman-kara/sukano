@@ -39,7 +39,11 @@ export const browserOnline: OnlineSource = {
   },
 };
 
-type SocketLike = Pick<WebSocket, "send" | "close" | "readyState"> & {
+/** WebSocket'in kullanılan alt kümesi (testte sahte soket). */
+export type SocketLike = {
+  readonly readyState: number;
+  send(data: string | Uint8Array): void;
+  close(code?: number, reason?: string): void;
   binaryType: string;
   onopen: ((ev: Event) => unknown) | null;
   onclose: ((ev: CloseEvent) => unknown) | null;

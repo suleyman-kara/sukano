@@ -171,3 +171,16 @@ describe("Yjs belgesi", () => {
     expect(noteSchema()).toBe(noteSchema());
   });
 });
+
+describe("editör eklentileri", () => {
+  it("ortak düzenlemede geri al geçmişi kapalı (Yjs'e bırakılır), yer tutucu isteğe bağlı", () => {
+    const names = (exts: ReturnType<typeof noteExtensions>) => exts.map((e) => e.name);
+    expect(names(noteExtensions({ placeholder: "Not al…" }))).toEqual([
+      "starterKit",
+      "placeholder",
+    ]);
+    const collab = noteExtensions({ collaborative: true })[0]!;
+    expect((collab.options as { undoRedo?: unknown }).undoRedo).toBe(false);
+    expect((noteExtensions()[0]!.options as { undoRedo?: unknown }).undoRedo).toBeUndefined();
+  });
+});
