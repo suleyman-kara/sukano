@@ -7,6 +7,7 @@ import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
+import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
 import { applyPendingIntents } from "~/domain/notes/optimistic";
 import { splitPinned } from "~/domain/notes/ordering";
 import { getCloudflare } from "~/lib/context";
@@ -30,7 +31,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const pending = usePendingNoteIntents();
   const [mobileComposer, setMobileComposer] = useState<ComposerMode | false>(false);
-  const notes = applyPendingIntents(loaderData.notes, pending, "notlar");
+  // Canlı ızgara: diğer sekme ve cihazlardaki değişiklikler kişisel kanaldan gelir.
+  const live = useLiveGrid(loaderData.notes, "notlar", PERSONAL_CHANNEL);
+  const notes = applyPendingIntents(live.notes, pending, "notlar");
   const { pinned, others } = splitPinned(notes);
 
   const save = ({ kind, tasks, ...draft }: ComposerDraft) =>

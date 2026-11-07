@@ -62,7 +62,7 @@ import { DateSheetHeader, TaskDetailSheet, TodoSheet, WhoSheetHeader } from "./t
 import { TodoToasts } from "./todo-toasts";
 import { TodoToolbar, useKeyboardInset } from "./todo-toolbar";
 import { useTaskViewState } from "./use-task-view-state";
-import { useTodoTasks } from "./use-todo-tasks";
+import { useTodoTasks, type LiveTaskSource } from "./use-todo-tasks";
 import { useTodoUndo } from "./use-todo-undo";
 
 export const COARSE_QUERY = "(pointer: coarse)";
@@ -134,6 +134,10 @@ export type TodoEditorProps = {
   people?: TodoPeople;
   /** Görev kimliği → atanan kullanıcı kimlikleri. */
   initialAssignees?: Record<string, string[]>;
+  /** Canlı görev yayınları (not odası; başka kişilerin yazımları anında gelir). */
+  live?: LiveTaskSource | null;
+  /** Odaklı görev değişince (varlıkta "şu görevde" bilgisi için). */
+  onActiveTaskChange?: (taskId: string | null) => void;
 };
 
 /**
@@ -153,11 +157,14 @@ export function TodoEditor({
   className,
   people,
   initialAssignees,
+  live,
+  onActiveTaskChange,
 }: TodoEditorProps) {
   const { tasks, apply, current, whenIdle, assignees, assign } = useTodoTasks(
     noteId,
     initialTasks,
     initialAssignees,
+    live,
   );
   const canAssign = editable && Boolean(people?.canAssign);
   const view = useTaskViewState(noteId);
@@ -171,6 +178,11 @@ export function TodoEditor({
   const [who, setWhoState] = useState<Who | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const activeChange = useRef(onActiveTaskChange);
+  useEffect(() => {
+    activeChange.current = onActiveTaskChange;
+  });
+  useEffect(() => activeChange.current?.(activeId), [activeId]);
   const [help, setHelpState] = useState(false);
   const [settling, setSettling] = useState<ReadonlySet<string>>(() => new Set());
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(() => new Set());

@@ -4,6 +4,8 @@
 export type ProjectColor = "turuncu" | "mavi" | "yesil" | "pembe" | "mor" | "sari" | "grimavi";
 
 export type ShellUser = {
+  /** Oturumdaki kişinin kimliği (canlı katman: varlık). Kabuksuz/boş veride yok. */
+  id?: string;
   name: string;
   email: string;
   /** Avatar zemin rengi (beyaz metinle ≥ 4,5:1). */

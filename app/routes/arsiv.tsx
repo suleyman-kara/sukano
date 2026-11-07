@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router";
 import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, NotesPage } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
+import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
 import { applyPendingIntents } from "~/domain/notes/optimistic";
 import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
@@ -19,7 +20,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function ArchiveRoute({ loaderData }: Route.ComponentProps) {
   const actions = useNoteActions();
   const navigate = useNavigate();
-  const notes = applyPendingIntents(loaderData.notes, usePendingNoteIntents(), "arsiv");
+  const live = useLiveGrid(loaderData.notes, "arsiv", PERSONAL_CHANNEL);
+  const notes = applyPendingIntents(live.notes, usePendingNoteIntents(), "arsiv");
 
   return (
     <NotesPage subtitle="Arşiv · yalnızca bu alan">

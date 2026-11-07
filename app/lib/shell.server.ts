@@ -49,6 +49,7 @@ export async function loadShellData(
 
   return {
     user: {
+      id: user.id,
       name: user.name,
       email: user.email,
       avatarColor: user.avatarColor ?? avatarColorFor(user.id),

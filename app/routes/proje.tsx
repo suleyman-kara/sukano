@@ -1,5 +1,5 @@
 import { Archive, Info, LayoutGrid, Trash2, X } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { data, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { ConfirmDialog } from "~/components/notes/confirm-dialog";
@@ -19,6 +19,7 @@ import { AppShell } from "~/components/shell/app-shell";
 import type { View } from "~/components/shell/view-switch";
 import { Button } from "~/components/ui/button";
 import { trashDaysLeft } from "~/domain/notes/dates";
+import { useLiveGrid } from "~/components/realtime/use-live-channel";
 import { applyPendingIntents, type NoteCardData, type NoteView } from "~/domain/notes/optimistic";
 import { splitPinned } from "~/domain/notes/ordering";
 import type { NoteIntent } from "~/domain/notes/validation";
@@ -81,8 +82,14 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
   const base = `/proje/${project.id}`;
   const views: readonly View[] =
     myRole === "goruntuleyici" ? ["notlar", "arsiv"] : ["notlar", "arsiv", "cop"];
+  // Canlı ızgara: proje kanalı (not ekleme, sıralama, renk, arşiv … diğer üyelerden).
+  const channel = useMemo(
+    () => ({ kind: "project" as const, projectId: project.id }),
+    [project.id],
+  );
+  const live = useLiveGrid(page.notes, view, channel);
   const notes = applyPendingIntents(
-    page.notes,
+    live.notes,
     pendingFor(project.id, usePendingNoteIntents()),
     view,
   );

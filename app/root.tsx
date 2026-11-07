@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { NotFoundView } from "~/components/not-found";
+import { LiveConfigProvider } from "~/components/realtime/live-context";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { isPublicPath, stripDataSuffix } from "~/domain/auth/redirects";
@@ -81,8 +82,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
-  return <Outlet />;
+/**
+ * Canlı katman (not odası, kanallar) yalnızca oturum varken açılır; bileşen testleri ve
+ * kabuksuz sayfalar sağlayıcısız (kapalı) çalışır.
+ */
+export default function App({ loaderData }: Route.ComponentProps) {
+  const user = loaderData?.shell?.user;
+  const me = user?.id
+    ? { id: user.id, name: user.name, color: user.avatarColor, avatarUrl: user.avatarUrl ?? null }
+    : null;
+  return (
+    <LiveConfigProvider enabled={me !== null} me={me}>
+      <Outlet />
+    </LiveConfigProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

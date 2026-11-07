@@ -7,6 +7,7 @@ import { EmptyState, NotesPage } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
 import { trashDaysLeft } from "~/domain/notes/dates";
+import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
 import { applyPendingIntents, type NoteCardData } from "~/domain/notes/optimistic";
 import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
@@ -25,7 +26,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function TrashRoute({ loaderData }: Route.ComponentProps) {
   const actions = useNoteActions();
-  const notes = applyPendingIntents(loaderData.notes, usePendingNoteIntents(), "cop");
+  const live = useLiveGrid(loaderData.notes, "cop", PERSONAL_CHANNEL);
+  const notes = applyPendingIntents(live.notes, usePendingNoteIntents(), "cop");
   const now = new Date(loaderData.now);
   const [deleting, setDeleting] = useState<NoteCardData | null>(null);
   const [emptying, setEmptying] = useState(false);

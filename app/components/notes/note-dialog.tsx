@@ -24,6 +24,8 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { useLiveConfig } from "~/components/realtime/live-context";
+import { useLiveNote, type LiveNote } from "~/components/realtime/use-live-note";
 import type { TodoPeople } from "~/components/tasks/person-picker";
 import {
   COARSE_QUERY,
@@ -100,11 +102,31 @@ export function NoteDialog({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [color, setColor] = useState<NoteColor>(note.color);
   const [pinned, setPinned] = useState(note.pinned);
+  /** Başka yerden gelen başlık (not odası `not` iletisi); her gelişte yeni nesne. */
+  const [remoteTitle, setRemoteTitle] = useState<{ title: string } | null>(null);
+  /** Not açıkken başka biri çöpe attı. */
+  const [trashedLive, setTrashedLive] = useState(false);
   const archived = note.archivedAt !== null;
   const project = access.kind === "project" ? access : null;
   const canWrite = canWriteNote(access);
   const viewer = !canWrite;
-  const editable = note.trashedAt === null && canWrite;
+  // Canlı katman (not odası): ortak düzenleme, varlık, görev yayınları, başka yerden gelen
+  // başlık / renk / sabit. Kapalıysa (sağlayıcı yok) `null`: eski HTTP davranışı.
+  const live = useLiveNote({
+    noteId: note.id,
+    kind: note.kind,
+    readOnly: viewer,
+    enabled: note.trashedAt === null,
+    onMeta: (m) => {
+      if (m.title !== undefined) setRemoteTitle({ title: m.title });
+      if (m.color !== undefined) setColor(m.color as NoteColor);
+      if (m.pinned !== undefined) setPinned(m.pinned);
+      if (m.trashed !== undefined) setTrashedLive(m.trashed);
+    },
+  });
+  // Çevrimdışıyken düzenleme kapalı (PLAN §5); metin gövdesi ayrıca eşitleme bekler.
+  const editable =
+    note.trashedAt === null && !trashedLive && canWrite && (live ? live.canWrite : true);
   const [moveOpen, setMoveOpen] = useState(initialMoveOpen);
   const people = useMemo(
     () => (project ? { members: project.members, canAssign: canWrite } : undefined),
@@ -114,12 +136,17 @@ export function NoteDialog({
   const saver = useAutosave(note.id);
   const [openedAt] = useState(() => (typeof performance === "undefined" ? 0 : performance.now()));
 
-  /** Bekleyen görev işlemleri bitince ızgara yeniden doğrulanır (kart güncel kalsın). */
+  /**
+   * Bekleyen görev işlemleri (ve canlı metin notunda odadaki değişikliklerin D1'e yazımı)
+   * bitince ızgara yeniden doğrulanır (kart güncel kalsın).
+   */
+  const liveFlush = live?.flush;
   const flushTasks = useCallback(() => {
     const pending = todoRef.current?.flush();
     if (pending) void pending.then(() => revalidator.revalidate());
-    return pending ?? Promise.resolve();
-  }, [revalidator]);
+    const saved = note.kind === "text" ? liveFlush?.() : undefined;
+    return Promise.all([pending, saved]).then(() => {});
+  }, [revalidator, liveFlush, note.kind]);
 
   const close = useCallback(() => {
     saver.flush();
@@ -194,6 +221,8 @@ export function NoteDialog({
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
         showCloseButton={false}
+        data-canli={live?.status ?? "kapali"}
+        data-canli-kisi={live?.peers.length ?? 0}
         aria-describedby={undefined}
         onEscapeKeyDown={(e) => {
           // Görev satırı, ayrıntı ve seçicide Esc katmanlıdır; not kapanmaz.
@@ -230,8 +259,10 @@ export function NoteDialog({
               : "Çöpteki not salt okunurdur."}
         </DialogDescription>
         <NoteBody
-          key={`${note.id}:${note.kind}:${revision}`}
+          key={`${note.id}:${note.kind}:${revision}:${live?.generation ?? 0}`}
           note={note}
+          live={live}
+          remoteTitle={remoteTitle}
           todoRef={todoRef}
           onHelpChange={setHelpOpen}
           editable={editable}
@@ -457,7 +488,7 @@ export function NoteDialog({
             </>
           )}
           meta={meta}
-          lockbar={viewer ? <LockBar /> : null}
+          lockbar={viewer ? <LockBar /> : live?.status === "cevrimdisi" ? <OfflineBar /> : null}
           people={people}
           colorButton={<ColorButton color={color} onChange={changeColor} />}
         />
@@ -547,6 +578,22 @@ function ViewerBadge() {
       <Lock className="size-3.5" aria-hidden="true" />
       Görüntüleyici
     </span>
+  );
+}
+
+/** Çevrimdışı açıklaması (asgari; görsel cilası Aşama 4b). */
+function OfflineBar() {
+  return (
+    <div
+      role="status"
+      data-testid="cevrimdisi"
+      className="flex items-start gap-2.5 rounded-xl bg-hover px-3.5 py-3 text-[13px] text-muted-foreground"
+    >
+      <span>
+        <b className="font-semibold text-fg">Çevrimdışısın.</b> Bağlantı gelince düzenleme yeniden
+        açılır.
+      </span>
+    </div>
   );
 }
 
@@ -672,6 +719,9 @@ function useAutosave(noteId: string): Saver {
 
 type NoteBodyProps = {
   note: NoteDetail;
+  /** Canlı katman (null: kapalı, eski HTTP davranışı). */
+  live: LiveNote | null;
+  remoteTitle: { title: string } | null;
   todoRef: React.Ref<TodoEditorHandle>;
   onHelpChange: (open: boolean) => void;
   editable: boolean;
@@ -690,6 +740,8 @@ type NoteBodyProps = {
 
 function NoteBody({
   note,
+  live,
+  remoteTitle,
   todoRef,
   onHelpChange,
   editable,
@@ -704,12 +756,26 @@ function NoteBody({
   people,
 }: NoteBodyProps) {
   const [title, setTitle] = useState(note.title);
+  const [titleFocused, setTitleFocused] = useState(false);
+  // Başka yerden gelen başlık: yazmıyorsan hemen gösterilir (render sırasında ayarlama).
+  const [seenRemote, setSeenRemote] = useState(remoteTitle);
+  if (remoteTitle !== seenRemote) {
+    setSeenRemote(remoteTitle);
+    if (remoteTitle && !titleFocused) setTitle(remoteTitle.title);
+  }
+  const { me } = useLiveConfig();
+  // Canlı metin notu: gövde Yjs belgesinden (ilk eşitlemeden sonra); HTTP'ye gövde gitmez.
+  const collab =
+    live?.provider && live.synced && me && note.kind === "text"
+      ? { provider: live.provider, user: me }
+      : null;
   const editor = useNoteEditor({
     initialHtml: note.bodyHtml,
-    editable: editable && note.kind === "text",
+    editable: editable && note.kind === "text" && (live ? live.canEdit : true),
+    collab,
     label: "Not",
     placeholder: "Not al…",
-    onChange: (bodyHtml) => saver.change({ bodyHtml }),
+    onChange: live ? undefined : (bodyHtml) => saver.change({ bodyHtml }),
     className: cn(
       "min-h-[120px]",
       tabletUp ? "text-[15px] leading-[1.65]" : "text-base leading-[1.6]",
@@ -725,6 +791,8 @@ function NoteBody({
         id={`not-baslik-${note.id}`}
         value={title}
         readOnly={!editable}
+        onFocus={() => setTitleFocused(true)}
+        onBlur={() => setTitleFocused(false)}
         onChange={(e) => {
           setTitle(e.target.value);
           saver.change({ title: e.target.value });
@@ -784,6 +852,8 @@ function NoteBody({
         noteId={note.id}
         initialTasks={note.todoTasks}
         initialAssignees={note.assignees}
+        live={live?.tasks}
+        onActiveTaskChange={live?.setFocus}
         people={people}
         editable={editable}
         onHelpChange={onHelpChange}
