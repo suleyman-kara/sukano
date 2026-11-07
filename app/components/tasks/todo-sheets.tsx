@@ -19,6 +19,7 @@ export function TodoSheet({
   header,
   children,
   onCloseAutoFocus,
+  initialFocus,
   className,
 }: {
   open: boolean;
@@ -28,6 +29,8 @@ export function TodoSheet({
   header: React.ReactNode;
   children: React.ReactNode;
   onCloseAutoFocus?: (e: Event) => void;
+  /** Açılınca odaklanacak öğe (ör. donanım klavyesiyle Ctrl+D → doğal yazım alanı). */
+  initialFocus?: () => HTMLElement | null;
   className?: string;
 }) {
   return (
@@ -40,7 +43,8 @@ export function TodoSheet({
         onOpenAutoFocus={(e) => {
           // Ekran klavyesi kendiliğinden açılmasın: odak sayfanın kendisine.
           e.preventDefault();
-          (e.currentTarget as HTMLElement | null)?.focus();
+          const target = initialFocus?.() ?? (e.currentTarget as HTMLElement | null);
+          target?.focus();
         }}
         onCloseAutoFocus={onCloseAutoFocus}
         className={cn(

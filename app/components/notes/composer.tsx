@@ -10,7 +10,7 @@ import {
   Plus,
   SquareCheckBig,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -157,7 +157,7 @@ export function Composer({
     if (open) titleRef.current?.focus();
   }, [open]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const f = focusLine.current;
     if (!f) return;
     focusLine.current = null;
@@ -283,9 +283,9 @@ export function Composer({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              if (mode === "todo") focusLine.current = { index: 0, caret: "end" };
-              if (mode === "todo") setLines((ls) => [...ls]);
-              else editor?.commands.focus("end");
+              if (mode === "todo") {
+                linesRef.current?.querySelector<HTMLInputElement>("input[data-line]")?.focus();
+              } else editor?.commands.focus("end");
             }
           }}
           placeholder="Başlık"
@@ -332,11 +332,10 @@ export function Composer({
               <input
                 data-line=""
                 value={l.title}
-                onChange={(e) =>
-                  setLines((ls) =>
-                    ls.map((x) => (x.key === l.key ? { ...x, title: e.target.value } : x)),
-                  )
-                }
+                onChange={(e) => {
+                  const title = e.target.value;
+                  setLines((ls) => ls.map((x) => (x.key === l.key ? { ...x, title } : x)));
+                }}
                 onKeyDown={(e) => lineKey(e, i)}
                 placeholder="Görev"
                 aria-label="Görev başlığı"

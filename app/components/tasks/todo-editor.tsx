@@ -90,6 +90,8 @@ export type TodoEditorHandle = {
 
 type Picker = {
   id: string;
+  /** Klavyeyle açıldı (Ctrl+D): mobil sayfada da odak doğal yazım alanına. */
+  viaKeyboard?: boolean;
   slot: DateSlot;
   timeOpen: boolean;
   text: string;
@@ -432,7 +434,8 @@ export function TodoEditor({
   const closePickerToRow = useCallback(() => {
     const p = pickerRef.current;
     if (!p) return;
-    pickerReturn.current = p.id;
+    // Odak hemen satıra döner; kapanış animasyonu bitince ikinci kez taşınmaz.
+    pickerReturn.current = null;
     setPicker(null);
     focusRow(p.id, "end");
   }, [setPicker, focusRow]);
@@ -611,7 +614,15 @@ export function TodoEditor({
       }
       if (mod && (k === "d" || k === "D")) {
         e.preventDefault();
-        setPicker({ id, slot: "due", timeOpen: false, text: "", textError: false, warning: null });
+        setPicker({
+          id,
+          slot: "due",
+          timeOpen: false,
+          text: "",
+          textError: false,
+          warning: null,
+          viaKeyboard: true,
+        });
         return;
       }
       if (k === "Escape") {
@@ -994,6 +1005,9 @@ export function TodoEditor({
             }}
             label="Tarih"
             description="Başlangıç ve bitiş tarihi; değişiklikler hemen uygulanır."
+            initialFocus={() =>
+              pickerRef.current?.viaKeyboard ? document.getElementById(`tarih-yaz-${noteId}`) : null
+            }
             onCloseAutoFocus={(e) => {
               e.preventDefault();
               const id = pickerReturn.current;

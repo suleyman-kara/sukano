@@ -247,7 +247,7 @@ function CardBody({ note, view }: { note: NoteCardData; view: NoteView }) {
               {tickable && t.id ? (
                 <input
                   type="checkbox"
-                  className="task-cb pointer-events-auto relative z-[1] !mx-0 !mt-0.5 !size-4 opacity-80 hover:opacity-100 pointer-coarse:!size-[18px]"
+                  className="card-cb pointer-events-auto relative z-[1]"
                   checked={false}
                   onChange={() => tick(t)}
                   onClick={(e) => e.stopPropagation()}

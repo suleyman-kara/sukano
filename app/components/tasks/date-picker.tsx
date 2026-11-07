@@ -223,7 +223,7 @@ export function DatePicker(props: DatePickerProps) {
         )}
       >
         <div
-          className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium opacity-45"
+          className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium"
           title="Görev hatırlatıcıları yakında"
         >
           <Switch disabled aria-label="Hatırlat" aria-describedby="hatirlat-kime" />

@@ -519,3 +519,49 @@
     }
   }
 }
+
+/* Hareketi azalt (sistem tercihi ya da Ayarlar): giriş/çıkış animasyonları ve geçişler
+   anında biter (Radix Presence animationend'i yine alır). */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  [data-motion="reduced"] *,
+  [data-motion="reduced"] ::before,
+  [data-motion="reduced"] ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Karttaki görev kutucuğu: görünür 16 px kutu, 24 px dokunma hedefi (WCAG 2.5.8). */
+@layer components {
+  .card-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    margin: -2px -4px -4px;
+    border: 4px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--muted);
+    opacity: 0.8;
+    cursor: pointer;
+  }
+  .card-cb:hover {
+    opacity: 1;
+  }
+  .card-cb:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
