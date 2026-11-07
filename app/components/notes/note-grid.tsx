@@ -10,8 +10,17 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
+import {
+  AnimatePresence,
+  LazyMotion,
+  domMax,
+  m,
+  type TargetAndTransition,
+  type Transition,
+} from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
+import { useReducedMotion } from "~/hooks/use-reduced-motion";
 import type { NoteCardData } from "~/domain/notes/optimistic";
 import { NoteCard, type NoteCardProps } from "./note-card";
 
@@ -34,6 +43,11 @@ let lastDragEnd = 0;
  * tablet ve mobilde 2 sütun. Sürükleme `@dnd-kit` ile; sütun düzeninde kartlar
  * yer değiştirmez, sürüklenen kartın yeri kesikli çerçeveyle, hedef kart vurguyla
  * gösterilir.
+ *
+ * Canlı ızgara hareketi (PLAN §10, Motion yalnızca yerleşim ve çıkış için): kartlar
+ * `layout="position"` ile yeni yerlerine kayar (sıralama, ekleme, başka kişinin
+ * değişikliği), giren kart belirir, çıkan kart `AnimatePresence` ile solar. Hareketi
+ * azalt açıkken (sistem ya da `data-motion="reduced"`) hiçbiri çalışmaz.
  */
 export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -67,9 +81,11 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
 
   const active = activeId ? notes.find((n) => n.id === activeId) : undefined;
 
+  const reduced = useReducedMotion();
   const cards = notes.map((note, i) => (
     <SortableCard
       key={note.id}
+      reduced={reduced}
       note={note}
       href={hrefFor?.(note)}
       sortable={Boolean(onMove)}
@@ -101,11 +117,11 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
         }
       }}
     >
-      {cards}
+      <AnimatePresence initial={false}>{cards}</AnimatePresence>
     </div>
   );
 
-  if (!onMove) return grid;
+  if (!onMove) return <LazyMotion features={domMax}>{grid}</LazyMotion>;
 
   return (
     <DndContext
@@ -132,7 +148,7 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
       }}
     >
       <SortableContext items={notes.map((n) => n.id)} strategy={() => null}>
-        {grid}
+        <LazyMotion features={domMax}>{grid}</LazyMotion>
       </SortableContext>
       <DragOverlay dropAnimation={null}>
         {active ? <NoteCard note={active} overlay {...card} /> : null}
@@ -141,11 +157,20 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
   );
 }
 
+/** Kart giriş / çıkış / kayma: medium 240 ms, ease-out-quart (MotionSpec). */
+const CARD_TRANSITION: Transition = { duration: 0.24, ease: [0.25, 1, 0.5, 1] };
+const CARD_EXIT: TargetAndTransition = {
+  opacity: 0,
+  scale: 0.96,
+  transition: { duration: 0.18, ease: [0.5, 0, 0.75, 0] },
+};
+
 function SortableCard({
   note,
   sortable,
+  reduced,
   ...props
-}: Omit<NoteCardProps, "dragging"> & { sortable: boolean }) {
+}: Omit<NoteCardProps, "dragging"> & { sortable: boolean; reduced: boolean }) {
   const { setNodeRef, attributes, listeners, isDragging } = useSortable({
     id: note.id,
     disabled: !sortable,
@@ -154,7 +179,16 @@ function SortableCard({
   // kartı ikinci bir sekme durağı yapmasın diye alınmaz.
   void attributes;
   return (
-    <div role="listitem" className="break-inside-avoid">
+    <m.div
+      role="listitem"
+      data-note-item={note.id}
+      className="break-inside-avoid"
+      layout={reduced || isDragging ? false : "position"}
+      initial={reduced ? false : { opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={reduced ? undefined : CARD_EXIT}
+      transition={CARD_TRANSITION}
+    >
       <NoteCard
         ref={setNodeRef}
         note={note}
@@ -162,6 +196,6 @@ function SortableCard({
         {...(sortable ? listeners : {})}
         {...props}
       />
-    </div>
+    </m.div>
   );
 }
