@@ -13,7 +13,20 @@ export default defineConfig(async () => {
       reactRouter(),
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations } },
+        miniflare: {
+          // `.dev.vars` CI'da yoktur; kimlik testleri için sabit, gizli olmayan değerler.
+          // Turnstile: Cloudflare'in her zaman geçen test anahtarı. Resend boş: e-postalar
+          // `globalThis.__sukanoOutbox`'a düşer.
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            BETTER_AUTH_SECRET: "workers-testleri-icin-en-az-32-karakterlik-gizli-deger",
+            BETTER_AUTH_URL: "http://sukano.test",
+            TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+            RESEND_API_KEY: "",
+            GOOGLE_CLIENT_ID: "",
+            GOOGLE_CLIENT_SECRET: "",
+          },
+        },
       }),
     ],
     resolve: {
