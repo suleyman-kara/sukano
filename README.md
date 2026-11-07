@@ -20,8 +20,9 @@ Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içi
 
 | Yol                 | Açıklama                                                                  |
 | ------------------- | ------------------------------------------------------------------------- |
-| `/`                 | Uygulama kabuğu + Notlarım (oturum yoksa boş kabuk)                       |
-| `/giris`            | Giriş ekranı (form yer tutucu; gerçek akış Aşama 1'de)                    |
+| `/`                 | Uygulama kabuğu + Notlarım (oturum ister)                                 |
+| `/giris`, `/kayit`  | Giriş ve kayıt; bkz. [Kimlik doğrulama](#kimlik-doğrulama)                |
+| `/ayarlar`          | Ayarlar: profil, görünüm, hesap ve güvenlik                               |
 | `/health`           | Sağlık denetimi, `{ "ok": true }`                                         |
 | `/api/auth/*`       | Better Auth uçları (`/api/auth/ok`, `/api/auth/get-session` …)            |
 | `/api/notes/:id/ws` | Not odası WebSocket'i (NoteRoom; oturum gerekli; Aşama 4'e kadar iskelet) |
@@ -165,7 +166,7 @@ listelidir; `Env` tipi (`npm run cf-typegen` → `worker-configuration.d.ts`) bu
 | `BETTER_AUTH_URL`      | Uygulamanın kök adresi (yerelde `http://localhost:5173`)            |
 | `GOOGLE_CLIENT_ID`     | Google OAuth istemci kimliği (boşsa Google girişi kapalı)           |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth istemci gizli anahtarı                                 |
-| `RESEND_API_KEY`       | E-posta gönderimi (Aşama 1; şimdilik e-postalar konsola yazılır)    |
+| `RESEND_API_KEY`       | E-posta gönderimi (Resend); boşsa e-postalar konsola yazılır        |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile gizli anahtarı (yerelde test anahtarı)         |
 | `VAPID_PUBLIC_KEY`     | Web Push genel anahtarı (`npx web-push generate-vapid-keys`)        |
 | `VAPID_PRIVATE_KEY`    | Web Push özel anahtarı                                              |
@@ -185,6 +186,107 @@ npm run db:migrate:remote
 npm run build
 npx wrangler deploy
 ```
+
+## Kimlik doğrulama
+
+Better Auth (`app/lib/auth.server.ts`), e-posta + şifre (doğrulama zorunlu) ve Google
+(`GOOGLE_CLIENT_ID` ve `GOOGLE_CLIENT_SECRET` tanımlıysa; düğme de yalnızca o zaman görünür).
+Oturum 30 gün. Sayfalar Better Auth'u sunucu tarafında (action/loader içinde `auth.api.*`)
+çağırır; formlar JavaScript olmadan da çalışır, hatalar Türkçedir.
+
+| Yol                      | İş                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `/giris`                 | Giriş (`?next=` korunur; doğrulanmamış hesap `/dogrula`'ya gider)               |
+| `/kayit`                 | Kayıt: ad, e-posta, şifre (≥ 8), görünmez Turnstile                             |
+| `/dogrula?eposta=`       | "E-postanı doğrula" ekranı; 60 sn beklemeli "Bağlantıyı tekrar gönder"          |
+| `/dogrula/:jeton`        | E-postadaki bağlantı: doğrular, oturum açar, `next`'e (yoksa `/`) gider         |
+| `/sifremi-unuttum`       | Sıfırlama bağlantısı ister (Turnstile); hesap varlığını sızdırmaz               |
+| `/sifre-sifirla?token=`  | Yeni şifre ×2; kaydedince diğer oturumlar kapanır ve oturum açılır              |
+| `POST /cikis`            | Çıkış; `/giris`'e döner                                                         |
+| `/ayarlar`               | Ad, tema (`user_preferences`'a da yazılır), e-posta/şifre değiştirme, oturumlar |
+| `GET /__test/outbox?to=` | Yalnızca geliştirme/test: yerel posta kutusu (aşağıya bakın)                    |
+
+**Koruma.** `app/root.tsx` middleware'i varsayılan olarak kapalıdır: kimlik sayfaları, `/cikis`,
+`/health`, `/api/auth/*` ve `/__test/*` dışındaki **her** yol oturum ister; oturumsuz istek
+`/giris?next=<yol>` adresine gider (`next` yalnızca site içi yol olabilir,
+`app/domain/auth/redirects.ts`). Yeni rotalar ek bir şey yapmadan korunur. Loader/action içinde
+kullanıcıya tipli erişim: `const { user } = await requireUser(request, context)`
+(`app/lib/session.server.ts`; aynı istekte oturum D1'den bir kez okunur). Kimlik sayfaları
+(`routes/_kimlik.tsx` kabuksuz düzeni) oturum varsa `/`'a yönlendirir. Kök loader kabuksuz
+sayfalarda kabuk verisi göndermez.
+
+**Hız sınırı.** Cloudflare **Workers Rate Limiting** binding'leri (`wrangler.jsonc` →
+`ratelimits`): `AUTH_IP_LIMITER` IP başına dakikada 20, `AUTH_EMAIL_LIMITER` e-posta başına
+dakikada 5 istek; giriş, kayıt, şifre sıfırlama isteği ve doğrulama e-postası için ayrı sayılır
+(anahtarlar `app/domain/auth/rate-limit.ts`). Denetim Better Auth `hooks.before` içinde
+(`app/lib/auth-policy.server.ts`) olduğu için doğrudan `/api/auth/*` istekleri de kapsanır. Aşıldığında
+429 ve "Çok fazla deneme yaptın. Lütfen bir dakika sonra tekrar dene." Better Auth'un yerleşik
+sınırlayıcısı kapalıdır (isolate belleğinde sayar; Workers'ta güvenilmez). Yerelde ve testlerde
+Miniflare aynı binding'leri bellekte taklit eder. Sayaçlar yaklaşık ve konum başınadır; kesin
+kota değil, kötüye kullanıma karşı fren olarak düşünülmeli.
+
+**Turnstile.** Kayıt ve şifremi unuttum formlarında görünmez widget (`appearance:
+interaction-only`; site anahtarı `vars.TURNSTILE_SITE_KEY`), form altında "Bu form Cloudflare
+Turnstile ile korunur." satırı. Jeton `x-captcha-response` başlığıyla Better Auth'a gider ve
+sunucuda `TURNSTILE_SECRET_KEY` ile doğrulanır; boş jeton her zaman reddedilir. Varsayılanlar
+Cloudflare'in test anahtarlarıdır (site `1x00000000000000000000AA`, gizli
+`1x0000000000000000000000000000000AA`); test gizli anahtarlarının sonucu sabit olduğundan sunucu
+bunlar için siteverify'a gitmez (yerel, CI ve testler dış ağa bağımlı değil).
+
+**E-posta.** `app/lib/email.server.ts`: `RESEND_API_KEY` varsa Resend HTTP API'si, gönderen
+`vars.EMAIL_FROM`. Yoksa ileti konsola yazılır ve aynı isolate'teki `globalThis.__sukanoOutbox`
+dizisine eklenir. Şablonlar (doğrulama, şifre sıfırlama, e-posta değişikliği; HTML + düz metin):
+`app/lib/email-templates.ts`. `GET /__test/outbox?to=<adres>` bu kutuyu JSON olarak döner; yalnızca
+Resend anahtarı yokken **ve** geliştirme sunucusunda ya da `BETTER_AUTH_URL` yerel
+(localhost/127.0.0.1) iken açıktır, üretim ve önizleme dağıtımlarında 404.
+
+### Kimlik testleri
+
+- **Birim (önce test):** `tests/unit/kimlik/` — şifre kuralı, e-posta normalizasyonu, güvenli
+  `next`, herkese açık yollar, hız sınırı anahtarları, hata metinleri, Turnstile test anahtarları,
+  form doğrulamaları, bağlantılar.
+- **Bileşen:** `tests/unit/kimlik-formlar.test.tsx` — giriş/kayıt formu doğrulama mesajları,
+  şifre göster/gizle.
+- **Worker:** `tests/workers/kimlik.test.ts` — kayıt → outbox → doğrulama → giriş, yanlış şifre,
+  doğrulanmamış giriş, sıfırlama, hız sınırı, Turnstile, rota koruması, Ayarlar eylemleri.
+  Değerler `vitest.workers.config.ts`'te sabittir (`.dev.vars` gerekmez).
+- **Uçtan uca:** `tests/e2e/kimlik.spec.ts` (`@duman`, üç görünüm). `tests/e2e/global-setup.ts`
+  sunucu yoksa ayrı yerel durumu (`.wrangler/e2e`, `SUKANO_PERSIST_DIR`) silip migration + tohum
+  uygular, **sonra** `vite preview`'u bu klasörle başlatır ve `ayse@test.sukano` ile giriş yapıp
+  oturumu `tests/e2e/.auth/ayse.json`'a yazar. Testler varsayılan olarak bu oturumla koşar;
+  oturumsuz testler `test.use({ storageState: OTURUMSUZ })` (`tests/e2e/ortam.ts`). Turnstile
+  betiği testte sahte sürümle değiştirilir (`sahteTurnstile`), e-posta bağlantıları
+  `/__test/outbox`'tan okunur (`epostaBaglantisi`). Uçtan uca testler `.dev.vars` ister (CI'da
+  `.dev.vars.example`'dan kopyalanır).
+
+## Kişisel notlar
+
+Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
+
+| Yol                            | Açıklama                                                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                            | Notlarım: not al alanı, Sabitlenmiş + Diğerleri masonry ızgarası                                                                                         |
+| `/not/:id`, `/arsiv/not/:id`   | Açık not (ızgaranın üstünde modal, mobilde tam ekran); `?surumler` ile sürüm geçmişi açık                                                                |
+| `/arsiv`, `/cop`               | Arşiv; çöp (7 gün, kalan gün, Geri yükle, Kalıcı olarak sil, Çöpü boşalt)                                                                                |
+| `/ara?q=`                      | Türkçe harf ve aksan duyarsız arama (başlık, metin, görev başlıkları)                                                                                    |
+| `POST /api/notlar`             | Not eylemleri (`intent`: create, update, color, pin, archive, unarchive, trash, restore, delete, discard, empty-trash, duplicate, move, restore-version) |
+| `GET /api/notlar/:id/surumler` | Sürüm listesi; `?surum=<id>` ile önizleme                                                                                                                |
+
+- **Katmanlar:** saf kurallar `app/domain/notes/` (sıralama, sürüm penceresi, arama
+  normalizasyonu, HTML→metin, doğrulama, iyimser arayüz); D1 sorguları
+  `app/lib/notes.server.ts` (`personalNotes(env, userId)`, her işlemde sahiplik denetimi,
+  başkasının notu → 404); arayüz `app/components/notes/`.
+- **Sıralama:** `position` kesirli; taşınan not iki komşusunun ortasına yerleşir, boşluk
+  1e-6'nın altına inerse bölüm yeniden numaralanır. Sürükleme `@dnd-kit` (fare 6 px, dokunma
+  350 ms basılı tutma); klavyede odaklı kartta Alt+ok.
+- **Sürümler:** aynı kişinin sürümün açılışından itibaren 5 dk içindeki düzenlemeleri aynı
+  sürümü günceller; en çok 50 sürüm; geri yükleme her zaman yeni sürüm. Renk/sabitleme sürüm
+  üretmez. Yapılacaklar notunun sürümleri Aşama 2'de.
+- **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt; not al alanı kapatınca kaydeder,
+  boşsa kaydetmez. Arşivle, çöpe at ve kopyasını oluştur "Geri al" toast'ı gösterir (6 sn).
+- **Cron:** `purgeTrashedNotes` 7 günden eski kişisel çöp notlarını sürüm ve ekleriyle siler.
+- **Devre dışı yer tutucular:** yapılacaklar notu oluşturma ve dönüştürme (Aşama 2), taşı veya
+  kopyala (Aşama 3), not hatırlatıcısı ve dosya ekleme (Aşama 5).
 
 ## Cloudflare tarafında yapılacaklar
 
@@ -271,7 +373,8 @@ etiketsiz kalır ve `main`'de tam sette koşar.
 `zeynep`, `can` (`<ad>@test.sukano`, şifre `Test1234!`, örnek projedeki rolleriyle).
 `tests/fixtures/ornek-veri.ts`: tasarımdaki projeler, notlar ve görevler (Web Sitesi Yenileme,
 Lansman hazırlığı …). İkisi de bağımlılıksız TypeScript'tir; tohum betiği de bunları kullanır.
-Playwright'ın `tests/e2e/global-setup.ts` dosyası tohumlamanın bağlanacağı yerdir.
+Playwright'ın `tests/e2e/global-setup.ts` dosyası uçtan uca veritabanını hazırlar ve oturumu
+üretir (bkz. [Kimlik testleri](#kimlik-testleri)).
 
 ## CI
 
