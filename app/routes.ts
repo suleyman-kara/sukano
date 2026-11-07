@@ -10,7 +10,7 @@ export default [
   route("", "routes/home.tsx", [route("not/:id", "routes/not.tsx")]),
   route("arsiv", "routes/arsiv.tsx", [route("not/:id", "routes/not.tsx", { id: "arsiv-not" })]),
   route("cop", "routes/cop.tsx"),
-  route("ara", "routes/ara.tsx"),
+  route("ara", "routes/ara.tsx", [route("not/:id", "routes/not.tsx", { id: "ara-not" })]),
   // Proje alanı: Notlar · Arşiv · Çöp (açık not alt rotada) ve ayarlar.
   route("proje/:projeId", "routes/proje.tsx", [
     route("not/:id", "routes/not.tsx", { id: "proje-not" }),
