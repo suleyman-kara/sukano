@@ -7,6 +7,10 @@ import { ac, sahteTurnstile } from "./yardimcilar";
 const SAYFALAR = [
   { ad: "Notlarım", yol: "/", oturum: true },
   { ad: "Ayarlar", yol: "/ayarlar", oturum: true },
+  { ad: "Proje sayfası", yol: "/proje/web-sitesi-yenileme", oturum: true },
+  { ad: "Proje ayarları", yol: "/proje/web-sitesi-yenileme/ayarlar", oturum: true },
+  { ad: "Davetler", yol: "/davetler", oturum: true },
+  { ad: "Silinmiş projeler", yol: "/silinmis-projeler", oturum: true },
   { ad: "Giriş", yol: "/giris", oturum: false },
   { ad: "Kayıt", yol: "/kayit", oturum: false },
   { ad: "Doğrulama", yol: "/dogrula?eposta=ayse%40ornek.com", oturum: false },
