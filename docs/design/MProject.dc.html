@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil proje sayfası</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);flex:0 0 auto;position:relative}
+.ib svg{width:22px;height:22px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.col{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--n-default);color:var(--fg);display:block;text-decoration:none}
+.card > * + *{margin-top:6px}
+.ct{margin:0;font-size:14px;font-weight:600}
+.cp{margin:0;font-size:13px;white-space:pre-line}
+.cb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-size:13px}
+.cb-list li{display:flex;align-items:flex-start;gap:8px}
+.cbx{appearance:none;-webkit-appearance:none;width:18px;height:18px;border:1.5px solid var(--muted);border-radius:5px;flex:0 0 auto;margin:0;background:var(--surface);cursor:pointer;position:relative}
+.cbx:checked{background:var(--accent);border-color:var(--accent)}
+.cbx:checked::after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:9px;border:solid var(--accent-fg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.hit{display:inline-flex;padding:7px;margin:-7px -1px -7px -7px;border-radius:999px;flex:0 0 auto;cursor:pointer}
+.card .cl{color:inherit;text-decoration:none}
+.card{cursor:pointer}
+.fopt{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+.fopt .fl{font-size:13px;font-weight:600;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 10px;box-shadow:var(--shadow)}
+.fopt .fb{width:48px;height:48px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:inline-flex;align-items:center;justify-content:center}
+.scrim{position:absolute;inset:0;background:rgba(28,27,25,.28);z-index:2}
+.sk[data-theme="dark"] .scrim{background:rgba(0,0,0,.55)}
+.fab{width:56px;height:56px;border-radius:18px;background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow);display:inline-flex;align-items:center;justify-content:center;position:relative;z-index:4;flex:0 0 auto}
+.fab svg{transition:transform .15s}.fab.open svg{transform:rotate(45deg)}
+.cmore{color:var(--muted);font-size:12px}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.vs{display:inline-flex;align-items:center;flex:0 0 auto;background:var(--hover);border-radius:10px;padding:3px;gap:2px}
+.vs a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;color:var(--muted);text-decoration:none}
+.vs a.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.clamp3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.clamp4{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.vs svg{width:20px;height:20px}
+.role{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:390px; height:844px; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; position:relative; overflow:hidden">
+  <header style="display:flex; align-items:center; gap:4px; padding:56px 8px 8px 8px">
+    <a class="ib" href="MDrawer.dc.html" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></a>
+    <label style="flex:1; position:relative; display:block"><span class="sr">Ara</span><input type="search" placeholder="Notlarda ve projelerde ara" style="width:100%; height:44px; border:1px solid var(--line); border-radius:12px; padding:0 14px; background:var(--surface); font-size:15px"></label>
+    <a class="ib" href="MNotifications.dc.html" aria-label="Bildirimler, 2 yeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span style="position:absolute; top:10px; right:11px; width:8px; height:8px; border-radius:999px; background:var(--danger); border:2px solid var(--bg)" aria-hidden="true"></span></a>
+    <a href="MSettings.dc.html" aria-label="Ayarlar" style="padding:6px; text-decoration:none"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#597895">SK</span></a>
+  </header>
+
+  <div style="flex:1; overflow:auto; padding:8px 16px 120px; display:flex; flex-direction:column; gap:16px">
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="display:flex; align-items:flex-start; gap:10px">
+        <span style="width:12px; height:12px; border-radius:999px; background:#AD5A34; flex:0 0 auto; margin-top:14px"></span>
+        <h1 style="margin:0; padding-top:6px; font-size:21px; line-height:1.3; font-weight:700; letter-spacing:-0.01em; flex:1; min-width:0">Web Sitesi Yenileme</h1>
+        <nav class="vs" aria-label="Görünüm">
+          <a class="on" href="MProject.dc.html" title="Notlar" aria-label="Notlar" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg></a>
+          <a href="MArchive.dc.html" title="Arşiv" aria-label="Arşiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg></a>
+          <a href="MTrash.dc.html" title="Çöp" aria-label="Çöp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></a>
+        </nav>
+      </div>
+      <p class="clamp3" style="margin:0; padding-left:22px; font-size:13px; color:var(--muted)">Kurumsal sitenin yeni tasarımı ve içerik taşıması. Lansman 24 Kasım.</p>
+      <div style="display:flex; align-items:center; gap:10px">
+        <a href="MProjectSettings.dc.html" aria-label="5 üye: Ayşe Demir, Mehmet Kaya, Zeynep Arslan, Can Yılmaz, Süleyman Kara" style="display:flex; align-items:center; text-decoration:none; color:var(--fg)">
+          <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#B25D49;border:2px solid var(--bg)">AD</span>
+          <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#4976B4;border:2px solid var(--bg);margin-left:-8px">MK</span>
+          <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#7A5FB8;border:2px solid var(--bg);margin-left:-8px">ZA</span>
+          <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#398264;border:2px solid var(--bg);margin-left:-8px">CY</span>
+          <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#597895;border:2px solid var(--bg);margin-left:-8px">SK</span>
+        </a>
+        <span class="role">Yönetici</span>
+        <span style="flex:1"></span>
+        <a href="MProjectSettings.dc.html" style="display:inline-flex; align-items:center; height:44px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--surface); color:var(--fg); font-weight:500; font-size:14px; text-decoration:none; white-space:nowrap; flex:0 0 auto">Davet gönder</a>
+        <a class="ib" href="MProjectSettings.dc.html" aria-label="Proje ayarları" title="Proje ayarları" style="margin-right:-8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></a>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="sec-h">Sabitlenmiş</h2>
+      <div style="display:flex; gap:10px">
+        <div class="col">
+          <article class="card" style="background:var(--n-turkuaz)" title="Uygulamada kartın tamamı notu açar">
+            <h3 class="ct"><a class="cl" href="MTodo.dc.html">Lansman hazırlığı</a></h3>
+            <ul class="cb-list"><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Tasarım onayı"></label><span>Tasarım onayı</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="İçerik yazımı"></label><span>İçerik yazımı</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="SEO kontrolleri"></label><span>SEO kontrolleri</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Lansman duyurusu"></label><span>Lansman duyurusu</span></li></ul>
+          </article>
+        </div>
+        <div class="col">
+          <article class="card" title="Uygulamada kartın tamamı notu açar"><h3 class="ct"><a class="cl" href="MText.dc.html">Karar günlüğü</a></h3><p class="cp clamp4">3 Kas: Barındırma için yıllık ödeme seçildi, en uygun teklif ikinci firmanın.
+5 Kas: Logo değişmiyor, yalnızca renk paleti güncellenecek.</p></article>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="sec-h">Diğerleri</h2>
+      <div style="display:flex; gap:10px">
+        <div class="col">
+          <article class="card" style="background:var(--n-sari)" title="Uygulamada kartın tamamı notu açar"><h3 class="ct"><a class="cl" href="MText.dc.html">Fotoğraf çekimi</a></h3><p class="cp clamp3">Stüdyo 18 Kasım, 10:00. Ürünler bir gün önce hazır olmalı; Can kargo ile gönderecek.</p></article>
+          <article class="card" style="background:var(--n-mor)" title="Uygulamada kartın tamamı notu açar"><h3 class="ct"><a class="cl" href="MTodo.dc.html">Müşteri geri bildirimleri</a></h3><ul class="cb-list"><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Ana sayfa görseli daha sıcak olsun"></label><span>Ana sayfa görseli daha sıcak olsun</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="İletişim formuna telefon alanı"></label><span>İletişim formuna telefon alanı</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Referanslar bölümü"></label><span>Referanslar bölümü</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Alt bilgiye sosyal medya bağlantıları"></label><span>Alt bilgiye sosyal medya bağlantıları</span></li><li><label class="hit"><input type="checkbox" class="cbx" aria-label="Blog sayfası şimdilik kalksın"></label><span>Blog sayfası şimdilik kalksın</span></li></ul></article>
+        </div>
+        <div class="col">
+          <article class="card" title="Uygulamada kartın tamamı notu açar"><h3 class="ct"><a class="cl" href="MText.dc.html">Teklif karşılaştırması</a></h3><p class="cp clamp4">Üç barındırma teklifi alındı. Aylık yerine yıllık ödemede %20 indirim var; sözleşme süresi 12 ay.</p></article>
+          <article class="card" style="background:var(--n-mavi)" title="Uygulamada kartın tamamı notu açar"><h3 class="ct"><a class="cl" href="MText.dc.html">Toplantı, 4 Kasım</a></h3><p class="cp clamp4">Mehmet SEO raporunu çıkardı. Zeynep içerik takvimini hazırlayacak. Lansman tarihi 24 Kasım olarak kesinleşti.</p></article>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute; left:0; right:0; bottom:0; padding:12px 16px 28px; background:linear-gradient(to top, var(--bg) 70%, transparent); display:flex; align-items:center; gap:10px">
+    <a href="MText.dc.html" style="flex:1; height:48px; border-radius:14px; background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow); display:flex; align-items:center; padding:0 16px; color:var(--muted); text-decoration:none; font-size:15px">Projeye not ekle…</a>
+    <button type="button" id="fab" class="fab {{fabCls}}" aria-label="Yeni not oluştur" aria-haspopup="menu" aria-expanded="{{fabOpen}}" aria-controls="fab-menu" onClick="{{toggleFab}}"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <sc-if value="{{fabOpen}}" hint-placeholder-val="{{false}}">
+    <div class="scrim" onClick="{{closeFab}}" aria-hidden="true"></div>
+    <div id="fab-menu" role="menu" aria-label="Yeni not" onKeyDown="{{fabKey}}" style="position:absolute; right:20px; bottom:100px; z-index:4; display:flex; flex-direction:column; align-items:flex-end; gap:12px">
+      <a class="fopt" role="menuitem" href="MText.dc.html"><span class="fl">Metin notu</span><span class="fb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg></span></a>
+      <a class="fopt" role="menuitem" href="MTodo.dc.html"><span class="fl">Yapılacaklar notu</span><span class="fb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 12 2.5 2.5L16 9"/></svg></span></a>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { fab: false }; }
+  closeFab() { this.setState({ fab: false }); const b = document.getElementById('fab'); if (b) b.focus(); }
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      fabOpen: !!this.state.fab, fabCls: this.state.fab ? 'open' : '',
+      toggleFab: () => this.setState({ fab: !this.state.fab }),
+      closeFab: () => this.closeFab(),
+      fabKey: (e) => { if (e.key === 'Escape') { e.preventDefault(); this.closeFab(); } }
+    };
+  }
+}
+</script>
+</body>
+</html>

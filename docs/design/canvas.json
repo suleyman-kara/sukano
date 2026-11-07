@@ -1,0 +1,910 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-06T23:10:00Z"
+  },
+  "title": "Sukano Tasarım",
+  "launch": {
+    "view": "canvas",
+    "page": "d1"
+  },
+  "pages": [
+    {
+      "id": "d1",
+      "name": "Masaüstü 1 · Kimlik, notlar, not al"
+    },
+    {
+      "id": "d2",
+      "name": "Masaüstü 2 · Projeler, diyaloglar, formlar"
+    },
+    {
+      "id": "d3",
+      "name": "Masaüstü 3 · Arşiv, çöp, davetler, bildirimler"
+    },
+    {
+      "id": "d4",
+      "name": "Masaüstü 4 · Ayarlar, durumlar, koyu tema"
+    },
+    {
+      "id": "m1",
+      "name": "Mobil 1 · Temel ekranlar"
+    },
+    {
+      "id": "m2",
+      "name": "Mobil 2 · Alt sayfalar ve durumlar"
+    },
+    {
+      "id": "t1",
+      "name": "Tablet 1"
+    },
+    {
+      "id": "t2",
+      "name": "Tablet 2"
+    },
+    {
+      "id": "x1",
+      "name": "Keşif · Logo, yazı tipi, hareket"
+    }
+  ],
+  "boards": {
+    "Auth.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Giriş / Kayıt",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "Main.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 960,
+      "title": "Ana sayfa — Notlarım",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "TextNote.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 960,
+      "title": "Metin notu açık",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "TodoNote.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "Yapılacaklar notu açık",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "Project.dc.html": {
+      "x": 0,
+      "y": 1400,
+      "w": 1440,
+      "h": 960,
+      "title": "Proje sayfası",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d2"
+    },
+    "ProjectSettings.dc.html": {
+      "x": 1520,
+      "y": 1400,
+      "w": 1440,
+      "h": 1560,
+      "title": "Proje ayarları",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d2"
+    },
+    "Dialogs.dc.html": {
+      "x": 3040,
+      "y": 1400,
+      "w": 1440,
+      "h": 1353,
+      "title": "Diyaloglar: proje, taşı/kopyala, sürümler",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d2"
+    },
+    "Search.dc.html": {
+      "x": 4560,
+      "y": 1400,
+      "w": 1440,
+      "h": 960,
+      "title": "Arama sonuçları",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d2"
+    },
+    "Archive.dc.html": {
+      "x": 0,
+      "y": 3300,
+      "w": 1440,
+      "h": 960,
+      "title": "Arşiv (alan bazında)",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d3"
+    },
+    "Trash.dc.html": {
+      "x": 1520,
+      "y": 3300,
+      "w": 1440,
+      "h": 960,
+      "title": "Çöp kutusu (alan bazında)",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d3"
+    },
+    "Invites.dc.html": {
+      "x": 3040,
+      "y": 3300,
+      "w": 1440,
+      "h": 960,
+      "title": "Davetler",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d3"
+    },
+    "Notifications.dc.html": {
+      "x": 4560,
+      "y": 3300,
+      "w": 1440,
+      "h": 960,
+      "title": "Bildirimler paneli",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d3"
+    },
+    "Settings.dc.html": {
+      "x": 0,
+      "y": 4660,
+      "w": 1440,
+      "h": 1725,
+      "title": "Ayarlar",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d4"
+    },
+    "States.dc.html": {
+      "x": 1520,
+      "y": 4660,
+      "w": 1440,
+      "h": 900,
+      "title": "Durumlar: boş, çevrimdışı, PWA, hata",
+      "page": "d4"
+    },
+    "HomeDark.dc.html": {
+      "x": 3040,
+      "y": 4660,
+      "w": 1440,
+      "h": 960,
+      "title": "Koyu tema — Ana sayfa",
+      "is_interactive": true,
+      "expand": "fill",
+      "page": "d4"
+    },
+    "TodoDark.dc.html": {
+      "x": 4560,
+      "y": 4660,
+      "w": 1440,
+      "h": 1000,
+      "title": "Koyu tema — Yapılacaklar notu",
+      "is_interactive": true,
+      "expand": "fill",
+      "page": "d4"
+    },
+    "MAuth.dc.html": {
+      "x": 0,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Giriş",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MHome.dc.html": {
+      "x": 470,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Notlarım",
+      "radius": 32,
+      "is_interactive": true,
+      "page": "m1"
+    },
+    "MDrawer.dc.html": {
+      "x": 940,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Gezinme çekmecesi",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MTodo.dc.html": {
+      "x": 1410,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Yapılacaklar notu",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MText.dc.html": {
+      "x": 1880,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Metin notu",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MProject.dc.html": {
+      "x": 2350,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Proje sayfası",
+      "radius": 32,
+      "is_interactive": true,
+      "page": "m1"
+    },
+    "MSettings.dc.html": {
+      "x": 2820,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Ayarlar",
+      "radius": 32,
+      "page": "m1"
+    },
+    "Logo.dc.html": {
+      "x": 0,
+      "y": 11300,
+      "w": 1440,
+      "h": 760,
+      "title": "Logo: A Izgara ve C Ayrılan kare",
+      "page": "x1"
+    },
+    "Fonts.dc.html": {
+      "x": 1520,
+      "y": 11300,
+      "w": 1440,
+      "h": 1972,
+      "title": "Yazı tipi adayları",
+      "page": "x1"
+    },
+    "Dialogs2.dc.html": {
+      "x": 6080,
+      "y": 1400,
+      "w": 1440,
+      "h": 1766,
+      "title": "Onay diyalogları: silme, çıkarma, ayrılma, geri yükleme, dönüştürme, proje notunu kopyalama",
+      "page": "d2"
+    },
+    "Forms.dc.html": {
+      "x": 7600,
+      "y": 1400,
+      "w": 1440,
+      "h": 1463,
+      "title": "Formlar: e-posta, şifre, hatırlatıcı, toast, not menüsü, davet hataları",
+      "page": "d2"
+    },
+    "States2.dc.html": {
+      "x": 9120,
+      "y": 1400,
+      "w": 1440,
+      "h": 1467,
+      "title": "Durumlar 2: boş proje, sonuç yok, davet, görüntüleyici, push, silinmiş projeler",
+      "page": "d2"
+    },
+    "Composer.dc.html": {
+      "x": 6520,
+      "y": 0,
+      "w": 1440,
+      "h": 1031,
+      "title": "Not al alanı açık",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "CardStates.dc.html": {
+      "x": 8040,
+      "y": 0,
+      "w": 1440,
+      "h": 1024,
+      "title": "Kart halleri",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "d1"
+    },
+    "TAuth.dc.html": {
+      "x": 0,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Giriş",
+      "radius": 24,
+      "page": "t1"
+    },
+    "THome.dc.html": {
+      "x": 914,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Notlarım",
+      "radius": 24,
+      "page": "t1"
+    },
+    "THomeNav.dc.html": {
+      "x": 1828,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Menü açık (kaplama)",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TText.dc.html": {
+      "x": 2742,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Metin notu açık",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TTodo.dc.html": {
+      "x": 3656,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Yapılacaklar notu, tarih seçici ve klavye açık",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TProject.dc.html": {
+      "x": 4570,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Proje sayfası",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TProjectSettings.dc.html": {
+      "x": 5484,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Proje ayarları",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TSearch.dc.html": {
+      "x": 6398,
+      "y": 8000,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Arama sonuçları",
+      "radius": 24,
+      "page": "t1"
+    },
+    "TArchive.dc.html": {
+      "x": 0,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Arşiv",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TTrash.dc.html": {
+      "x": 914,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Çöp kutusu",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TInvites.dc.html": {
+      "x": 1828,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Davetler",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TNotifications.dc.html": {
+      "x": 2742,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Bildirimler paneli",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TSettings.dc.html": {
+      "x": 3656,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Ayarlar",
+      "radius": 24,
+      "is_interactive": true,
+      "page": "t2"
+    },
+    "TDialogs.dc.html": {
+      "x": 4570,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Diyaloglar: proje, taşı/kopyala, sürümler",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TStates.dc.html": {
+      "x": 5484,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Durumlar: boş, çevrimdışı, PWA, hata",
+      "radius": 24,
+      "page": "t2"
+    },
+    "MRegister.dc.html": {
+      "x": 3290,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Kayıt",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MVerify.dc.html": {
+      "x": 3760,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — E-posta doğrulama",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MForgot.dc.html": {
+      "x": 4230,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Şifre sıfırlama isteği",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MReset.dc.html": {
+      "x": 4700,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Yeni şifre",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MArchive.dc.html": {
+      "x": 5170,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Arşiv",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MTrash.dc.html": {
+      "x": 5640,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Çöp kutusu",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MInvites.dc.html": {
+      "x": 6110,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Davetler",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MNotifications.dc.html": {
+      "x": 6580,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Bildirimler",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MProjectSettings.dc.html": {
+      "x": 7050,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Proje ayarları",
+      "radius": 32,
+      "page": "m1"
+    },
+    "MSearch.dc.html": {
+      "x": 7520,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Arama sonuçları",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MTodoDate.dc.html": {
+      "x": 7990,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Tarih seçici",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MTodoWho.dc.html": {
+      "x": 8460,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Kişi seçici",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MReminder.dc.html": {
+      "x": 8930,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Not hatırlatıcısı (proje notu)",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MMove.dc.html": {
+      "x": 9400,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Taşı / kopyala",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MNewProject.dc.html": {
+      "x": 9870,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Yeni proje",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MVersions.dc.html": {
+      "x": 10340,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Sürüm geçmişi",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MNoteMenu.dc.html": {
+      "x": 10810,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Not menüsü",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MStates.dc.html": {
+      "x": 11280,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Durumlar: geri al, boş proje, sonuç yok",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MOffline.dc.html": {
+      "x": 11750,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Çevrimdışı",
+      "radius": 32,
+      "page": "m2"
+    },
+    "TViewer.dc.html": {
+      "x": 6398,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Görüntüleyici proje sayfası",
+      "radius": 24,
+      "page": "t2"
+    },
+    "MTodoMenu.dc.html": {
+      "x": 12220,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Yapılacaklar menüsü",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MConfirm.dc.html": {
+      "x": 12690,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Onay (proje silme)",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MViewer.dc.html": {
+      "x": 13160,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Görüntüleyici proje sayfası",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MInstall.dc.html": {
+      "x": 13630,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Ana ekrana ekle ipucu",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MTodoDetail.dc.html": {
+      "x": 14100,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Görev ayrıntısı",
+      "radius": 32,
+      "page": "m2"
+    },
+    "MViewerNote.dc.html": {
+      "x": 14570,
+      "y": 6720,
+      "w": 390,
+      "h": 844,
+      "title": "Mobil — Görüntüleyici, salt okunur not",
+      "radius": 32,
+      "page": "m2"
+    },
+    "TTodoDetail.dc.html": {
+      "x": 7312,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Yapılacaklar notu, görev ayrıntısı",
+      "radius": 24,
+      "page": "t2"
+    },
+    "TViewerNote.dc.html": {
+      "x": 8226,
+      "y": 9594,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet — Görüntüleyici, salt okunur not",
+      "radius": 24,
+      "page": "t2"
+    },
+    "AuthMotion.dc.html": {
+      "x": 3040,
+      "y": 11300,
+      "w": 1440,
+      "h": 900,
+      "title": "Hareket — Giriş arka planı (A/B/C)",
+      "is_interactive": true,
+      "page": "x1"
+    },
+    "MicroMotion.dc.html": {
+      "x": 4560,
+      "y": 11300,
+      "w": 1440,
+      "h": 1260,
+      "title": "Hareket — Mikro etkileşimler",
+      "is_interactive": true,
+      "page": "x1"
+    },
+    "MotionSpec.dc.html": {
+      "x": 6080,
+      "y": 11300,
+      "w": 1440,
+      "h": 1210,
+      "title": "Hareket — Sistem özeti",
+      "page": "x1"
+    }
+  },
+  "order": [
+    "Auth.dc.html",
+    "Main.dc.html",
+    "TextNote.dc.html",
+    "TodoNote.dc.html",
+    "Project.dc.html",
+    "ProjectSettings.dc.html",
+    "Dialogs.dc.html",
+    "Search.dc.html",
+    "Archive.dc.html",
+    "Trash.dc.html",
+    "Invites.dc.html",
+    "Notifications.dc.html",
+    "Settings.dc.html",
+    "States.dc.html",
+    "HomeDark.dc.html",
+    "TodoDark.dc.html",
+    "MAuth.dc.html",
+    "MHome.dc.html",
+    "MDrawer.dc.html",
+    "MTodo.dc.html",
+    "MText.dc.html",
+    "MProject.dc.html",
+    "MSettings.dc.html",
+    "Dialogs2.dc.html",
+    "Forms.dc.html",
+    "States2.dc.html",
+    "Composer.dc.html",
+    "CardStates.dc.html",
+    "TAuth.dc.html",
+    "THome.dc.html",
+    "THomeNav.dc.html",
+    "TText.dc.html",
+    "TTodo.dc.html",
+    "TProject.dc.html",
+    "TProjectSettings.dc.html",
+    "TSearch.dc.html",
+    "TArchive.dc.html",
+    "TTrash.dc.html",
+    "TInvites.dc.html",
+    "TNotifications.dc.html",
+    "TSettings.dc.html",
+    "TDialogs.dc.html",
+    "TStates.dc.html",
+    "MRegister.dc.html",
+    "MVerify.dc.html",
+    "MForgot.dc.html",
+    "MReset.dc.html",
+    "MArchive.dc.html",
+    "MTrash.dc.html",
+    "MInvites.dc.html",
+    "MNotifications.dc.html",
+    "MProjectSettings.dc.html",
+    "MSearch.dc.html",
+    "MTodoDate.dc.html",
+    "MTodoWho.dc.html",
+    "MReminder.dc.html",
+    "MMove.dc.html",
+    "MNewProject.dc.html",
+    "MVersions.dc.html",
+    "MNoteMenu.dc.html",
+    "MStates.dc.html",
+    "MOffline.dc.html",
+    "Logo.dc.html",
+    "Fonts.dc.html",
+    "TViewer.dc.html",
+    "MTodoMenu.dc.html",
+    "MConfirm.dc.html",
+    "MViewer.dc.html",
+    "MInstall.dc.html",
+    "MTodoDetail.dc.html",
+    "MViewerNote.dc.html",
+    "TTodoDetail.dc.html",
+    "TViewerNote.dc.html",
+    "AuthMotion.dc.html",
+    "MicroMotion.dc.html",
+    "MotionSpec.dc.html"
+  ],
+  "notes": {
+    "r1": {
+      "x": 0,
+      "y": -300,
+      "text": "Masaüstü · Kimlik, ana sayfa ve açık notlar",
+      "kind": "title1",
+      "maxW": 10600,
+      "page": "d1"
+    },
+    "r2": {
+      "x": 0,
+      "y": 1100,
+      "text": "Masaüstü · Projeler, diyaloglar ve arama",
+      "kind": "title1",
+      "maxW": 10600,
+      "page": "d2"
+    },
+    "r3": {
+      "x": 0,
+      "y": 3000,
+      "text": "Masaüstü · Arşiv, çöp, davetler, bildirimler",
+      "kind": "title1",
+      "maxW": 10600,
+      "page": "d3"
+    },
+    "r4": {
+      "x": 0,
+      "y": 4360,
+      "text": "Masaüstü · Ayarlar, durumlar ve koyu tema",
+      "kind": "title1",
+      "maxW": 10600,
+      "page": "d4"
+    },
+    "r5": {
+      "x": 0,
+      "y": 6420,
+      "text": "Mobil · 390 px",
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "m1"
+    },
+    "tip": {
+      "x": 6080,
+      "y": 0,
+      "w": 360,
+      "text": "Masaüstü ekranlarında Tweaks: theme (açık/koyu) ve sidebar (open/collapsed). Yapılacaklar notu, Giriş, Diyaloglar, Not al ve kart halleri etkileşimli: Play ile dene. Satırlar: masaüstü, projeler, arşiv/çöp/davetler, ayarlar/durumlar/koyu tema, mobil, tablet, keşif.",
+      "fill": "green",
+      "page": "d1"
+    },
+    "r6": {
+      "x": 0,
+      "y": 7700,
+      "text": "Tablet · 834 px",
+      "kind": "title1",
+      "maxW": 7400,
+      "page": "t1"
+    },
+    "r7": {
+      "x": 0,
+      "y": 11000,
+      "text": "Keşif · Logo ve yazı tipi adayları",
+      "kind": "title1",
+      "maxW": 3000,
+      "page": "x1"
+    },
+    "r5b": {
+      "x": 7520,
+      "y": 6420,
+      "text": "Mobil 2 · Alt sayfalar ve durumlar",
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "m2"
+    },
+    "r6b": {
+      "x": 0,
+      "y": 9300,
+      "text": "Tablet 2",
+      "kind": "title1",
+      "maxW": 9200,
+      "page": "t2"
+    }
+  },
+  "designSystems": []
+}

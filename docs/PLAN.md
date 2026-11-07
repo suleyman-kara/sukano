@@ -225,3 +225,49 @@ Her aşamanın sonunda çalışan önizleme + kısa özet, onaydan sonra sırada
 - E-posta gönderim servisi seçimi (Resend varsayılan) ve gönderici alan adı.
 - Alan adı.
 - Google OAuth istemci kimliği (Google Cloud Console'da oluşturulacak).
+
+---
+
+## 10. Tasarım kararları (onaylandı, 7 Kasım 2026)
+
+Tasarım tuvali: https://claude.ai/artifact/UeHrCw2oY651GfEmHzFCBF (76 artboard; masaüstü 1440, tablet 834×1194, mobil 390×844; açık ve koyu tema). Kaynak dosyalar `docs/design/` altında (`*.dc.html` + `canvas.json`); inceleme raporları `docs/design/ux-1.md`, `ux-2.md`, `consistency.md`.
+
+### Görsel dil
+- **Yazı tipi:** Onest (400/500/600/700), yedek Inter ve sistem. Gövde 14 px masaüstü, 15–16 px mobil.
+- **Renk:** vurgu çam yeşili `#2E6B55` (koyu temada `#7FC2A6`); sıcak gri nötrler (`--bg #F7F6F2`, `--surface #FFF`, `--fg #1C1B19`, `--muted #5F5D57`, `--line #E4E2DC`; koyu: `#141413 / #1E1E1C / #ECEAE4 / #AFADA6 / #2F2F2C`). Not renkleri 9 pastel + varsayılan, koyu temada derin tonları. Proje renkleri 7 koyu ton (`#AD5A34 #3F6DB5 #4A7D45 #9E4F72 #6F5DAE #87691A #4F6C7A`); avatar renkleri beyaz metinle ≥ 4,5:1.
+- **Logo:** 2×2 yuvarlatılmış kare ızgara (sol üst ve sağ alt tam renk, diğer ikisi %35); kelime işareti küçük harf "sukano", 700, -0.01em. PWA simgesi yeşil zemin üstünde beyaz kareler.
+- Radius 10–14 (kart 14, düğme 10, mobil kart 12), Keep gibi havadar.
+
+### Kabuk ve gezinme
+- Sol panel katlanabilir: 248 px açık / 72 px ray (yalnızca simgeler, projeler baş harfli daire). Tablette varsayılan ray, hamburger ile kaplama. Mobilde çekmece.
+- "Notlar · Arşiv · Çöp" görünüm kapsülü üst çubukta, aramanın sağında; yalnızca alan sayfalarında (Notlarım, proje). Masaüstünde hepsi etiketli, tablette yalnızca seçili etiketli, mobilde yalnızca simge.
+- Avatar menüsü: ad, e-posta, Ayarlar, Çıkış yap (masaüstü ve tablet); mobilde Ayarlar sayfasında.
+- Silinmiş projeler listesi sol menüde Projeler'in altında (yalnızca yöneticilere).
+
+### Yapılacaklar notu
+- Satır: kutucuk + başlık; sağda sessiz ipuçları (alt görev "1/3", tarih "3 → 12 Kas" / "Bugün" / gecikmiş kırmızı, avatarlar). Hover/odakta takvim ve kişi simgeleri; "Ayrıntılar" satırlar simgesi akordeonu açar.
+- Tarih seçici: iki yuva ve ok (başlangıç → bitiş; sözcük yok), varsayılan aktif yuva bitiş; hızlı seçenekler; doğal yazım alanı ("yarın, cuma, 15 kasım"); takvimde aralık vurgusu; saat düğmesi; Hatırlat anahtarı ("Atananlara gider" / "Sana gider"); "Tarihleri temizle".
+- Tamamlama: satır 1,2 sn yerinde kalır, sonra "Tamamlananlar (n)" grubuna iner; not içinde toast "X tamamlandı · Geri al" (8 sn, üzerine gelince durur, en çok 2 yığın); Ctrl+Z son tamamlamayı geri alır. Zincirleme tamamlanmada üst görev adı toast'ta yazar.
+- Kısayollar: sürekli şerit yok; boş satırın yer tutucusu "Görev yaz · Enter yeni görev · Tab alt görev"; Ctrl+/ ve alt çubuktaki klavye simgesi kısayol kartını açar. Ctrl+D seçiciyi açıp odağı doğal yazım alanına verir; Esc katmanlı kapatır.
+- Dokunmatik: klavye üstü araç çubuğu (girinti, alt görev, tarih, kişi, ayrıntılar, Tamamla, Bitti); görev ayrıntısı alttan açılan sayfa.
+
+### Sözlük
+- "Kopyasını oluştur" (aynı alanda yinele), "Kopyala…" (proje notunu başka alana kopyala), "Taşı veya kopyala…" (kişisel not; taşıma 10 sn geri alınabilir, sonra kesin).
+- "Geri yükle" (çöp ve sürüm), "Projeyi geri getir" (silinmiş proje), "Geri al" (toast ve Ctrl+Z), "Tarihleri temizle" (görev tarihi), "Kaldır" (hatırlatıcı, ek).
+- "Not hatırlatıcısı" (not düzeyi), "Hatırlat" (görev). Rol adları çipte büyük, cümle içinde küçük harf. Görüntüleyici açıklaması: "Okur ve arar; not ekleyemez, görev işaretleyemez."
+- Kart ve not menüsü kanonik sırası: Sabitle · Renk · Not hatırlatıcısı · Taşı veya kopyala… · Kopyasını oluştur · Sürüm geçmişi · Dönüştür · ayraç · Arşivle · Çöpe at (yapılacaklarda en üstte Tümünü aç/kapat ve Tamamlananları sil).
+
+### Diğer ürün kararları (tasarım sırasında alındı)
+- Görüntüleyici: satırlarda kutucuk yerine madde işareti; kilitli rozet. Görev görüntüleyiciye atanabilir ama işaretleyemez.
+- Mobil alttan açılan sayfalar: anında uygulananlarda "Bitti", onaylılarda Vazgeç + birincil; tutamak ve karartma erişilebilir düğme; geri hareketi kapatır.
+- Toast sol altta (uygulama) / not içinde (yapılacaklar), 6–8 sn, "Geri al". Arşivle, çöpe at, taşı, tamamla, tamamlananları sil geri alınabilir.
+- E-posta değiştirirken şifre istenir; hesap silmede e-posta adresi yazılarak onaylanır. Eki olan metin notu önce ekler kaldırılmadan yapılacaklara dönüştürülemez.
+- Turnstile görünmez; formda yalnızca "Bu form Cloudflare Turnstile ile korunur." satırı.
+- Arşivde tüm görevleri tamamlanmış yapılacaklar kartı başlık + "Tüm görevler tamamlandı" satırı gösterir.
+- PWA kurulum ipucu: Android/masaüstünde "Ekle"; iOS'ta "Paylaş → Ana Ekrana Ekle" adımları.
+- Sürüm geçmişinde önizleme paneli; geri yükleme onaylı.
+
+### Hareket
+- Giriş ekranı arka planı: A "Yükselen ızgara" (2×2 kare matrisleri, 5–11 sn döngü, yalnızca transform ve opacity; üretimde genlik önizlemenin yaklaşık yarısı). `prefers-reduced-motion` ve Ayarlar'daki "Hareketi azalt" seçeneğine uyulur.
+- Süre ölçeği: micro 120, small 180, medium 240, large 320 ms, ambient 8–14 s; giriş ease-out-quart, çıkış ease-in-quart, spring hissi `cubic-bezier(.2,.8,.2,1)`.
+- Kütüphane: Motion (`motion/react`), yalnızca çıkış animasyonları (`AnimatePresence`), paylaşılan geçişler (`layout`/`layoutId`) ve `MotionConfig reducedMotion="user"` için; geri kalanı düz CSS.

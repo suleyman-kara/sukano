@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Formlar ve bildirim kalıpları</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-fg:#FFFFFF;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--stage:#5E5C56;
+--n-turuncu:#FBE2CC;--n-mavi:#DCE9F7;--n-sari:#FBF0BF;--n-yesil:#DEF0D6}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-fg:#2A1210;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--stage:#0B0B0A;--n-turuncu:#4A3827;--n-mavi:#27374A;--n-sari:#45401F;--n-yesil:#2C3F27}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+:where(.sk) h2,:where(.sk) h3,:where(.sk) p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dlg{background:var(--surface);color:var(--fg);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column}
+.dlg h2{font-size:18px;font-weight:600}
+.dlg p{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{background:var(--danger);color:var(--danger-fg);border-color:var(--danger)}
+.btn svg{width:18px;height:18px}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib:hover{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface);width:100%}
+.input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{font-size:12px;color:var(--muted)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.hd{display:flex;align-items:flex-start;gap:12px}
+.hd h2{flex:1;padding-top:6px}
+.ico{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ico svg{width:20px;height:20px}
+.ico.d{background:var(--danger-soft);color:var(--danger)}
+.ico.a{background:var(--accent-soft);color:var(--accent)}
+.foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+.chipline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.chipline b{font-weight:600}
+.chipline small{color:var(--muted);font-size:12px}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13px}
+.note svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.note.w{background:var(--warn-soft);color:var(--warn)}
+.note.m{background:var(--hover);color:var(--muted)}
+.qp{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;width:100%;font-weight:500}
+.qp:hover{background:var(--hover)}.qp small{color:var(--muted);font-weight:400;font-size:13px}
+.qp.on{background:var(--accent-soft);color:var(--accent)}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px}
+.ii{position:relative}.ii svg{position:absolute;left:11px;top:11px;width:18px;height:18px;color:var(--muted)}.ii .input{padding-left:36px}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:12px;background:#2A2926;color:#F3F1EC;box-shadow:var(--shadow);width:100%}
+.sk[data-theme="dark"] .toast{background:#ECEAE4;color:#1C1B19}
+.toast span{flex:1;min-width:0}
+.toast .ta{font-weight:600;color:#9FD8BF;padding:6px 10px;border-radius:8px;text-decoration:none}
+.sk[data-theme="dark"] .toast .ta{color:#2E6B55}
+.toast .tx{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:999px;opacity:.7}
+.toast .tx svg{width:16px;height:16px}
+.toast .tico{width:18px;height:18px;flex:0 0 auto;opacity:.8}
+.menu{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column}
+.mi{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:8px;width:100%;font-weight:500}
+.mi:hover{background:var(--hover)}
+.mi svg{width:18px;height:18px;color:var(--muted);flex:0 0 auto}
+.mi kbd{margin-left:auto;font:inherit;font-size:12px;color:var(--muted)}
+.mi.dg{color:var(--danger)}.mi.dg svg{color:var(--danger)}
+.sep{height:1px;background:var(--line);margin:6px 4px}
+.err{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--danger)}
+.err svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.ok{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--accent)}
+.ok svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.input.bad{border-color:var(--danger)}
+.meter{display:flex;gap:4px}.meter i{flex:1;height:4px;border-radius:999px;background:var(--line)}.meter i.on{background:var(--accent)}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" style="display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; justify-content:center; min-height:1463px; width:100%; padding:48px 40px; background:var(--stage); color:var(--fg)">
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">E-posta değiştirme</span>
+    <div class="dlg" role="dialog" aria-labelledby="f1" style="padding:24px; gap:16px">
+      <div class="hd"><h2 id="f1" style="padding-top:6px">E-posta adresini değiştir</h2><a class="ib" href="Settings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="field"><span>Şu anki adres</span><div class="input" style="display:flex; align-items:center; background:var(--hover); color:var(--muted)">karasuleyman@ornek.com</div></div>
+      <label class="field"><span>Yeni e-posta</span><input class="input" type="email" value="suleyman.kara@ornek.com"></label>
+      <label class="field"><span>Şifren</span><input class="input" type="password" value="parola123"><span class="hint">Google ile giriş yapıyorsan şifre yerine Google hesabınla onaylarsın.</span></label>
+      <p style="font-size:13px">Yeni adrese bir doğrulama bağlantısı gönderilir. Bağlantıya tıklayana kadar eski adresin geçerli kalır.</p>
+      <div class="foot"><a class="btn" href="Settings.dc.html">Vazgeç</a><button class="btn primary">Doğrulama gönder</button></div>
+    </div>
+    <span class="lbl" style="margin-top:12px">Gönderildi</span>
+    <div class="dlg" style="padding:16px 20px; gap:10px">
+      <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span><b style="font-weight:600">suleyman.kara@ornek.com</b> adresine doğrulama bağlantısı gönderildi.</span></div>
+      <p style="font-size:13px">Ayarlarda: "Doğrulama bekleniyor · Tekrar gönder · İptal et"</p>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Şifre değiştirme</span>
+    <div class="dlg" role="dialog" aria-labelledby="f2" style="padding:24px; gap:16px">
+      <div class="hd"><h2 id="f2" style="padding-top:6px">Şifreyi değiştir</h2><a class="ib" href="Settings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <label class="field"><span>Mevcut şifre</span><input class="input" type="password" value="eskiparola1"></label>
+      <label class="field"><span>Yeni şifre</span><input class="input" type="password" value="yeniparola2026"><span class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="hint">En az 8 karakter.</span></label>
+      <label class="field"><span>Yeni şifre (tekrar)</span><input class="input bad" type="password" value="yeniparola2025" aria-invalid="true" aria-describedby="f2e"><span class="err" id="f2e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5h.01"/></svg><span>Şifreler aynı değil.</span></span></label>
+      <label style="display:flex; align-items:center; gap:10px; font-size:13px"><input type="checkbox" checked style="accent-color:var(--accent); width:16px; height:16px; margin:0">Diğer cihazlardaki oturumları kapat</label>
+      <div class="foot"><a class="btn" href="Settings.dc.html">Vazgeç</a><button class="btn primary" disabled style="opacity:.5">Şifreyi kaydet</button></div>
+    </div>
+    <span class="lbl" style="margin-top:12px">Yalnızca Google ile bağlı hesap</span>
+    <div class="dlg" style="padding:16px 20px; gap:10px">
+      <p style="font-size:13px; color:var(--fg)">Hesabında şifre yok. Bir şifre belirlersen e-posta ve şifreyle de giriş yapabilirsin.</p>
+      <div style="display:flex; justify-content:flex-end"><button class="btn">Şifre belirle</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Not hatırlatıcısı · proje notu</span>
+    <div class="dlg" role="dialog" aria-labelledby="f3" style="padding:16px; gap:10px; border-radius:14px">
+      <div style="display:flex; align-items:center; gap:10px; padding:2px 4px 4px"><span style="color:var(--accent); display:inline-flex; width:20px; height:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><h3 id="f3" style="flex:1; font-size:15px; font-weight:600">Hatırlatıcı</h3><span class="hint">Lansman hazırlığı</span></div>
+      <div style="display:flex; flex-direction:column; gap:2px">
+        <button class="qp">Bugün <small>18:00</small></button>
+        <button class="qp on">Yarın <small>Cmt, 09:00</small></button>
+        <button class="qp">Gelecek hafta <small>Pzt, 9 Kas, 09:00</small></button>
+      </div>
+      <div style="height:1px; background:var(--line); margin:2px 0"></div>
+      <div class="two">
+        <label class="field"><span>Tarih</span><span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><input class="input" value="8 Kasım 2026"></span></label>
+        <label class="field"><span>Saat</span><span class="ii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg><input class="input" value="09:00"></span></label>
+      </div>
+      <div class="note m" style="align-items:center"><span style="display:flex; flex:0 0 auto"><span class="avatar" style="width:24px;height:24px;font-size:9px;background:#B25D49;border:2px solid var(--hover)">AD</span><span class="avatar" style="width:24px;height:24px;font-size:9px;background:#4976B4;border:2px solid var(--hover);margin-left:-5px">MK</span><span class="avatar" style="width:24px;height:24px;font-size:9px;background:#7A5FB8;border:2px solid var(--hover);margin-left:-5px">ZA</span></span><span style="color:var(--fg)">Projedeki herkese gider <span style="color:var(--muted)">· 5 üye</span></span></div>
+      <p class="hint">Bir kez çalar. Saat dilimi: İstanbul (tarayıcıdan).</p>
+      <div style="display:flex; align-items:center; gap:8px; padding-top:6px; border-top:1px solid var(--line)"><button class="btn" style="height:34px; padding:0 12px; color:var(--danger); border-color:transparent">Kaldır</button><span style="flex:1"></span><button class="btn" style="height:34px; padding:0 12px">Vazgeç</button><button class="btn primary" style="height:34px; padding:0 14px">Kaydet</button></div>
+    </div>
+    <span class="lbl" style="margin-top:12px">Kişisel notta</span>
+    <div class="dlg" style="padding:14px 16px; gap:10px">
+      <p style="font-size:13px">Kişisel notta "Projedeki herkese gider" satırı yoktur; hatırlatıcı yalnızca sana gelir. Kaydedilen hatırlatıcı notta çip olarak görünür:</p>
+      <span style="display:inline-flex; align-self:flex-start; align-items:center; gap:6px; height:30px; padding:0 10px 0 8px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:500"><span style="display:inline-flex; width:15px; height:15px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span>Yarın, 09:00</span>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Toast · taşı / kopyala sonucu</span>
+    <div class="toast" role="status"><span>Kişisel alana kopyalandı</span><a class="ta" href="TextNote.dc.html">Aç</a><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="toast" role="status"><span>Web Sitesi Yenileme projesine kopyalandı</span><a class="ta" href="Project.dc.html">Aç</a><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="toast" role="status"><span>Ev Taşınma projesine taşındı</span><button class="ta" title="10 sn içinde geri alınabilir">Geri al</button><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <p style="color:#E8E6E0; font-size:13px; margin:-4px 0 0">Taşıma 10 sn içinde geri alınabilir; toast bu süre boyunca durur, sonra taşıma kesinleşir.</p>
+    <span class="lbl" style="margin-top:12px">Toast · geri al kalıbı</span>
+    <div class="toast" role="status"><span>Not arşivlendi</span><button class="ta">Geri al</button><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="toast" role="status"><span>Not çöpe atıldı · 7 gün Çöp'te kalır</span><button class="ta">Geri al</button><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="toast" role="status"><span>3 tamamlanan görev silindi</span><button class="ta">Geri al</button><button class="tx" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="dlg" style="padding:14px 16px; gap:6px; margin-top:4px">
+      <p style="font-size:13px">Sol altta; not açıkken notun içinde, alt çubuğun hemen üstünde. 8 sn kalır (taşımada 10 sn); üzerine gelince ya da odaklanınca süre durur. Yeni toast eskisini silmez: en çok iki satır yığılır, ikisinin de Geri al düğmesi çalışır. Ctrl+Z son işlemi geri alır. Metin işi söyler: "Mobil görünüm tamamlandı". Açık temada koyu, koyu temada açık zeminde durur.</p>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Not menüsü · yapılacaklar notu (Diğer, masaüstü)</span>
+    <div class="menu" role="menu" aria-label="Not işlemleri" style="width:300px">
+      <button class="mi" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 9 5 5 5-5"/><path d="m7 4 5 5 5-5" opacity=".5"/></svg>Tümünü aç</button>
+      <button class="mi" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5-5 5 5"/><path d="m7 20 5-5 5 5" opacity=".5"/></svg>Tümünü kapat</button>
+      <button class="mi" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M6 7l1 13h10l1-13"/><path d="m9.5 13 2 2 3.5-4"/></svg>Tamamlananları sil</button>
+      <div class="sep"></div>
+      <button class="mi" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>Kopyasını oluştur</button>
+      <button class="mi" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-4-4"/><path d="M19 16H5l4 4"/></svg>Metin notuna dönüştür</button>
+    </div>
+    <p style="color:#E8E6E0; font-size:13px; max-width:340px">Kanonik sıra üç cihazda aynı: Tümünü aç · Tümünü kapat · Tamamlananları sil · ayraç · Sabitle · Renk · Not hatırlatıcısı · Kopyala… · Kopyasını oluştur · Sürüm geçmişi · Dönüştür · ayraç · Arşivle · Çöpe at. Masaüstünde alt çubukta duranlar menüde tekrarlanmaz. Proje notunda taşıma yoktur, yalnızca kopyalama; kişisel notta "Kopyala…" yerine "Taşı veya kopyala…" yer alır (aynı klasör+ok simgesi).</p>
+    <span class="lbl" style="margin-top:12px">Mobil sheet kuralı</span>
+    <div class="dlg" style="padding:14px 16px; gap:6px">
+      <p style="font-size:13px">Anında uygulanan sheet'lerde (tarih, kişi, not ve yapılacaklar menüsü) sağ üstte "Bitti"; onaylı sheet'lerde (hatırlatıcı, taşı/kopyala, yeni proje, onay) altta Vazgeç + birincil düğme, × yok. Tutamak ve karartma "Kapat" düğmesidir; aşağı kaydırma ve geri hareketi sheet'i kapatır. Kapanınca odak sheet'i açan düğmeye döner.</p>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Davet formu · hata ve uyarılar</span>
+    <div class="dlg" style="padding:20px; gap:14px">
+      <label class="field"><span>E-posta</span><input class="input bad" value="deniz@baska.com" aria-invalid="true" aria-describedby="g1"></label>
+      <span class="err" id="g1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16.5h.01"/></svg><span>Bu adresle bir Sukano hesabı yok. Davet edebilmen için önce hesap açması gerekiyor.</span></span>
+      <div style="height:1px; background:var(--line)"></div>
+      <label class="field"><span>E-posta</span><input class="input" value="emre@ornek.com" aria-describedby="g2"></label>
+      <span class="note w" id="g2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg><span>Emre henüz e-postasını doğrulamadı. Doğrulayınca davet edilebilir.</span></span>
+      <div style="height:1px; background:var(--line)"></div>
+      <label class="field"><span>E-posta</span><input class="input" value="mehmet@ornek.com" aria-describedby="g3"></label>
+      <span class="note m" id="g3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span>Mehmet Kaya zaten bu projenin üyesi.</span></span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":1440,"height":1463}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

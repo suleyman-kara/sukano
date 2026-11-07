@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Durumlar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--n-turkuaz:#D4EEEA}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--n-turkuaz:#223E3A}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;color:var(--muted)}
+.ib svg{width:18px;height:18px}
+.frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:300px}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.banner{display:flex;align-items:center;gap:12px;padding:10px 16px;font-weight:500}
+.banner svg{width:18px;height:18px;flex:0 0 auto}
+.toast{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);max-width:360px}
+.toast p{margin:0}.toast small{color:var(--muted)}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:32px; min-height:900px; width:100%; padding:40px; background:var(--bg); color:var(--fg)">
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Boş durum · Notlarım</span>
+    <div class="frame" style="align-items:center; justify-content:center; padding:40px; text-align:center; gap:12px">
+      <span style="width:64px; height:64px; border-radius:18px; background:var(--accent-soft); color:var(--accent); display:inline-flex; align-items:center; justify-content:center"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg></span>
+      <h2 style="margin:0; font-size:18px; font-weight:600">Henüz not yok</h2>
+      <p style="margin:0; color:var(--muted); max-width:280px">Yukarıdaki "Not al" alanına yaz ya da bir yapılacaklar notu başlat. Notların yalnızca sana görünür.</p>
+      <div style="display:flex; gap:8px; margin-top:8px"><a class="btn primary" href="Main.dc.html">Not al</a><a class="btn" href="TodoNote.dc.html">Yapılacaklar notu</a></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Çevrimdışı</span>
+    <div class="frame">
+      <div class="banner" style="background:var(--warn-soft); color:var(--warn)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 3-2.2M12 9a10 10 0 0 1 7 4M2 9a15 15 0 0 1 5-3.3M17 5.5A15 15 0 0 1 22 9"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>Çevrimdışısın. Notlar okunabilir, düzenleme bağlantı gelince açılır.</div>
+      <div style="padding:20px; display:flex; flex-direction:column; gap:12px; opacity:.85">
+        <div style="height:44px; border:1px solid var(--line); border-radius:12px; display:flex; align-items:center; padding:0 14px; color:var(--muted); background:var(--hover)">Not al…</div>
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+          <div style="border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--n-turkuaz)"><b style="font-weight:600">Market</b><p style="margin:6px 0 0; color:var(--muted)">Süt, yumurta, zeytinyağı</p></div>
+          <div style="border:1px solid var(--line); border-radius:12px; padding:14px"><b style="font-weight:600">Kitap listesi</b><p style="margin:6px 0 0; color:var(--muted)">Tutunamayanlar</p></div>
+        </div>
+        <p style="margin:0; font-size:12px; color:var(--muted)">Son eşitleme: bugün 14:02</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">PWA kurulum ipucu</span>
+    <div class="frame" style="justify-content:flex-end; padding:20px; background:var(--bg)">
+      <div class="toast" style="align-self:flex-end">
+        <span style="width:40px; height:40px; border-radius:11px; background:#2E6B55; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span style="flex:1"><p style="font-weight:500">Sukano'yu ana ekrana ekle</p><small>Uygulama gibi açılır, hatırlatıcılar bildirim olarak gelir.</small></span>
+        <button class="btn primary" style="height:34px; padding:0 12px">Ekle</button>
+        <button class="ib" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Silinmiş proje · yönetici görünümü</span>
+    <div class="frame">
+      <div class="banner" style="background:var(--danger-soft); color:var(--danger)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span style="flex:1">Bu proje 4 Kasım'da silindi. 5 gün içinde geri getirilmezse notlar ve dosyalar kalıcı olarak silinir.</span><button class="btn" style="height:32px; padding:0 12px; white-space:nowrap">Projeyi geri getir</button></div>
+      <div style="padding:20px; display:flex; flex-direction:column; gap:12px; opacity:.6">
+        <div style="display:flex; align-items:center; gap:10px"><span style="width:12px; height:12px; border-radius:999px; background:#4F6C7A"></span><b style="font-size:18px; font-weight:700">Bütçe 2026</b></div>
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+          <div style="border:1px solid var(--line); border-radius:12px; padding:14px"><b style="font-weight:600">Gelir tahmini</b><p style="margin:6px 0 0; color:var(--muted)">Çeyrek bazında tablo</p></div>
+          <div style="border:1px solid var(--line); border-radius:12px; padding:14px"><b style="font-weight:600">Gider kalemleri</b><p style="margin:6px 0 0; color:var(--muted)">Kira, maaş, yazılım</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Görüntüleyici · salt okunur not</span>
+    <div class="frame">
+      <div class="banner" style="background:var(--hover); color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span><b style="color:var(--fg); font-weight:600">Görüntüleyici · salt okunur.</b> Okur ve arar; not ekleyemez, görev işaretleyemez.</span></div>
+      <div style="padding:20px; display:flex; flex-direction:column; gap:10px">
+        <b style="font-size:18px; font-weight:600">Lansman hazırlığı</b>
+        <div style="display:flex; align-items:center; gap:10px; color:var(--fg)"><span style="width:8px; height:8px; border:1.5px solid var(--muted); border-radius:999px; margin:0 5px; flex:0 0 auto" aria-hidden="true"></span>Tasarım onayı</div>
+        <div style="display:flex; align-items:center; gap:10px"><span style="width:8px; height:8px; border:1.5px solid var(--muted); border-radius:999px; margin:0 5px; flex:0 0 auto" aria-hidden="true"></span>İçerik yazımı</div>
+        <div style="display:flex; align-items:center; gap:10px"><span style="width:8px; height:8px; border:1.5px solid var(--muted); border-radius:999px; margin:0 5px; flex:0 0 auto" aria-hidden="true"></span>SEO kontrolleri</div>
+        <p style="margin:6px 0 0; font-size:12px; color:var(--muted)">Ayşe Demir oluşturdu · Son düzenleyen Mehmet Kaya, 2 saat önce</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Hata · sayfa bulunamadı</span>
+    <div class="frame" style="align-items:center; justify-content:center; padding:40px; text-align:center; gap:12px">
+      <span style="font-size:48px; font-weight:700; letter-spacing:-0.03em; color:var(--muted)">404</span>
+      <h2 style="margin:0; font-size:18px; font-weight:600">Bu sayfa yok ya da erişimin kaldırılmış</h2>
+      <p style="margin:0; color:var(--muted); max-width:300px">Not silinmiş, proje silinmiş ya da projeden çıkarılmış olabilirsin.</p>
+      <a class="btn" href="Main.dc.html" style="margin-top:8px">Notlarıma dön</a>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

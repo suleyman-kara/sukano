@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil ayarlar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib svg{width:22px;height:22px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.grp{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:52px;border-top:1px solid var(--line);color:var(--fg);text-decoration:none;width:100%}
+.row:first-child{border-top:0}
+.row .t{flex:1;display:flex;flex-direction:column;min-width:0}
+.row .t b{font-weight:500}
+.row .t small{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row > svg{width:18px;height:18px;color:var(--muted);flex:0 0 auto}
+.sec{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px 14px}
+.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;margin:0;cursor:pointer;flex:0 0 auto}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:999px;background:#fff;transition:left .15s}
+.sw:checked{background:var(--accent)}.sw:checked::after{left:20px}
+.seg{display:inline-flex;background:var(--hover);border-radius:9px;padding:2px;gap:2px}
+.seg span{padding:4px 10px;border-radius:7px;color:var(--muted);font-weight:500;font-size:13px}
+.seg .on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:390px; height:844px; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; overflow:hidden">
+  <header style="display:flex; align-items:center; gap:4px; padding:50px 8px 4px">
+    <a class="ib" href="MHome.dc.html" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></a>
+    <h1 style="margin:0; font-size:20px; font-weight:700">Ayarlar</h1>
+  </header>
+  <div style="flex:1; overflow:auto; padding:8px 16px 32px; display:flex; flex-direction:column; gap:18px">
+    <div class="grp">
+      <a class="row" href="Settings.dc.html">
+        <span class="avatar" style="width:48px; height:48px; font-size:17px; background:#597895">SK</span>
+        <span class="t"><b>Süleyman Kara</b><small>karasuleyman@ornek.com</small></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <div>
+      <p class="sec">Görünüm</p>
+      <div class="grp">
+        <div class="row"><span class="t"><b>Tema</b></span><span class="seg" aria-label="Tema"><span class="on">Açık</span><span>Koyu</span><span>Sistem</span></span></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="sec">Bildirimler</p>
+      <div class="grp">
+        <label class="row"><span class="t"><b>Hatırlatıcılar</b><small>Zamanı gelince bildirim</small></span><input type="checkbox" class="sw" checked></label>
+        <label class="row"><span class="t"><b>Göreve atanma</b></span><input type="checkbox" class="sw" checked></label>
+        <label class="row"><span class="t"><b>Davetler</b></span><input type="checkbox" class="sw" checked></label>
+        <label class="row"><span class="t"><b>Davet e-postası</b></span><input type="checkbox" class="sw" checked></label>
+      </div>
+    </div>
+
+    <div>
+      <p class="sec">Hesap ve güvenlik</p>
+      <div class="grp">
+        <a class="row" href="Settings.dc.html"><span class="t"><b>E-posta</b><small>karasuleyman@ornek.com</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+        <a class="row" href="Settings.dc.html"><span class="t"><b>Şifre</b><small>3 ay önce değiştirildi</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+        <a class="row" href="Settings.dc.html"><span class="t"><b>Google hesabı</b><small>Bağlı</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+        <a class="row" href="Settings.dc.html"><span class="t"><b>Oturumlar</b><small>Bu cihaz ve 2 cihaz daha</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+      </div>
+    </div>
+
+    <div class="grp">
+      <button class="row"><span class="t"><b>Çıkış yap</b></span></button>
+      <a class="row" href="Settings.dc.html" style="color:var(--danger)"><span class="t"><b>Hesabı sil</b></span></a>
+    </div>
+    <p style="margin:0; text-align:center; font-size:12px; color:var(--muted)">Sukano · sürüm 1.0</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

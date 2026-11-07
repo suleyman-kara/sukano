@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil yapılacaklar notu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--key:#FFFFFF;--kb:#D9D8D3}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--key:#3A3A38;--kb:#222220}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib svg{width:22px;height:22px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.row{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border-radius:8px}
+.row.focus{background:var(--hover)}
+.chev{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 auto;visibility:hidden}
+.chev.show{visibility:visible}.chev svg{width:16px;height:16px}.chev.open svg{transform:rotate(90deg)}
+.cb{width:20px;height:20px;border:1.5px solid var(--muted);border-radius:6px;flex:0 0 auto;position:relative;background:var(--surface)}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.cb.on::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid var(--accent-fg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ttl.done{text-decoration:line-through;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);padding:2px 7px;border-radius:999px;background:var(--line);white-space:nowrap}
+.hint.over{color:var(--danger);background:var(--danger-soft);font-weight:500}
+.donehdr{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:500;padding:8px 6px}
+.donehdr svg{width:16px;height:16px}
+.kbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;color:var(--fg);flex:0 0 auto}
+.kbtn.on{background:var(--accent-soft);color:var(--accent)}
+.kbtn svg{width:20px;height:20px}
+.kdone{height:44px;padding:0 10px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;flex:0 0 auto;white-space:nowrap}
+.kclose{height:44px;padding:0 8px 0 10px;border-radius:10px;color:var(--accent);font-size:15px;font-weight:600;flex:0 0 auto;white-space:nowrap}
+.toast{position:absolute;left:12px;right:12px;bottom:288px;z-index:3;display:flex;align-items:center;gap:8px;padding:4px 4px 4px 16px;min-height:52px;border-radius:12px;background:#2A2926;color:#F3F1EC;box-shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08)}
+.sk[data-theme="dark"] .toast{background:#ECEAE4;color:#1C1B19}
+.toast span{flex:1;min-width:0;font-size:14px}
+.toast .ta{font-weight:600;color:#9FD8BF;height:44px;padding:0 12px;border-radius:8px;display:inline-flex;align-items:center;flex:0 0 auto}
+.sk[data-theme="dark"] .toast .ta{color:#2E6B55}
+.toast .tx{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;opacity:.7;flex:0 0 auto}
+.toast .tx svg{width:18px;height:18px}
+.key{height:40px;border-radius:6px;background:var(--key);flex:1;box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.key.wide{flex:1.6;background:var(--line)}
+.caret{display:inline-block;width:2px;height:20px;background:var(--accent);margin-left:1px;vertical-align:middle}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:390px; height:844px; background:var(--surface); color:var(--fg); display:flex; flex-direction:column; overflow:hidden; position:relative">
+  <header style="display:flex; align-items:center; gap:2px; padding:50px 8px 0">
+    <a class="ib" href="MProject.dc.html" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></a>
+    <div style="flex:1"></div>
+    <div style="display:flex; align-items:center" aria-label="Şu anda açık tutanlar: Mehmet Kaya, Zeynep Arslan"><span class="avatar" style="width:26px; height:26px; font-size:10px; background:#4976B4; border:2px solid var(--surface)">MK</span><span class="avatar" style="width:26px; height:26px; font-size:10px; background:#7A5FB8; border:2px solid var(--surface); margin-left:-8px">ZA</span></div>
+    <button class="ib" aria-label="Sabitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3-1-6Z"/><path d="M12 15v5"/></svg></button>
+    <a class="ib" href="MReminder.dc.html" aria-label="Not hatırlatıcısı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></a>
+    <a class="ib" href="MTodoMenu.dc.html" aria-label="Diğer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+  </header>
+
+  <div style="flex:1; overflow:auto; padding:4px 16px 16px; display:flex; flex-direction:column; gap:2px">
+    <label style="display:block; padding:4px 4px 10px"><span class="sr">Not başlığı</span><input value="Lansman hazırlığı" style="width:100%; border:0; background:transparent; font-size:20px; font-weight:600; padding:0"></label>
+    <p style="margin:-6px 0 0; padding:0 4px 10px; font-size:12px; color:var(--muted)">Ayşe Demir oluşturdu · Son düzenleyen Mehmet Kaya, 2 saat önce</p>
+
+    <div class="row"><span class="chev show open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="cb"></span><span class="ttl">Tasarım onayı</span><span class="hint" title="1/3 alt görev tamamlandı">1/3</span></div>
+    <div class="row" style="padding-left:28px"><span class="chev"></span><span class="cb"></span><span class="ttl">Ürün sayfası</span><span class="hint">Bugün</span><span class="avatar" style="width:22px;height:22px;font-size:9px;background:#7A5FB8" title="Zeynep Arslan">ZA</span><span class="avatar" style="width:22px;height:22px;font-size:9px;background:#597895" title="Süleyman Kara (sen)">SK</span></div>
+    <div class="row focus" style="padding-left:28px"><span class="chev"></span><span class="cb {{doneCls}}"></span><span class="ttl {{doneTtl}}">Mobil görünü<span class="caret"></span></span></div>
+    <div class="donehdr" style="padding-left:34px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Tamamlananlar (1)</div>
+    <div class="row"><span class="chev show"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span><span class="cb"></span><span class="ttl">İçerik yazımı</span><span class="hint" title="1/3 alt görev tamamlandı">1/3</span><span class="hint">3 → 12 Kas</span><span class="avatar" style="width:22px;height:22px;font-size:9px;background:#7A5FB8">ZA</span><span class="avatar" style="width:22px;height:22px;font-size:9px;background:#4976B4; margin-left:-6px">MK</span></div>
+    <div class="row"><span class="chev"></span><span class="cb"></span><span class="ttl">SEO kontrolleri</span><span class="hint over">4 Kas</span><span class="avatar" style="width:22px;height:22px;font-size:9px;background:#4976B4">MK</span></div>
+    <div class="row"><span class="chev"></span><span class="cb"></span><span class="ttl">Lansman duyurusu</span><span class="hint">20 Kas</span></div>
+    <div class="donehdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Tamamlananlar (2)</div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 4px; color:var(--muted)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Görev ekle</div>
+  </div>
+
+  <div role="toolbar" aria-label="Görev araçları" style="display:flex; align-items:center; gap:2px; padding:4px 8px; border-top:1px solid var(--line); background:var(--bg)">
+    <button class="kbtn" aria-label="Girintiyi azalt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M12 12h8M12 18h8"/><path d="m8 10-3 2 3 2"/></svg></button>
+    <button class="kbtn" aria-label="Alt görev yap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M12 12h8M12 18h8"/><path d="m5 10 3 2-3 2"/></svg></button>
+    <button class="kbtn" aria-label="Tarih"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+    <button class="kbtn" aria-label="Kişiye ata"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+    <a class="kbtn" href="MTodoDetail.dc.html" aria-label="Ayrıntılar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg></a>
+    <span style="flex:1"></span>
+    <button class="kdone" aria-label="Görevi tamamla: Mobil görünüm">Tamamla</button>
+    <button class="kclose" aria-label="Klavyeyi kapat">Bitti</button>
+  </div>
+  <sc-if value="{{toast}}" hint-placeholder-val="{{false}}">
+    <div class="toast" role="status"><span>Mobil görünüm tamamlandı</span><button type="button" class="ta">Geri al</button><button type="button" class="tx" aria-label="Bildirimi kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  </sc-if>
+
+  <div aria-hidden="true" style="background:var(--kb); padding:8px 4px 24px; display:flex; flex-direction:column; gap:10px">
+    <div style="display:flex; gap:5px; padding:0 2px"><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span></div>
+    <div style="display:flex; gap:5px; padding:0 18px"><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span></div>
+    <div style="display:flex; gap:5px; padding:0 2px"><span class="key wide"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key"></span><span class="key wide"></span></div>
+    <div style="display:flex; gap:5px; padding:0 2px"><span class="key wide"></span><span class="key" style="flex:5"></span><span class="key wide" style="flex:2.2; background:var(--accent)"></span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"hal":{"editor":"enum","options":["Düzenleme","Tamamlandı, geri al"],"default":"Düzenleme","section":"Hal"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Tamamlandı hali: satır 1,2 sn yerinde, üstü çizili kalır; toast araç çubuğunun hemen üstünde (visualViewport'a göre) çıkar.
+    const t = this.props.hal === 'Tamamlandı, geri al';
+    return { theme: this.props.theme ?? 'light', toast: t, doneCls: t ? 'on' : '', doneTtl: t ? 'done' : '' };
+  }
+}
+</script>
+</body>
+</html>

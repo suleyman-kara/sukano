@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Durumlar 2</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-fg:#FFFFFF;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--stage:#5E5C56;
+--n-turuncu:#FBE2CC;--n-mavi:#DCE9F7;--n-sari:#FBF0BF;--n-yesil:#DEF0D6}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-fg:#2A1210;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--stage:#0B0B0A;--n-turuncu:#4A3827;--n-mavi:#27374A;--n-sari:#45401F;--n-yesil:#2C3F27}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+:where(.sk) h2,:where(.sk) h3,:where(.sk) p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dlg{background:var(--surface);color:var(--fg);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column}
+.dlg h2{font-size:18px;font-weight:600}
+.dlg p{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{background:var(--danger);color:var(--danger-fg);border-color:var(--danger)}
+.btn svg{width:18px;height:18px}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib:hover{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface);width:100%}
+.input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{font-size:12px;color:var(--muted)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.hd{display:flex;align-items:flex-start;gap:12px}
+.hd h2{flex:1;padding-top:6px}
+.ico{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ico svg{width:20px;height:20px}
+.ico.d{background:var(--danger-soft);color:var(--danger)}
+.ico.a{background:var(--accent-soft);color:var(--accent)}
+.foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+.chipline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.chipline b{font-weight:600}
+.chipline small{color:var(--muted);font-size:12px}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13px}
+.note svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.note.w{background:var(--warn-soft);color:var(--warn)}
+.note.m{background:var(--hover);color:var(--muted)}
+.lbl.m{color:var(--muted)}
+.frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;height:400px}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.banner{display:flex;align-items:center;gap:12px;padding:10px 16px;font-weight:500}
+.banner svg{width:18px;height:18px;flex:0 0 auto}
+.ph{display:flex;align-items:center;gap:10px;padding:16px 20px 10px}
+.ph h3{font-size:18px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap}
+.pdot{width:12px;height:12px;border-radius:999px;flex:0 0 auto}
+.stack{display:flex;align-items:center}
+.stack .avatar{width:26px;height:26px;font-size:10px;border:2px solid var(--surface);margin-left:-6px}
+.stack .avatar:first-child{margin-left:0}
+.addf{margin:4px 20px 0;height:40px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;padding:0 14px;color:var(--muted);box-shadow:var(--shadow)}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:16px 28px}
+.empty h4{margin:0;font-size:16px;font-weight:600}
+.empty p{color:var(--muted);max-width:300px;font-size:13px}
+.eico{width:52px;height:52px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;justify-content:center}
+.eico svg{width:26px;height:26px}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card b{font-weight:600}
+.card p{color:var(--muted);font-size:13px}
+.tk{display:flex;align-items:center;gap:8px;font-size:13px}
+.tk i{width:15px;height:15px;border:1.5px solid var(--muted);border-radius:4px;flex:0 0 auto}
+.tk i.vb{width:7px;height:7px;border-radius:999px;margin:0 4px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill svg{width:13px;height:13px}
+.searchbar{margin:16px 20px 0;height:42px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--surface)}
+.searchbar svg{width:18px;height:18px;color:var(--muted);flex:0 0 auto}
+.os{width:340px;border-radius:14px;background:rgba(250,249,246,.92);color:#1C1B19;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px;display:flex;gap:12px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+.sk[data-theme="dark"] .os{background:rgba(44,44,42,.94);color:#ECEAE4}
+.os .ap{width:36px;height:36px;border-radius:9px;background:#2E6B55;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.os b{font-weight:600}
+.os small{opacity:.6;font-size:12px}
+.os .act{display:flex;gap:6px;margin-top:8px}
+.os .act span{padding:4px 10px;border-radius:7px;background:rgba(0,0,0,.07);font-weight:500;font-size:12px}
+.sk[data-theme="dark"] .os .act span{background:rgba(255,255,255,.1)}
+.dl{display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--line)}
+.dl b{font-weight:600}
+.dl small{color:var(--muted);font-size:12px}
+.trow{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:8px;font-size:14px}
+.trow i{width:17px;height:17px;border:1.5px solid var(--muted);border-radius:5px;flex:0 0 auto}
+.grip{width:16px;height:16px;color:var(--muted);flex:0 0 auto}
+.lift{background:var(--surface);box-shadow:0 2px 4px rgba(0,0,0,.08),0 12px 28px rgba(0,0,0,.16);border:1px solid var(--line);transform:rotate(-1deg)}
+.ghost{opacity:.35;border:1.5px dashed var(--line)}
+.dropline{height:2px;background:var(--accent);border-radius:2px;position:relative}
+.dropline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:999px;background:var(--accent)}
+.att{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.att .ft{width:36px;height:36px;border-radius:8px;background:var(--hover);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex:0 0 auto}
+.att b{font-weight:500;font-size:13px}
+.att small{color:var(--muted);font-size:12px}
+.bar{height:4px;border-radius:999px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.mini{display:flex;flex-direction:column;gap:2px;padding:12px;border-right:1px solid var(--line);width:180px;flex:0 0 180px}
+.mini a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:var(--fg);text-decoration:none;font-weight:500;font-size:13px;white-space:nowrap}
+.mini a.on{background:var(--accent-soft);color:var(--accent)}
+.mini .h{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:12px;background:#2A2926;color:#F3F1EC;box-shadow:var(--shadow);font-size:13px}
+.sk[data-theme="dark"] .toast{background:#ECEAE4;color:#1C1B19}
+.toast .ta{font-weight:600;color:#9FD8BF;padding:4px 8px;text-decoration:none}
+.sk[data-theme="dark"] .toast .ta{color:#2E6B55}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:32px; min-height:1467px; width:100%; padding:40px; background:var(--bg); color:var(--fg)">
+
+  <div class="col">
+    <span class="lbl m">Boş proje · ilk giriş</span>
+    <div class="frame">
+      <div class="ph"><span class="pdot" style="background:#87691A"></span><h3>Kış Tatili Planı</h3><span style="flex:1"></span><span class="stack"><span class="avatar" style="background:#B25D49">AD</span><span class="avatar" style="background:#4976B4">MK</span><span class="avatar" style="background:#7A5FB8">ZA</span><span class="avatar" style="background:#398264">CY</span></span><span class="hint" style="margin-left:6px">5 üye</span></div>
+      <div class="addf">Projeye not ekle…</div>
+      <div class="empty">
+        <span class="eico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 14v6M14 17h6"/></svg></span>
+        <h4>Bu projede henüz not yok</h4>
+        <p>Eklediğin notları projedeki herkes görür ve düzenleyebilir. Kişisel bir notu da projeye taşıyabilirsin.</p>
+        <div style="display:flex; gap:8px; margin-top:4px"><button class="btn primary" style="height:34px; padding:0 12px">Yapılacaklar notu</button><a class="btn" href="ProjectSettings.dc.html" style="height:34px; padding:0 12px">Davet gönder</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Arama · sonuç yok</span>
+    <div class="frame">
+      <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span style="flex:1">fatura ödemesi</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px; height:16px"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+      <div style="display:flex; gap:6px; padding:12px 20px 0"><span class="pill" style="background:var(--fg); color:var(--bg)">Tümü</span><span class="pill" style="border:1px solid var(--line)">Notlarım</span><span class="pill" style="border:1px solid var(--line)">Ev Taşınma</span></div>
+      <div class="empty">
+        <span class="eico" style="background:var(--hover); color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+        <h4>"fatura ödemesi" için sonuç yok</h4>
+        <p>Notlarında ve erişebildiğin 3 projede başlık, metin ve görev başlıklarına bakıldı. Daha kısa bir sözcük dene.</p>
+        <button class="btn" style="height:34px; padding:0 12px; margin-top:4px">Aramayı temizle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Davet kabul edildi</span>
+    <div class="frame" style="flex-direction:row; position:relative">
+      <nav class="mini" aria-label="Gezinme örneği">
+        <a href="Main.dc.html">Notlarım</a>
+        <span class="h">Projeler</span>
+        <a href="Project.dc.html"><span class="pdot" style="width:9px; height:9px; background:#AD5A34"></span>Web Sitesi Yen…</a>
+        <a href="Project.dc.html"><span class="pdot" style="width:9px; height:9px; background:#3F6DB5"></span>Ev Taşınma</a>
+        <a class="on" href="Project.dc.html" aria-current="page"><span class="pdot" style="width:9px; height:9px; background:#9E4F72"></span>Fotoğraf Arşivi<span aria-label="Yeni" style="margin-left:auto; width:7px; height:7px; border-radius:999px; background:var(--accent); flex:0 0 auto"></span></a>
+      </nav>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column">
+        <div class="ph" style="padding:16px 16px 6px"><span class="pdot" style="background:#9E4F72"></span><h3 style="font-size:16px">Fotoğraf Arşivi</h3></div>
+        <div style="margin:4px 16px; padding:12px; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-size:13px; display:flex; flex-direction:column; gap:4px">
+          <b style="font-weight:600">Projeye katıldın</b>
+          <span>Ayşe Demir seni düzenleyici olarak ekledi. Not ekleyebilir, düzenleyebilir ve görevleri işaretleyebilirsin.</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; padding:8px 16px">
+          <div class="card" style="padding:10px"><b style="font-size:13px">Albüm seçimi</b><p style="font-size:12px">2019–2023 arası</p></div>
+          <div class="card" style="padding:10px"><b style="font-size:13px">Tarama listesi</b><p style="font-size:12px">Annemin albümleri</p></div>
+        </div>
+        <div class="toast" role="status" style="margin:auto 12px 12px"><span style="flex:1">Davet kabul edildi</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Görüntüleyici · proje sayfası</span>
+    <div class="frame">
+      <div class="ph"><span class="pdot" style="background:#4A7D45"></span><h3>Kitap Kulübü</h3><span class="pill" style="background:var(--hover); color:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Görüntüleyici</span><span style="flex:1"></span><span class="stack"><span class="avatar" style="background:#B25D49">AD</span><span class="avatar" style="background:#4976B4">MK</span><span class="avatar" style="background:#7A5FB8">ZA</span><span class="avatar" style="background:#398264">CY</span></span></div>
+      <p style="padding:0 20px 8px; color:var(--muted); font-size:13px">Okur ve arar; not ekleyemez, görev işaretleyemez.</p>
+      <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; padding:4px 20px 14px">
+        <div class="card"><b>Kasım kitabı</b><div class="tk"><i class="vb" aria-hidden="true"></i>İlk 100 sayfa</div><div class="tk"><i class="vb" aria-hidden="true"></i>Tartışma soruları</div><div class="tk"><i class="vb" aria-hidden="true"></i>Mekân ayarla</div></div>
+        <div class="card" style="background:var(--n-mavi); border-color:transparent"><b>Okuma listesi</b><p>Kürk Mantolu Madonna, Saatleri Ayarlama Enstitüsü, Tutunamayanlar</p></div>
+        <div class="card"><b>Buluşma yerleri</b><p>Moda sahil kafe, Kadıköy kütüphanesi</p></div>
+        <div class="card" style="background:var(--n-sari); border-color:transparent"><b>Aidat</b><p>Aylık 100 TL, Deniz topluyor</p></div>
+      </div>
+      <p class="hint" style="padding:0 20px 12px; margin-top:auto">"Projeye not ekle" alanı, kart eylemleri ve sürükleme görüntüleyicide yoktur.</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Push bildirimi · işletim sistemi</span>
+    <div class="frame" style="background:linear-gradient(160deg,#8FA39A,#5E6F68); align-items:flex-end; padding:16px; gap:10px">
+      <div class="os"><span class="ap"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span style="flex:1; min-width:0; display:flex; flex-direction:column; gap:1px"><span style="display:flex; justify-content:space-between"><b>Sukano</b><small>şimdi</small></span><span style="font-weight:500">Hatırlatıcı: Market</span><small style="opacity:.75">Kişisel not · bugün 09:00</small><span class="act"><span>Notu aç</span></span></span></div>
+      <div class="os"><span class="ap"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span style="flex:1; min-width:0; display:flex; flex-direction:column; gap:1px"><span style="display:flex; justify-content:space-between"><b>Sukano</b><small>4 dk</small></span><span style="font-weight:500">Zeynep Arslan seni bir göreve atadı</span><small style="opacity:.75">Ürün sayfası · Web Sitesi Yenileme</small></span></div>
+      <div class="os"><span class="ap"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span style="flex:1; min-width:0; display:flex; flex-direction:column; gap:1px"><span style="display:flex; justify-content:space-between"><b>Sukano</b><small>dün</small></span><span style="font-weight:500">Fotoğraf Arşivi projesine davet</span><small style="opacity:.75">Ayşe Demir · Düzenleyici</small></span></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Silinmiş projeler · yalnızca yöneticiler</span>
+    <div class="frame">
+      <div style="padding:16px 20px 12px; display:flex; flex-direction:column; gap:4px"><b style="font-size:16px; font-weight:600">Silinmiş projeler</b><p style="color:var(--muted); font-size:13px">7 gün içinde projeyi geri getirebilirsin; sonra notlar, dosyalar ve sürümler kalıcı olarak silinir.</p></div>
+      <div class="dl"><span class="pdot" style="background:#4F6C7A"></span><span style="flex:1; display:flex; flex-direction:column; min-width:0"><b>Bütçe 2026</b><small>Deniz Öztürk sildi · 4 Kas · 5 gün kaldı</small></span><button class="btn" style="height:32px; padding:0 12px; white-space:nowrap">Projeyi geri getir</button></div>
+      <div class="dl"><span class="pdot" style="background:#9E4F72"></span><span style="flex:1; display:flex; flex-direction:column; min-width:0"><b>Düğün hazırlığı</b><small>Sen sildin · 1 Kas · 2 gün kaldı</small></span><button class="btn" style="height:32px; padding:0 12px; white-space:nowrap">Projeyi geri getir</button></div>
+      <div class="dl"><span class="pdot" style="background:#87691A"></span><span style="flex:1; display:flex; flex-direction:column; min-width:0"><b>Yaz okulu</b><small style="color:var(--danger)">Sen sildin · 31 Eki · yarın silinecek</small></span><button class="btn" style="height:32px; padding:0 12px; white-space:nowrap">Projeyi geri getir</button></div>
+      <p class="hint" style="padding:12px 20px 16px; margin-top:auto; border-top:1px solid var(--line)">Sol gezinmede, Projeler listesinin altında "Silinmiş projeler (3)" bağlantısıyla açılır; silinmiş projesi olmayan yöneticide görünmez.</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">PWA · kurulu uygulama açılışı</span>
+    <div class="frame" style="flex-direction:row; align-items:center; justify-content:center; gap:28px; background:var(--hover)">
+      <div style="width:150px; height:300px; border-radius:24px; background:#F7F6F2; border:6px solid #1C1B19; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px">
+        <span style="width:56px; height:56px; border-radius:15px; background:#2E6B55; display:inline-flex; align-items:center; justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span style="font-weight:700; font-size:18px; color:#1C1B19; letter-spacing:-0.01em">sukano</span>
+      </div>
+      <div style="width:150px; height:300px; border-radius:24px; background:#141413; border:6px solid #1C1B19; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px">
+        <span style="width:56px; height:56px; border-radius:15px; background:#2E6B55; display:inline-flex; align-items:center; justify-content:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="#fff" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span style="font-weight:700; font-size:18px; color:#ECEAE4; letter-spacing:-0.01em">sukano</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Görev sürükleme · alt görev olarak bırakma</span>
+    <div class="frame" style="padding:16px 14px; gap:2px">
+      <b style="font-size:16px; font-weight:600; padding:0 10px 8px">Lansman hazırlığı</b>
+      <div class="trow"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>Tasarım onayı</div>
+      <div class="trow" style="padding-left:40px"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>Ana sayfa</div>
+      <div class="trow ghost" style="padding-left:40px"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>Ürün sayfası</div>
+      <div class="trow"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>İçerik yazımı</div>
+      <div class="dropline" style="margin:3px 10px 3px 62px"></div>
+      <div class="trow lift" style="margin:2px 0 4px 70px; width:230px"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>Ürün sayfası</div>
+      <div class="trow"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>SEO kontrolleri</div>
+      <div class="trow"><svg class="grip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg><i></i>Lansman duyurusu</div>
+      <p class="hint" style="padding:10px 10px 0; margin-top:auto">Çizginin girintisi bırakılacak seviyeyi gösterir: sağa çekince "İçerik yazımı"nın alt görevi olur. Kartlar ızgarada aynı biçimde kalkar.</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <span class="lbl m">Dosya eki · yükleniyor ve sınır</span>
+    <div class="frame" style="padding:20px; gap:10px">
+      <div class="att"><span class="ft">JPG</span><span style="flex:1; min-width:0; display:flex; flex-direction:column; gap:6px"><span style="display:flex; justify-content:space-between"><b>salon-olcu.jpg</b><small>2,4 / 3,1 MB</small></span><span class="bar"><i style="width:72%"></i></span></span></div>
+      <div class="att"><span class="ft">PDF</span><span style="flex:1; min-width:0; display:flex; flex-direction:column"><b>usta-teklifi-kasim.pdf</b><small>1,8 MB</small></span></div>
+      <div class="att" style="border-color:var(--danger); background:var(--danger-soft)"><span class="ft" style="color:var(--danger)">MOV</span><span style="flex:1; min-width:0; display:flex; flex-direction:column"><b>balkon-video.mov</b><small style="color:var(--danger)">48 MB · dosya başına en fazla 10 MB</small></span><button class="btn" style="height:30px; padding:0 10px">Kaldır</button></div>
+      <div class="att" style="border-style:dashed; justify-content:center; color:var(--muted); font-size:13px; padding:14px">Dosyayı buraya bırak ya da seç · yalnızca metin notunda</div>
+      <p class="hint" style="margin-top:auto">Çevrimdışıyken ekleme kapalıdır; düğme soluk görünür.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":1440,"height":1467}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

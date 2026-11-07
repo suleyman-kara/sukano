@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Tablet — Diyaloglar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--dim:rgba(28,27,25,.45);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-turuncu:#FBE2CC;--n-pembe:#F9DADA;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA;--n-yesil:#DEF0D6;--n-kahve:#EADFD3;--n-gri:#E6E6E1}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--dim:rgba(0,0,0,.6);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-turuncu:#4A3827;--n-pembe:#4A2E2E;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A;--n-yesil:#2C3F27;--n-kahve:#423831;--n-gri:#30302E}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);position:relative;flex:0 0 auto;text-decoration:none}
+.ib:hover,.ib.on{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;margin:0 5px}
+.badge{margin-left:auto;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.role{font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.sk{--stage:#5E5C56}
+.sk[data-theme="dark"]{--stage:#0B0B0A}
+.dlg{background:var(--surface);color:var(--fg);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column}
+.dlg h2{margin:0;font-size:18px;font-weight:600}
+.dlg p{margin:0;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface);width:100%}
+.psw{width:36px;height:36px;border-radius:999px;border:2px solid transparent;flex:0 0 auto}
+.psw.on{border-color:var(--fg)}
+.opt{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:10px;border:1px solid var(--line);width:100%}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt .dot{margin:0}
+.seg{display:flex;background:var(--hover);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;text-align:center;min-height:40px;padding:0 14px;border-radius:8px;color:var(--muted);font-weight:500}
+.seg .on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ver{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:10px;width:100%}
+.ver.on{background:var(--accent-soft)}
+.ver b{font-weight:600}
+.ver small{color:var(--muted);font-size:12px}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13px}
+.note svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.note.w{background:var(--warn-soft);color:var(--warn)}
+.note.m{background:var(--hover);color:var(--muted)}
+.btns{display:flex;justify-content:flex-end;gap:8px}
+.chipline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.chipline b{font-weight:600}
+.pchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.opt .os{font-size:12px;color:var(--muted)}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:834px; height:1194px; background:var(--bg); color:var(--fg); display:flex; position:relative; overflow:hidden; background:var(--stage); gap:24px; padding:32px 24px; align-items:flex-start">
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <span class="lbl">Yeni proje</span>
+      <div class="dlg" role="dialog" aria-labelledby="d1" style="padding:20px 20px 20px 24px; gap:16px">
+        <div style="display:flex; align-items:center; justify-content:space-between"><h2 id="d1">Yeni proje</h2><a class="ib" href="THome.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+        <label class="field"><span>Proje adı</span><input class="input" value="Kış Tatili Planı"></label>
+        <div class="field"><span>Renk</span>
+          <div style="display:flex; gap:6px; align-items:center" role="group" aria-label="Proje rengi">
+            <button class="psw" style="background:#AD5A34" aria-label="Turuncu"></button>
+            <button class="psw on" style="background:#3F6DB5" aria-label="Mavi, seçili"></button>
+            <button class="psw" style="background:#4A7D45" aria-label="Yeşil"></button>
+            <button class="psw" style="background:#9E4F72" aria-label="Pembe"></button>
+            <button class="psw" style="background:#6F5DAE" aria-label="Mor"></button>
+            <button class="psw" style="background:#87691A" aria-label="Sarı"></button>
+            <button class="psw" style="background:#4F6C7A" aria-label="Gri mavi"></button>
+          </div>
+        </div>
+        <label class="field"><span>Açıklama <span style="font-weight:400; color:var(--muted)">(isteğe bağlı)</span></span><input class="input" placeholder="Projenin amacı bir cümleyle"></label>
+        <p style="font-size:13px">Projeyi açan kişi yönetici olur. Üyeleri proje ayarlarından davet edebilirsin.</p>
+        <div class="btns"><a class="btn" href="THome.dc.html">Vazgeç</a><a class="btn primary" href="TProject.dc.html">Projeyi oluştur</a></div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <span class="lbl">Sürüm geçmişi</span>
+      <div class="dlg" role="dialog" aria-labelledby="d3" style="padding:20px 20px 20px 24px; gap:12px">
+        <div style="display:flex; align-items:center; justify-content:space-between"><h2 id="d3">Sürüm geçmişi</h2><a class="ib" href="TTodo.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+        <p style="font-size:13px">Lansman hazırlığı · son 50 sürüm saklanır. Bir sürümü seçince not salt okunur önizlenir; eklenen görevler yeşil, silinenler üstü çizili görünür.</p>
+        <div style="display:flex; flex-direction:column; gap:2px">
+          <button class="ver on"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:#4976B4">MK</span><span style="flex:1; display:flex; flex-direction:column"><b>Bugün, 14:20</b><small>Mehmet Kaya · şu anki sürüm</small></span></button>
+          <button class="ver"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:#7A5FB8">ZA</span><span style="flex:1; display:flex; flex-direction:column"><b>Bugün, 11:05</b><small>Zeynep Arslan · 2 görev eklendi</small></span></button>
+          <button class="ver"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:#B25D49">AD</span><span style="flex:1; display:flex; flex-direction:column"><b>Dün, 17:48</b><small>Ayşe Demir · başlık ve 1 görev değişti</small></span></button>
+          <button class="ver"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:#4976B4">MK</span><span style="flex:1; display:flex; flex-direction:column"><b>4 Kas, 09:30</b><small>Mehmet Kaya</small></span></button>
+          <button class="ver"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:#B25D49">AD</span><span style="flex:1; display:flex; flex-direction:column"><b>3 Kas, 16:12</b><small>Ayşe Demir · not oluşturuldu</small></span></button>
+        </div>
+        <div class="note m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span>Geri yükleme yeni bir sürüm olarak kaydedilir; şu anki sürüm de geçmişte kalır.</span></div>
+        <div class="btns" style="border-top:1px solid var(--line); padding-top:14px"><a class="btn" href="TTodo.dc.html">Kapat</a><button class="btn primary" disabled style="opacity:.5">Bu sürümü geri yükle</button></div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:10px">
+    <span class="lbl">Kişisel not · taşı veya kopyala</span>
+    <div class="dlg" role="dialog" aria-labelledby="d2" style="padding:20px 20px 20px 24px; gap:16px">
+      <div style="display:flex; align-items:center; justify-content:space-between"><h2 id="d2">Notu projeye taşı</h2><a class="ib" href="TText.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--n-turuncu)"><span style="font-weight:600">Ev tadilatı fikirleri</span><span style="color:var(--muted); font-size:13px">Kişisel not</span></div>
+      <div class="seg" role="tablist" aria-label="İşlem"><button type="button" role="tab" class="on" aria-selected="true">Taşı</button><button type="button" role="tab" aria-selected="false">Kopyala</button></div>
+      <div style="display:flex; flex-direction:column; gap:8px" role="radiogroup" aria-label="Hedef proje">
+        <button class="opt on" role="radio" aria-checked="true"><span class="dot" style="background:#3F6DB5"></span><span style="flex:1; font-weight:500">Ev Taşınma</span><span style="font-size:12px; color:var(--muted)">Yönetici</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button>
+        <button class="opt" role="radio" aria-checked="false"><span class="dot" style="background:#AD5A34"></span><span style="flex:1; font-weight:500">Web Sitesi Yenileme</span><span style="font-size:12px; color:var(--muted)">Yönetici</span></button>
+        <button class="opt" role="radio" aria-checked="false" disabled style="opacity:.5; padding-top:6px; padding-bottom:6px"><span class="dot" style="background:#4A7D45"></span><span style="flex:1; font-weight:500">Kitap Kulübü</span><span style="font-size:12px; color:var(--muted); text-align:right">Görüntüleyici, not ekleyemez</span></button>
+      </div>
+      <div class="note w"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg><span>Not projenin olur, kişisel alandan kalkar. Taşıdıktan sonra 10 sn içinde toast'tan geri alabilirsin; sonra kesinleşir.</span></div>
+      <p style="font-size:13px">Projedeki herkes notu görür; yöneticiler ve düzenleyiciler düzenleyebilir. Asıl notun kişisel alanında kalsın istiyorsan Kopyala'yı seç.</p>
+      <div class="btns" style="flex-wrap:wrap"><a class="btn" href="TText.dc.html">Vazgeç</a><a class="btn primary" href="TProject.dc.html">Ev Taşınma projesine taşı</a></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px">
+      <span class="lbl">Proje notu · kopyala</span>
+      <div class="dlg" role="dialog" aria-labelledby="d4" aria-describedby="d4d" style="padding:20px 20px 20px 24px; gap:16px">
+        <div style="display:flex; align-items:center; justify-content:space-between"><h2 id="d4">Notu kopyala</h2><a class="ib" href="TTodo.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+        <div class="chipline" style="background:var(--n-turkuaz); border-color:transparent"><b style="flex:1; min-width:0">Lansman hazırlığı</b><span class="pchip"><span class="dot" style="width:8px; height:8px; margin:0; background:#AD5A34"></span>Web Sitesi Yenileme</span></div>
+        <div style="display:flex; flex-direction:column; gap:8px" role="radiogroup" aria-label="Kopyanın yeri">
+          <button class="opt on" role="radio" aria-checked="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted); flex:0 0 auto"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span style="flex:1; font-weight:500">Kişisel alanım</span><span class="os">Notlarım</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button>
+          <button class="opt" role="radio" aria-checked="false"><span class="dot" style="background:#3F6DB5"></span><span style="flex:1; font-weight:500">Ev Taşınma</span><span class="os">Yönetici</span></button>
+          <button class="opt" role="radio" aria-checked="false" disabled style="opacity:.5; padding-top:6px; padding-bottom:6px"><span class="dot" style="background:#4A7D45"></span><span style="flex:1; font-weight:500">Kitap Kulübü</span><span class="os" style="text-align:right">Görüntüleyici, not ekleyemez</span></button>
+        </div>
+        <p id="d4d" style="font-size:13px">Proje notu taşınamaz, yalnızca kopyalanır. Asıl not projede kalır; kopya görev ağacıyla birlikte yeni bir not olarak oluşur. Kişisel alanda atama olmadığı için atamalar kopyalanmaz.</p>
+        <div class="btns" style="flex-wrap:wrap"><a class="btn" href="TTodo.dc.html">Vazgeç</a><a class="btn primary" href="THome.dc.html">Kişisel alanıma kopyala</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":834,"height":1194}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

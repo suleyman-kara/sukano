@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Tablet — Giriş</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--dim:rgba(28,27,25,.45);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-turuncu:#FBE2CC;--n-pembe:#F9DADA;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA;--n-yesil:#DEF0D6;--n-kahve:#EADFD3;--n-gri:#E6E6E1}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--dim:rgba(0,0,0,.6);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-turuncu:#4A3827;--n-pembe:#4A2E2E;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A;--n-yesil:#2C3F27;--n-kahve:#423831;--n-gri:#30302E}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);position:relative;flex:0 0 auto;text-decoration:none}
+.ib:hover,.ib.on{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;margin:0 5px}
+.badge{margin-left:auto;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.role{font-size:12px;font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.sk{--panel:#E8EFE9}
+.sk[data-theme="dark"]{--panel:#1B2420}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface);width:100%}
+.btn{width:100%;height:44px;gap:10px}
+.lnk{color:var(--accent);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.help{color:var(--muted);font-size:13px;margin:0}
+.tab{display:flex;gap:4px;background:var(--hover);border-radius:12px;padding:3px}
+.tab button{flex:1;text-align:center;min-height:44px;padding:0 8px;border-radius:9px;font-weight:500;color:var(--muted)}
+.tab button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:834px; height:1194px; background:var(--bg); color:var(--fg); display:flex; position:relative; overflow:hidden; background:var(--panel)">
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:48px 32px 72px">
+    <div style="display:flex; align-items:center; gap:10px">
+      <span class="logo-mark" style="width:36px; height:36px; display:inline-flex; flex:0 0 auto; color:var(--accent)"><svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+      <span style="font-weight:700; font-size:22px; letter-spacing:-0.01em">sukano</span>
+    </div>
+    <div style="width:100%; max-width:460px; background:var(--surface); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); padding:36px 36px 32px; display:flex; flex-direction:column; gap:20px">
+      <div>
+        <h1 style="margin:0 0 6px; font-size:26px; font-weight:700; letter-spacing:-0.02em">Tekrar hoş geldin</h1>
+        <p style="margin:0; color:var(--muted)">Notların ve projelerin seni bekliyor.</p>
+      </div>
+      <div class="tab" aria-label="Giriş veya kayıt"><button class="on">Giriş yap</button><button>Kayıt ol</button></div>
+      <button class="btn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4Z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9l3.3-2.5Z"/><path fill="#EA4335" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.5L6.4 10C7.2 7.8 9.4 6 12 6Z"/></svg>Google ile devam et</button>
+      <div style="display:flex; align-items:center; gap:12px; color:var(--muted); font-size:13px"><span style="flex:1; height:1px; background:var(--line)"></span>veya<span style="flex:1; height:1px; background:var(--line)"></span></div>
+      <form style="display:flex; flex-direction:column; gap:14px">
+        <label class="field"><span>E-posta</span><input class="input" type="email" autocomplete="email" placeholder="ad@ornek.com"></label>
+        <label class="field"><span style="display:flex; justify-content:space-between; align-items:center">Şifre <a class="lnk" href="TAuth.dc.html" style="font-size:13px; display:inline-flex; align-items:center; min-height:32px">Şifremi unuttum</a></span><input class="input" type="password" autocomplete="current-password"></label>
+        <button class="btn primary" type="button">Giriş yap</button>
+      </form>
+      <p class="help" style="text-align:center">Hesabın yok mu? <a class="lnk" href="TAuth.dc.html">Kayıt ol</a></p>
+    </div>
+  </div>
+  <p class="help" style="position:absolute; left:0; right:0; bottom:32px; text-align:center">© 2026 Sukano</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":834,"height":1194}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

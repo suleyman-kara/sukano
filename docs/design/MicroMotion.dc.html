@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Hareket: mikro etkileşimler</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;width:1440px;min-height:1260px;padding:32px 40px 40px;display:flex;flex-direction:column;gap:20px;background:var(--bg);color:var(--fg);
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--skel:#E8E6E0;--toast:#1C1B19;--toast-fg:#F7F6F2;--toast-acc:#9FD3BC;--shadow-lift:0 2px 4px rgba(28,27,25,.08),0 12px 28px rgba(28,27,25,.16);
+--dur-micro:120ms;--dur-small:180ms;--dur-medium:240ms;--dur-large:320ms;
+--ease-out:cubic-bezier(.25,1,.5,1);--ease-in:cubic-bezier(.5,0,.75,0);--ease-spring:cubic-bezier(.2,.8,.2,1);--ease-inout:cubic-bezier(.65,0,.35,1)}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--skel:#2A2A27;--toast:#ECEAE4;--toast-fg:#1C1B19;--toast-acc:#2E6B55;--shadow-lift:0 2px 4px rgba(0,0,0,.4),0 14px 32px rgba(0,0,0,.55)}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) h1,:where(.sk) h2,:where(.sk) p,:where(.sk) ul{margin:0}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.hd h1{font-size:22px;font-weight:700;letter-spacing:-0.015em}
+.hd .sub{font-size:13.5px;color:var(--muted);margin-top:4px}
+.tok{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tok span{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.tok b{color:var(--fg);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,325px);gap:20px}
+.mc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.mc.wide{grid-column:span 2}
+.stage{position:relative;height:190px;background:var(--bg);border-bottom:1px solid var(--line);overflow:hidden}
+.mb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px}
+.mb h2{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.mb .n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700;padding:0 5px}
+.tm{font-size:12px;line-height:1.5;color:var(--muted)}
+.tm b{color:var(--fg);font-weight:600}
+.rm{font-size:12px;line-height:1.5;color:var(--muted)}
+.rmk{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-right:6px}
+.rules{padding:20px 24px;gap:10px}
+.rules h2{font-size:14px;font-weight:600}
+.rules ul{padding-left:18px;display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.5;color:var(--muted)}
+.rules b{color:var(--fg);font-weight:600}
+.rules code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:var(--accent-soft);color:var(--fg);padding:1px 5px;border-radius:5px}
+.ml{display:block;height:5px;border-radius:3px;background:var(--line)}
+.ml.w1{width:62%;height:6px;background:var(--muted);opacity:.35}.ml.w2{width:86%}.ml.w3{width:70%}
+.cb{position:relative;flex:0 0 auto;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--muted);display:inline-flex}
+.cb.sm{width:14px;height:14px;border-radius:4.5px}
+.cb-f{position:absolute;inset:-1.5px;border-radius:5px;background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center}
+.cb.sm .cb-f{border-radius:4.5px}
+.cb.sm svg{width:13px;height:13px}
+.cb.done{border-color:var(--accent)}
+.ck-path{stroke-dasharray:14;stroke-dashoffset:0}
+.dn{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+
+/* 1 — görev tamamlama (4 sn döngü) — taban stiller = son durum (azaltılmış harekette görünen) */
+.lp{position:absolute;left:22px;top:16px;right:22px;height:166px}
+.ck{animation:loopfade 4s linear infinite both}
+.ck-r{position:absolute;left:0;right:0;height:32px;display:flex;align-items:center;gap:10px;font-size:13px}
+.ck-r:nth-child(1){top:0}.ck-b{top:32px;transform:translateY(68px);animation:ck-move 4s infinite both}
+.ck-c{top:64px;transform:translateY(-32px);animation:ck-up 4s infinite both}
+.ck-h{position:absolute;top:104px;left:0;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);transform:translateY(-32px);animation:ck-up 4s infinite both}
+.ck-d{top:132px}
+.tt{position:relative;display:inline-block}
+.ck-b .tt-x{opacity:.55;animation:ck-dim 4s infinite both}
+.strike{position:absolute;left:-1px;right:-1px;top:50%;height:1.5px;background:var(--muted);transform-origin:left center;animation:ck-strike 4s infinite both}
+.ck-b .cb-f{animation:ck-fill 4s infinite both}
+.ck-b .ck-path{animation:ck-draw 4s infinite both}
+@keyframes ck-fill{0%,8%{transform:scale(.4);opacity:0;animation-timing-function:cubic-bezier(.25,1,.5,1)}11%,100%{transform:scale(1);opacity:1}}
+@keyframes ck-draw{0%,10%{stroke-dashoffset:14;animation-timing-function:cubic-bezier(.25,1,.5,1)}14.5%,100%{stroke-dashoffset:0}}
+@keyframes ck-strike{0%,11%{transform:scaleX(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}15.5%,100%{transform:scaleX(1)}}
+@keyframes ck-dim{0%,11%{opacity:1;animation-timing-function:cubic-bezier(.25,1,.5,1)}15.5%,100%{opacity:.55}}
+@keyframes ck-move{0%,45.5%{transform:translateY(0);animation-timing-function:cubic-bezier(.65,0,.35,1)}53.5%,100%{transform:translateY(68px)}}
+@keyframes ck-up{0%,46.5%{transform:translateY(0);animation-timing-function:cubic-bezier(.65,0,.35,1)}52.5%,100%{transform:translateY(-32px)}}
+@keyframes loopfade{0%{opacity:0}4%,92%{opacity:1}98%,100%{opacity:0}}
+
+/* 2 — toast (8 sn döngü: 240 ms giriş, 6 sn bekleme, 180 ms çıkış) */
+.ts-bgl{position:absolute;left:24px;top:22px;right:24px;display:flex;flex-direction:column;gap:12px}
+.ts-bgl span{display:block;height:6px;border-radius:3px;background:var(--line)}
+.ts{position:absolute;left:50%;bottom:22px;margin-left:-128px;width:256px;height:44px;border-radius:12px;background:var(--toast);color:var(--toast-fg);display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 14px;font-size:13px;overflow:hidden;box-shadow:var(--shadow-lift);animation:ts-in 8s infinite both}
+.ts-u{font-weight:600;color:var(--toast-acc);padding:6px 8px;border-radius:8px}
+.ts-p{position:absolute;left:0;right:0;bottom:0;height:2.5px;background:var(--toast-acc);transform-origin:left center;transform:scaleX(.6);animation:ts-prog 8s infinite both}
+@keyframes ts-in{0%,2%{transform:translateY(24px);opacity:0;animation-timing-function:cubic-bezier(.25,1,.5,1)}5%,78%{transform:translateY(0);opacity:1;animation-timing-function:cubic-bezier(.5,0,.75,0)}80.25%,100%{transform:translateY(12px);opacity:0}}
+@keyframes ts-prog{0%,5%{transform:scaleX(1);animation-timing-function:linear}78%,100%{transform:scaleX(0)}}
+
+/* 3 — karttan modala (clip-path ile yerinden büyüme, içerik çapraz geçiş) */
+.md-c{position:absolute;width:140px;height:72px;border-radius:10px;background:var(--surface);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px}
+.md-ghost{background:transparent;border-style:dashed}
+.md-scrim{position:absolute;inset:0;background:#1C1B19;opacity:.35;animation:md-scrim 4s infinite both}
+.sk[data-theme="dark"] .md-scrim{background:#000;opacity:.5}
+.md-m{position:absolute;left:40px;top:12px;width:280px;height:166px;border-radius:14px;background:var(--surface);border:1px solid var(--line);clip-path:inset(0 round 14px);animation:md-open 4s infinite both}
+.md-cc{position:absolute;left:129px;top:4px;width:140px;height:72px;padding:12px;display:flex;flex-direction:column;gap:8px;opacity:0;animation:md-cc 4s infinite both}
+.md-mc{position:absolute;inset:0;padding:18px 20px;display:flex;flex-direction:column;gap:11px;animation:md-mc 4s infinite both}
+.md-h{font-size:13px;font-weight:600}
+.md-row{display:flex;align-items:center;gap:8px}
+.md-row .ml{flex:0 0 auto}
+.md-b{width:11px;height:11px;border-radius:3.5px;border:1.4px solid var(--muted);flex:0 0 auto}
+.md-tap{position:absolute;left:225px;top:38px;width:28px;height:28px;border-radius:50%;background:var(--accent);opacity:0;animation:md-tap 4s infinite both}
+@keyframes md-open{0%,14%{clip-path:inset(4px 11px 90px 129px round 10px);animation-timing-function:cubic-bezier(.2,.8,.2,1)}22%,66%{clip-path:inset(0px 0px 0px 0px round 14px);animation-timing-function:cubic-bezier(.5,0,.75,0)}72%,100%{clip-path:inset(4px 11px 90px 129px round 10px)}}
+@keyframes md-cc{0%,15%{opacity:1}19%,68%{opacity:0}72%,100%{opacity:1}}
+@keyframes md-mc{0%,17%{opacity:0;animation-timing-function:cubic-bezier(.25,1,.5,1)}22%,65%{opacity:1}68%,100%{opacity:0}}
+@keyframes md-scrim{0%,14%{opacity:0;animation-timing-function:cubic-bezier(.25,1,.5,1)}20%,66%{opacity:.35;animation-timing-function:cubic-bezier(.5,0,.75,0)}72%,100%{opacity:0}}
+@keyframes md-tap{0%,9%{opacity:0;transform:scale(.4)}11%{opacity:.18;transform:scale(1)}15%,100%{opacity:0;transform:scale(1.4)}}
+
+/* 4 — sol panel ray ↔ açık (taban = açık) */
+.rl{position:absolute;inset:14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.rl-bg{position:absolute;left:0;top:0;bottom:0;width:120px;background:var(--surface);border-right:1px solid var(--line);transform-origin:left center;animation:rl-bg 4s infinite both}
+.rl-i{position:absolute;left:12px;width:16px;height:16px;border-radius:5px;background:var(--line)}
+.rl-i.on{background:var(--accent);opacity:.8}
+.rl-l{position:absolute;left:36px;height:9px;border-radius:4px;background:var(--line);transform-origin:left center;animation:rl-l 4s infinite both}
+.rl-main{position:absolute;left:134px;top:0;width:260px;height:100%;animation:rl-main 4s infinite both}
+.rl-c{position:absolute;width:74px;height:60px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+@keyframes rl-bg{0%,15%{transform:scaleX(.3333);animation-timing-function:cubic-bezier(.25,1,.5,1)}21%,60%{transform:scaleX(1);animation-timing-function:cubic-bezier(.5,0,.75,0)}64.5%,100%{transform:scaleX(.3333)}}
+@keyframes rl-l{0%,16.5%{opacity:0;transform:translateX(-6px);animation-timing-function:cubic-bezier(.25,1,.5,1)}22.5%,59%{opacity:1;transform:translateX(0)}61%,100%{opacity:0;transform:translateX(-6px)}}
+@keyframes rl-main{0%,15%{transform:translateX(-80px);animation-timing-function:cubic-bezier(.25,1,.5,1)}21%,60%{transform:translateX(0);animation-timing-function:cubic-bezier(.5,0,.75,0)}64.5%,100%{transform:translateX(-80px)}}
+
+/* 5 — ızgaraya giriş / çıkış */
+.gr-c{position:absolute;width:87px;height:70px;border-radius:10px;background:var(--surface);border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:7px;animation:loopfade 4s linear infinite both}
+.gr-n{border-color:var(--accent);animation:gr-in 4s infinite both}
+.gr-dot{position:absolute;right:8px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.gr-x{opacity:0;transform:scale(.92);animation:gr-out 4s infinite both}
+.gr-m{transform:translateX(-97px);animation:gr-shift 4s infinite both}
+@keyframes gr-in{0%,12%{opacity:0;transform:scale(.92);animation-timing-function:cubic-bezier(.25,1,.5,1)}18%,92%{opacity:1;transform:scale(1)}98%,100%{opacity:0;transform:scale(1)}}
+@keyframes gr-out{0%{opacity:0;transform:scale(1)}4%,50%{opacity:1;transform:scale(1);animation-timing-function:cubic-bezier(.5,0,.75,0)}54.5%,100%{opacity:0;transform:scale(.92)}}
+@keyframes gr-shift{0%{opacity:0;transform:translateX(0)}4%,56%{opacity:1;transform:translateX(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}62%,92%{opacity:1;transform:translateX(-97px)}98%,100%{opacity:0;transform:translateX(-97px)}}
+
+/* 6 — iskelet ışıltısı */
+.sk-c{position:absolute;top:28px;width:87px;height:134px;border-radius:10px;background:var(--surface);border:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.sk-b{display:block;height:6px;border-radius:3px;background:var(--skel)}
+.sk-sh{position:absolute;top:0;bottom:0;left:0;width:100%;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.9) 50%,transparent 80%);transform:translateX(-110%);animation:sk-sh 2.4s linear infinite both}
+.sk[data-theme="dark"] .sk-sh{background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.06) 50%,transparent 80%)}
+.sk-c:nth-child(2) .sk-sh{animation-delay:.12s}.sk-c:nth-child(3) .sk-sh{animation-delay:.24s}
+@keyframes sk-sh{0%{transform:translateX(-110%)}66%,100%{transform:translateX(110%)}}
+
+/* 7 — alt görev aç / kapa (taban = açık) */
+.sb{position:absolute;left:18px;right:18px;top:16px;font-size:12.5px}
+.sb-p{display:flex;align-items:center;gap:8px;height:30px}
+.sb-p.nx{color:var(--muted)}
+.sb-cv{display:inline-flex;color:var(--muted);transform:rotate(90deg);animation:sb-cv 4s infinite both}
+.sb-p.nx .sb-cv{animation:none;transform:none}
+.sb-t{flex:0 1 auto}
+.sb-n{margin-left:auto;font-size:11px;color:var(--muted)}
+.sb-w{display:grid;grid-template-rows:1fr;animation:sb-h 4s infinite both}
+.sb-in{overflow:hidden;min-height:0;animation:sb-o 4s infinite both}
+.sb-r{display:flex;align-items:center;gap:8px;height:28px;padding-left:44px}
+@keyframes sb-cv{0%,12%{transform:rotate(0deg);animation-timing-function:cubic-bezier(.25,1,.5,1)}16.5%,60%{transform:rotate(90deg);animation-timing-function:cubic-bezier(.5,0,.75,0)}64.5%,100%{transform:rotate(0deg)}}
+@keyframes sb-h{0%,12%{grid-template-rows:0fr;animation-timing-function:cubic-bezier(.25,1,.5,1)}18%,60%{grid-template-rows:1fr;animation-timing-function:cubic-bezier(.5,0,.75,0)}64.5%,100%{grid-template-rows:0fr}}
+@keyframes sb-o{0%,13.5%{opacity:0;transform:translateY(-4px);animation-timing-function:cubic-bezier(.25,1,.5,1)}19.5%,59%{opacity:1;transform:translateY(0)}62%,100%{opacity:0;transform:translateY(-4px)}}
+
+/* 8 — tarih seçici (origin: çipin sol alt köşesi) */
+.dp-chip{position:absolute;left:20px;top:16px;height:28px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted);animation:dp-chip 4s infinite both}
+.dp{position:absolute;left:20px;top:50px;width:196px;padding:10px 10px 8px;border-radius:12px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lift);transform-origin:top left;animation:dp-open 4s infinite both}
+.dp-h{display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;margin-bottom:6px}
+.dp-ar{color:var(--muted);font-weight:500;letter-spacing:.1em}
+.dp-g{display:grid;grid-template-columns:repeat(7,1fr);gap:1px 0}
+.dp-wd{font-size:8.5px;color:var(--muted);text-align:center;height:12px}
+.dp-d{font-size:9.5px;text-align:center;height:15px;line-height:15px;border-radius:5px}
+.dp-d.on{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.dp-d.now{color:var(--accent);font-weight:700}
+@keyframes dp-open{0%,15%{opacity:0;transform:translateY(-4px) scale(.96);animation-timing-function:cubic-bezier(.25,1,.5,1)}19.5%,65%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.5,0,.75,0)}68%,100%{opacity:0;transform:translateY(-2px) scale(.98)}}
+@keyframes dp-chip{0%,13%{background:var(--surface)}14%,66%{background:var(--hover)}68%,100%{background:var(--surface)}}
+
+/* 9 — sürükle ve bırak (taban = bırakılmış son durum) */
+.dr-r{position:absolute;left:22px;right:22px;height:34px;border-radius:10px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 10px;font-size:12.5px;animation:loopfade 4s linear infinite both}
+.dr-r::after{content:"";position:absolute;inset:-1px;border-radius:10px;box-shadow:var(--shadow-lift);opacity:0}
+.dr-h{display:grid;grid-template-columns:repeat(2,3px);gap:2px;width:8px}
+.dr-h i{display:block;width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.6}
+.dr-h i:nth-child(1){box-shadow:5px 0 0 var(--muted)}
+.dr-1{top:24px;transform:translateY(80px);z-index:2;animation:dr-move 4s infinite both}
+.dr-1::after{animation:dr-shadow 4s infinite both}
+.dr-2{top:64px;transform:translateY(-40px);animation:dr-up2 4s infinite both}
+.dr-3{top:104px;transform:translateY(-40px);animation:dr-up3 4s infinite both}
+.dr-ph{position:absolute;left:22px;right:22px;top:24px;height:34px;border-radius:10px;border:1.5px dashed var(--accent);background:var(--accent-soft);opacity:0;transform:translateY(80px);animation:dr-ph 4s infinite both}
+@keyframes dr-move{0%{opacity:0;transform:translateY(0)}4%,10%{opacity:1;transform:translateY(0) scale(1) rotate(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}13%{transform:translateY(-2px) scale(1.03) rotate(-.8deg);animation-timing-function:cubic-bezier(.65,0,.35,1)}52%{transform:translateY(78px) scale(1.03) rotate(-.8deg);animation-timing-function:cubic-bezier(.2,.8,.2,1)}56.5%,92%{opacity:1;transform:translateY(80px) scale(1) rotate(0)}98%,100%{opacity:0;transform:translateY(80px)}}
+@keyframes dr-shadow{0%,10%{opacity:0;animation-timing-function:cubic-bezier(.25,1,.5,1)}13%,52%{opacity:1}56.5%,100%{opacity:0}}
+@keyframes dr-up2{0%{opacity:0;transform:translateY(0)}4%,25%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}29.5%,92%{opacity:1;transform:translateY(-40px)}98%,100%{opacity:0;transform:translateY(-40px)}}
+@keyframes dr-up3{0%{opacity:0;transform:translateY(0)}4%,40%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}44.5%,92%{opacity:1;transform:translateY(-40px)}98%,100%{opacity:0;transform:translateY(-40px)}}
+@keyframes dr-ph{0%,11%{opacity:0;transform:translateY(0)}13%,25%{opacity:1;transform:translateY(0);animation-timing-function:cubic-bezier(.25,1,.5,1)}29.5%,40%{opacity:1;transform:translateY(40px);animation-timing-function:cubic-bezier(.25,1,.5,1)}44.5%,53%{opacity:1;transform:translateY(80px)}56.5%,100%{opacity:0;transform:translateY(80px)}}
+
+/* 10 — boş durumda logo */
+.es{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.es-m{display:grid;grid-template-columns:repeat(2,22px);gap:5px;margin-bottom:8px}
+.es-s{width:22px;height:22px;border-radius:6px;background:var(--accent);animation:es-st 4s infinite both}
+.es-s.wk{opacity:.35;animation-name:es-wk}
+.es-1{animation-delay:0s}.es-2{animation-delay:.08s}.es-3{animation-delay:.16s}.es-4{animation-delay:.24s}
+.es-t{font-size:14px;font-weight:600;animation:es-tx 4s infinite both}
+.es-d{font-size:12px;color:var(--muted);animation:es-tx 4s infinite both;animation-delay:.06s}
+@keyframes es-st{0%,8%{opacity:0;transform:scale(.6);animation-timing-function:cubic-bezier(.25,1,.5,1)}14%,90%{opacity:1;transform:scale(1)}96%,100%{opacity:0;transform:scale(1)}}
+@keyframes es-wk{0%,8%{opacity:0;transform:scale(.6);animation-timing-function:cubic-bezier(.25,1,.5,1)}14%,90%{opacity:.35;transform:scale(1)}96%,100%{opacity:0;transform:scale(1)}}
+@keyframes es-tx{0%,20%{opacity:0;transform:translateY(4px);animation-timing-function:cubic-bezier(.25,1,.5,1)}26%,90%{opacity:1;transform:translateY(0)}96%,100%{opacity:0;transform:translateY(0)}}
+
+/* Azaltılmış hareket: döngüler durur, taban stilleri anlamlı son durumu gösterir */
+@media (prefers-reduced-motion: reduce){
+  .sk[data-motion="auto"] *,.sk[data-motion="auto"] *::before,.sk[data-motion="auto"] *::after{animation:none !important;transition:none !important}
+}
+.sk[data-motion="reduced"] *,.sk[data-motion="reduced"] *::before,.sk[data-motion="reduced"] *::after{animation:none !important;transition:none !important}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" data-motion="{{motion}}">
+  <header class="hd">
+    <div>
+      <h1>Mikro etkileşimler</h1>
+      <p class="sub">Her kart kendi döngüsünde tekrar eder (4 sn; toast gerçek süresiyle 8 sn). Süre ve eğriler “Hareket — Sistem özeti” ölçeğinden.</p>
+    </div>
+    <div class="tok"><span><b>micro</b> 120 ms</span><span><b>small</b> 180 ms</span><span><b>medium</b> 240 ms</span><span><b>large</b> 320 ms</span><span><b>ease-out</b> giriş · <b>ease-in</b> çıkış</span></div>
+  </header>
+  <div class="grid">
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="lp ck">
+          <div class="ck-r"><span class="cb"></span><span class="tt">Market listesi hazırla</span></div>
+          <div class="ck-r ck-b"><span class="cb"><span class="cb-f"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="ck-path" d="M4 8.4 6.8 11 12 5.4"/></svg></span></span><span class="tt"><span class="tt-x">Faturayı öde</span><span class="strike"></span></span></div>
+          <div class="ck-r ck-c"><span class="cb"></span><span class="tt">Kargo takibi</span></div>
+          <div class="ck-h">Tamamlananlar</div>
+          <div class="ck-r ck-d"><span class="cb done"><span class="cb-f st"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="ck-path" d="M4 8.4 6.8 11 12 5.4"/></svg></span></span><span class="tt"><span class="tt-x dn">Randevu al</span></span></div>
+        </div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">1</span>Görev tamamlama</h2>
+        <p class="tm">kutucuk dolar 120 ms <b>ease-out-quart</b> · tik çizilir 180 ms · başlık çizgisi 180 ms · <b>1,2 sn</b> bekler · satır iner 320 ms <b>ease-in-out</b></p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Dolgu, tik ve çizgi anında; satır kaymaz, 120 ms saydamlıkla yer değiştirir.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="ts-bgl"><span style="width:62%"></span><span style="width:80%"></span><span style="width:48%"></span><span style="width:70%"></span></div>
+        <div class="ts"><span class="ts-t">Görev tamamlandı</span><span class="ts-u">Geri al</span><span class="ts-p"></span></div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">2</span>Toast ve “Geri al”</h2>
+        <p class="tm">giriş 240 ms <b>ease-out-quart</b> (alttan 24 px) · 6 sn ekranda, ilerleme çizgisi <b>linear</b> · çıkış 180 ms <b>ease-in-quart</b> · döngü 8 sn</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Kaymaz, 120 ms saydamlıkla gelir ve gider; süre çizgisi durağan, imleç üstündeyken süre durur.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="md-grid">
+          <span class="md-c" style="left:16px; top:16px"><span class="ml w1"></span><span class="ml w2"></span><span class="ml w3"></span></span>
+          <span class="md-c md-ghost" style="left:169px; top:16px"></span>
+          <span class="md-c" style="left:16px; top:102px"><span class="ml w1"></span><span class="ml w2"></span><span class="ml w3"></span></span>
+          <span class="md-c" style="left:169px; top:102px"><span class="ml w1"></span><span class="ml w2"></span><span class="ml w3"></span></span>
+        </div>
+        <div class="md-scrim"></div>
+        <span class="md-tap"></span>
+        <div class="md-m">
+          <div class="md-cc"><span class="ml w1"></span><span class="ml w2"></span><span class="ml w3"></span></div>
+          <div class="md-mc"><span class="md-h">Taşınma listesi</span><span class="md-row"><span class="md-b"></span><span class="ml" style="width:58%"></span></span><span class="md-row"><span class="md-b"></span><span class="ml" style="width:44%"></span></span><span class="md-row"><span class="md-b"></span><span class="ml" style="width:66%"></span></span><span class="md-row"><span class="md-b"></span><span class="ml" style="width:38%"></span></span></div>
+        </div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">3</span>Karttan modala</h2>
+        <p class="tm">kart yerinden büyür 320 ms <b>spring (.2,.8,.2,1)</b> · içerik çapraz geçiş 160 ms · kapanış 240 ms <b>ease-in-quart</b> · örtü %35, 240 ms</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Yerinden büyüme yok; modal ve örtü 120 ms saydamlıkla gelir.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="rl">
+          <span class="rl-bg"></span>
+          <span class="rl-i" style="top:14px"></span><span class="rl-l" style="top:16px; width:54px"></span>
+          <span class="rl-i on" style="top:40px"></span><span class="rl-l" style="top:42px; width:46px"></span>
+          <span class="rl-i" style="top:66px"></span><span class="rl-l" style="top:68px; width:60px"></span>
+          <span class="rl-i" style="top:92px"></span><span class="rl-l" style="top:94px; width:40px"></span>
+          <div class="rl-main"><span class="rl-c" style="left:0; top:14px"></span><span class="rl-c" style="left:84px; top:14px"></span><span class="rl-c" style="left:168px; top:14px"></span><span class="rl-c" style="left:0; top:84px"></span><span class="rl-c" style="left:84px; top:84px"></span><span class="rl-c" style="left:168px; top:84px"></span></div>
+        </div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">4</span>Sol panel: ray ↔ açık</h2>
+        <p class="tm">açılış 240 ms <b>ease-out-quart</b> · kapanış 180 ms <b>ease-in-quart</b> · etiketler 60 ms gecikmeli saydamlık · içerik yalnızca kayar, yeniden akmaz</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Panel anında açılır; etiketler 120 ms saydamlıkla belirir.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <span class="gr-c gr-n" style="left:22px; top:22px"><span class="gr-dot"></span><span class="ml w1"></span><span class="ml w2"></span></span><span class="gr-c " style="left:119px; top:22px"><span class="ml w1"></span><span class="ml w2"></span></span><span class="gr-c " style="left:216px; top:22px"><span class="ml w1"></span><span class="ml w2"></span></span><span class="gr-c gr-x" style="left:22px; top:102px"><span class="ml w1"></span><span class="ml w2"></span></span><span class="gr-c gr-m" style="left:119px; top:102px"><span class="ml w1"></span><span class="ml w2"></span></span><span class="gr-c gr-m" style="left:216px; top:102px"><span class="ml w1"></span><span class="ml w2"></span></span>
+      </div>
+      <div class="mb">
+        <h2><span class="n">5</span>Izgaraya giriş ve çıkış</h2>
+        <p class="tm">yeni kart .92 → 1 ölçek 240 ms <b>ease-out-quart</b> · silinen 1 → .92 ve saydam 180 ms <b>ease-in-quart</b> · komşular 240 ms kayar</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Ölçek ve kayma yok; kart 120 ms saydamlıkla girer ya da çıkar.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <span class="sk-c" style="left:20px"><span class="sk-b" style="width:70%; height:9px"></span><span class="sk-b" style="width:92%"></span><span class="sk-b" style="width:80%"></span><span class="sk-b" style="width:56%"></span><span class="sk-sh"></span></span><span class="sk-c" style="left:119px"><span class="sk-b" style="width:70%; height:9px"></span><span class="sk-b" style="width:92%"></span><span class="sk-b" style="width:80%"></span><span class="sk-b" style="width:56%"></span><span class="sk-sh"></span></span><span class="sk-c" style="left:218px"><span class="sk-b" style="width:70%; height:9px"></span><span class="sk-b" style="width:92%"></span><span class="sk-b" style="width:80%"></span><span class="sk-b" style="width:56%"></span><span class="sk-sh"></span></span>
+      </div>
+      <div class="mb">
+        <h2><span class="n">6</span>İskelet yükleme</h2>
+        <p class="tm">ışıltı bandı 1,6 sn <b>linear</b> + 0,8 sn ara · yalnızca transform · yükleme 300 ms’yi geçmezse iskelet hiç gösterilmez</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Işıltı yok; iskelet durağan gri kalır.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="sb">
+          <div class="sb-p"><span class="sb-cv"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></span><span class="cb sm"></span><span class="sb-t">Taşınma hazırlığı</span><span class="sb-n">1/3</span></div>
+          <div class="sb-w"><div class="sb-in">
+            <div class="sb-r"><span class="cb sm done"><span class="cb-f st"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="ck-path" d="M4 8.4 6.8 11 12 5.4"/></svg></span></span><span class="sb-t dn">Kutuları al</span></div>
+            <div class="sb-r"><span class="cb sm"></span><span class="sb-t">Nakliyeci ara</span></div>
+            <div class="sb-r"><span class="cb sm"></span><span class="sb-t">Adres değişikliği</span></div>
+          </div></div>
+          <div class="sb-p nx"><span class="sb-cv"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></span><span class="cb sm"></span><span class="sb-t">Kitap kulübü notları</span></div>
+        </div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">7</span>Alt görev aç / kapa</h2>
+        <p class="tm">yükseklik 240 ms <b>ease-out-quart</b> açılır, 180 ms <b>ease-in-quart</b> kapanır · ok 90° döner 180 ms · alt satırlar 60 ms gecikmeli belirir</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Yükseklik anında değişir; ok döner ama animasyonsuz.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <span class="dp-chip"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 7h11M5.5 2v3M10.5 2v3"/></svg>Tarih ekle</span>
+        <div class="dp"><div class="dp-h"><span>Kasım 2026</span><span class="dp-ar">‹ ›</span></div><div class="dp-g"><span class="dp-wd">Pt</span><span class="dp-wd">Sa</span><span class="dp-wd">Ça</span><span class="dp-wd">Pe</span><span class="dp-wd">Cu</span><span class="dp-wd">Ct</span><span class="dp-wd">Pz</span><span class="dp-d"></span><span class="dp-d"></span><span class="dp-d"></span><span class="dp-d"></span><span class="dp-d"></span><span class="dp-d"></span><span class="dp-d">1</span><span class="dp-d">2</span><span class="dp-d">3</span><span class="dp-d">4</span><span class="dp-d">5</span><span class="dp-d">6</span><span class="dp-d now">7</span><span class="dp-d">8</span><span class="dp-d">9</span><span class="dp-d">10</span><span class="dp-d">11</span><span class="dp-d on">12</span><span class="dp-d">13</span><span class="dp-d">14</span><span class="dp-d">15</span><span class="dp-d">16</span><span class="dp-d">17</span><span class="dp-d">18</span><span class="dp-d">19</span><span class="dp-d">20</span><span class="dp-d">21</span><span class="dp-d">22</span><span class="dp-d">23</span><span class="dp-d">24</span><span class="dp-d">25</span><span class="dp-d">26</span><span class="dp-d">27</span><span class="dp-d">28</span><span class="dp-d">29</span></div></div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">8</span>Tarih seçici açılışı</h2>
+        <p class="tm">çipin köşesinden (transform-origin: top left) .96 → 1 ölçek + saydamlık 180 ms <b>ease-out-quart</b> · kapanış 120 ms <b>ease-in-quart</b></p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Ölçek yok; 120 ms saydamlıkla açılır, kapanış anında.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <span class="dr-ph"></span><div class="dr-r dr-1"><span class="dr-h"><i></i><i></i><i></i></span><span class="cb sm"></span><span class="dr-t">Sunumu bitir</span></div><div class="dr-r dr-2"><span class="dr-h"><i></i><i></i><i></i></span><span class="cb sm"></span><span class="dr-t">Toplantı notları</span></div><div class="dr-r dr-3"><span class="dr-h"><i></i><i></i><i></i></span><span class="cb sm"></span><span class="dr-t">Bütçe tablosu</span></div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">9</span>Sürükle ve bırak</h2>
+        <p class="tm">kaldırma 120 ms: 1,03 ölçek + gölge · komşular 180 ms <b>ease-out-quart</b> kayar · bırakma 180 ms <b>spring</b> · yer tutucu kesik çizgili</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Ölçek ve eğim yok; gölge ve yer tutucu kalır, komşular anında yer değiştirir.</p>
+      </div>
+    </article>
+    <article class="mc ">
+      <div class="stage" aria-hidden="true">
+        <div class="es">
+          <span class="es-m"><span class="es-s es-1"></span><span class="es-s es-2 wk"></span><span class="es-s es-4 wk"></span><span class="es-s es-3"></span></span>
+          <p class="es-t">Henüz not yok</p>
+          <p class="es-d">İlk notunu yukarıdaki alana yaz.</p>
+        </div>
+      </div>
+      <div class="mb">
+        <h2><span class="n">10</span>Boş durumda logo</h2>
+        <p class="tm">kareler sırayla (sol üst → sağ üst → sağ alt → sol alt) 80 ms arayla, her biri 240 ms <b>ease-out-quart</b> · metin 160 ms sonra</p>
+        <p class="rm"><span class="rmk">Azaltılmış hareket</span>Kareler ve metin baştan yerinde, animasyon yok.</p>
+      </div>
+    </article>
+    <article class="mc wide rules">
+      <h2>Ortak kurallar</h2>
+      <ul>
+        <li><b>Yalnızca transform ve opacity.</b> Yükseklik (alt görev) tek istisna; uygulamada <code>grid-template-rows: 0fr → 1fr</code> ya da Motion <code>layout</code>.</li>
+        <li><b>Giriş ease-out, çıkış ease-in ve daha kısa.</b> Çıkış girişin yaklaşık %75’i: 240 → 180 ms, 180 → 120 ms.</li>
+        <li><b>Klavyeyle tetiklenen ve sık tekrarlanan eylemde hareket kısalır.</b> Ctrl+Enter ile tamamlama: tik anında, satır inişi 180 ms.</li>
+        <li><b>Her hareket kesilebilir.</b> Kart açılırken Esc’e basılırsa kapanış bulunduğu kareden başlar; yeniden başlamaz.</li>
+        <li><b>Azaltılmış hareket:</b> kayma, ölçek ve paralaks kapanır; anlam taşıyan durum değişimi 120 ms saydamlıkla kalır.</li>
+      </ul>
+    </article>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"motion":{"editor":"enum","options":["full","auto","reduced"],"default":"full","section":"Hareket önizlemesi"},"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', motion: this.props.motion ?? 'full' };
+  }
+}
+</script>
+</body>
+</html>

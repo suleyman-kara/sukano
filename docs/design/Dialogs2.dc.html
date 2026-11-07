@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Onay diyalogları</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-fg:#FFFFFF;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--stage:#5E5C56;
+--n-turuncu:#FBE2CC;--n-turkuaz:#D4EEEA;--n-mavi:#DCE9F7;--n-sari:#FBF0BF;--n-yesil:#DEF0D6}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-fg:#2A1210;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--stage:#0B0B0A;--n-turuncu:#4A3827;--n-turkuaz:#223E3A;--n-mavi:#27374A;--n-sari:#45401F;--n-yesil:#2C3F27}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+:where(.sk) h2,:where(.sk) h3,:where(.sk) p{margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dlg{background:var(--surface);color:var(--fg);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column}
+.dlg h2{font-size:18px;font-weight:600}
+.dlg p{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{background:var(--danger);color:var(--danger-fg);border-color:var(--danger)}
+.btn svg{width:18px;height:18px}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib:hover{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface);width:100%}
+.input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{font-size:12px;color:var(--muted)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.hd{display:flex;align-items:flex-start;gap:12px}
+.hd h2{flex:1;padding-top:6px}
+.ico{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ico svg{width:20px;height:20px}
+.ico.d{background:var(--danger-soft);color:var(--danger)}
+.ico.a{background:var(--accent-soft);color:var(--accent)}
+.foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+.chipline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.chipline b{font-weight:600}
+.chipline small{color:var(--muted);font-size:12px}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13px}
+.note svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.note.w{background:var(--warn-soft);color:var(--warn)}
+.note.m{background:var(--hover);color:var(--muted)}
+.opt{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);width:100%}
+.opt:hover{background:var(--hover)}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt .os{font-size:12px;color:var(--muted)}
+.pchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" style="display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; justify-content:center; min-height:1766px; width:100%; padding:48px 40px; background:var(--stage); color:var(--fg)">
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Proje silme</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c1" aria-describedby="c1d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c1">Proje silinsin mi?</h2><a class="ib" href="ProjectSettings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline"><span class="avatar" style="width:12px; height:12px; background:#AD5A34"></span><b style="flex:1">Web Sitesi Yenileme</b><small>14 not · 5 üye</small></div>
+      <p id="c1d">Proje 7 gün boyunca silinmiş olarak bekler; bu sürede yöneticiler projeyi geri getirebilir. Sonra notlar, dosyalar ve sürümler kalıcı olarak silinir. Üyelere bildirim gider.</p>
+      <div class="foot"><a class="btn" href="ProjectSettings.dc.html">Vazgeç</a><button class="btn danger">Projeyi sil</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Üye çıkarma</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c2" aria-describedby="c2d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 11h6"/></svg></span><h2 id="c2">Üye projeden çıkarılsın mı?</h2><a class="ib" href="ProjectSettings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline"><span class="avatar" style="width:30px; height:30px; font-size:11px; background:#398264">CY</span><span style="flex:1; display:flex; flex-direction:column"><b>Can Yılmaz</b><small>can.yilmaz@ornek.com · Görüntüleyici</small></span></div>
+      <p id="c2d">Notlar projede kalır, Can'ın görev atamaları kaldırılır. Oluşturduğu ve düzenlediği notlarda adı görünmeye devam eder. Can'a bildirim gider.</p>
+      <div class="foot"><a class="btn" href="ProjectSettings.dc.html">Vazgeç</a><button class="btn danger">Projeden çıkar</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Projeden ayrılma</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c3" aria-describedby="c3d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/><path d="M10 12h10"/><path d="m16 8 4 4-4 4"/></svg></span><h2 id="c3">Projeden ayrılıyor musun?</h2><a class="ib" href="ProjectSettings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline"><span class="avatar" style="width:12px; height:12px; background:#4A7D45"></span><b style="flex:1">Kitap Kulübü</b><small>Görüntüleyici</small></div>
+      <p id="c3d">Notlar projede kalır ve sana atanan görevlerden çıkarılırsın. Geri dönmek için bir yöneticinin seni yeniden davet etmesi gerekir.</p>
+      <div class="foot"><a class="btn" href="ProjectSettings.dc.html">Vazgeç</a><button class="btn danger">Projeden ayrıl</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Projeden ayrılma · tek yönetici</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c3b" aria-describedby="c3bd" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/><path d="M10 12h10"/><path d="m16 8 4 4-4 4"/></svg></span><h2 id="c3b">Projeden ayrılıyor musun?</h2><a class="ib" href="ProjectSettings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline"><span class="avatar" style="width:12px; height:12px; background:#3F6DB5"></span><b style="flex:1">Ev Taşınma</b><small>Yönetici · tek yönetici</small></div>
+      <div class="note w" id="c3bd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg><span>Projenin son yöneticisi sensin; bu yüzden ayrılamazsın. Önce Proje ayarlarında başka bir üyeyi yönetici yap ya da projeyi sil.</span></div>
+      <div class="foot"><a class="btn" href="ProjectSettings.dc.html">Proje ayarlarına git</a><button class="btn danger" disabled style="opacity:.5">Projeden ayrıl</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Çöpü boşalt</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c4" aria-describedby="c4d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c4">Çöp boşaltılsın mı?</h2><a class="ib" href="Trash.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <p id="c4d">Web Sitesi Yenileme çöpündeki 4 not, sürümleri ve ekleriyle birlikte kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+      <div class="note m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span>Yalnızca bu projenin çöpü boşalır. Notlarım ve diğer projeler etkilenmez.</span></div>
+      <div class="foot"><a class="btn" href="Trash.dc.html">Vazgeç</a><button class="btn danger">Çöpü boşalt</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Kalıcı silme · tek not</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c5" aria-describedby="c5d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c5">Not kalıcı olarak silinsin mi?</h2><a class="ib" href="Trash.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline" style="background:var(--n-sari); border-color:transparent"><b style="flex:1">Eski ana sayfa metni</b><small>Çöpte · 2 gün kaldı</small></div>
+      <p id="c5d">Not, sürüm geçmişi ve ekleri silinir. Bu işlem geri alınamaz.</p>
+      <div class="foot"><a class="btn" href="Trash.dc.html">Vazgeç</a><button class="btn danger">Kalıcı olarak sil</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Hesap silme</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c6" aria-describedby="c6d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico d"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 11-7.4"/><path d="m17 16 4 4M21 16l-4 4"/></svg></span><h2 id="c6">Hesabın silinsin mi?</h2><a class="ib" href="Settings.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <p id="c6d">Kişisel notların ekleri ve sürümleriyle silinir. Proje notları projelerde kalır; adın "silinmiş kullanıcı" olarak görünür. Bu işlem geri alınamaz.</p>
+      <label class="field"><span>Onaylamak için e-posta adresini yaz</span><input class="input" placeholder="karasuleyman@ornek.com" autocomplete="off"></label>
+      <div class="foot"><a class="btn" href="Settings.dc.html">Vazgeç</a><button class="btn danger" disabled style="opacity:.5">Hesabımı sil</button></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Sürüm geri yükleme</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c7" aria-describedby="c7d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></span><h2 id="c7">Bu sürüm geri yüklensin mi?</h2><a class="ib" href="Dialogs.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline"><span class="avatar" style="width:28px; height:28px; font-size:10px; background:#B25D49">AD</span><span style="flex:1; display:flex; flex-direction:column"><b>Dün, 17:48</b><small>Ayşe Demir · Lansman hazırlığı</small></span></div>
+      <p id="c7d">Not bu sürümdeki haline döner. Şu anki hali kaybolmaz, sürüm geçmişinde kalır. Projedeki herkes değişikliği hemen görür.</p>
+      <div class="foot"><a class="btn" href="Dialogs.dc.html">Vazgeç</a><a class="btn primary" href="TodoNote.dc.html">Geri yükle</a></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Yapılacaklar → metin dönüşümü</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c8" aria-describedby="c8d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-4-4"/><path d="M19 16H5l4 4"/></svg></span><h2 id="c8">Metin notuna dönüştürülsün mü?</h2><a class="ib" href="TodoNote.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <p id="c8d">Her görev bir satır olur; alt görevler girintili madde olarak kalır.</p>
+      <div class="note w"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg><span>Tarihler, atamalar, görev hatırlatıcıları ve açıklamalar kaldırılır. Önceki hal sürüm geçmişinde kalır.</span></div>
+      <div class="foot"><a class="btn" href="TodoNote.dc.html">Vazgeç</a><a class="btn primary" href="TextNote.dc.html">Metne dönüştür</a></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Metin → yapılacaklar dönüşümü</span>
+    <div class="dlg" role="alertdialog" aria-labelledby="c9" aria-describedby="c9d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-4-4"/><path d="M19 16H5l4 4"/></svg></span><h2 id="c9">Yapılacaklar notuna dönüştürülsün mü?</h2><a class="ib" href="TextNote.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <p id="c9d">Her satır bir görev olur, girintili maddeler alt görev olur. Kalın, italik ve bağlantılar düz metne döner.</p>
+      <div class="note m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span>Yapılacaklar notunda dosya eki tutulmaz. Eki olan not, ekler kaldırılınca dönüştürülebilir.</span></div>
+      <div class="foot"><a class="btn" href="TextNote.dc.html">Vazgeç</a><a class="btn primary" href="TodoNote.dc.html">Dönüştür</a></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:400px">
+    <span class="lbl">Proje notu · kopyala</span>
+    <div class="dlg" role="dialog" aria-labelledby="c10" aria-describedby="c10d" style="padding:24px; gap:16px">
+      <div class="hd"><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M9 13.5h6.5M13 11l2.5 2.5L13 16"/></svg></span><h2 id="c10">Notu kopyala</h2><a class="ib" href="TodoNote.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a></div>
+      <div class="chipline" style="background:var(--n-turkuaz); border-color:transparent"><b style="flex:1">Lansman hazırlığı</b><span class="pchip"><span class="avatar" style="width:8px; height:8px; background:#AD5A34"></span>Web Sitesi Yenileme</span></div>
+      <div style="display:flex; flex-direction:column; gap:8px" role="radiogroup" aria-label="Kopyanın yeri">
+        <button class="opt on" role="radio" aria-checked="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted); flex:0 0 auto"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span style="flex:1; font-weight:500">Kişisel alanım</span><span class="os">Notlarım</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button>
+        <button class="opt" role="radio" aria-checked="false"><span class="avatar" style="width:10px; height:10px; background:#3F6DB5"></span><span style="flex:1; font-weight:500">Ev Taşınma</span><span class="os">Yönetici</span></button>
+        <button class="opt" role="radio" aria-checked="false" disabled style="opacity:.5"><span class="avatar" style="width:10px; height:10px; background:#4A7D45"></span><span style="flex:1; font-weight:500">Kitap Kulübü</span><span class="os">Görüntüleyici, not ekleyemez</span></button>
+      </div>
+      <p id="c10d">Proje notu taşınamaz, yalnızca kopyalanır. Asıl not projede kalır; kopya görev ağacıyla birlikte yeni bir not olarak oluşur. Kişisel alanda atama olmadığı için atamalar kopyalanmaz.</p>
+      <div class="foot"><a class="btn" href="TodoNote.dc.html">Vazgeç</a><a class="btn primary" href="Main.dc.html">Kişisel alanıma kopyala</a></div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":1440,"height":1766}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>
