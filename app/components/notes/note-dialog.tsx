@@ -836,11 +836,17 @@ function NoteBody({
 }: NoteBodyProps) {
   const [title, setTitle] = useState(note.title);
   const [titleFocused, setTitleFocused] = useState(false);
-  // Başka yerden gelen başlık: yazmıyorsan hemen gösterilir (render sırasında ayarlama).
+  // Başka yerden gelen başlık (sunucu sırasında son yazan kazanır): yazmıyorsan ve
+  // gönderilmemiş başlığın yoksa hemen gösterilir; yazarken gelen bekletilir, alandan
+  // çıkınca (o arada yeniden yazmadıysan) uygulanır. Böylece iki taraf aynı başlıkta buluşur.
   const [seenRemote, setSeenRemote] = useState(remoteTitle);
+  const [deferredTitle, setDeferredTitle] = useState<string | null>(null);
   if (remoteTitle !== seenRemote) {
     setSeenRemote(remoteTitle);
-    if (remoteTitle && !titleFocused) setTitle(remoteTitle.title);
+    if (remoteTitle) {
+      if (!titleFocused && saver.pending?.title === undefined) setTitle(remoteTitle.title);
+      else setDeferredTitle(remoteTitle.title);
+    }
   }
   const { me } = useLiveConfig();
   // Canlı metin notu: gövde Yjs belgesinden (ilk eşitlemeden sonra); HTTP'ye gövde gitmez.
@@ -875,8 +881,13 @@ function NoteBody({
         value={title}
         readOnly={!editable}
         onFocus={() => setTitleFocused(true)}
-        onBlur={() => setTitleFocused(false)}
+        onBlur={() => {
+          setTitleFocused(false);
+          if (deferredTitle !== null && saver.pending?.title === undefined) setTitle(deferredTitle);
+          setDeferredTitle(null);
+        }}
         onChange={(e) => {
+          setDeferredTitle(null);
           setTitle(e.target.value);
           saver.change({ title: e.target.value });
         }}

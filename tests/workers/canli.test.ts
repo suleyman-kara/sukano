@@ -262,6 +262,17 @@ describe("metin notu: ortak düzenleme", () => {
     expect(await a.waitFor((m) => m.t === "not" && "color" in m)).toMatchObject({ color: "mavi" });
   });
 
+  it("sırasız gelen başlık bildirimi D1'deki güncel başlığı yayınlar (son yazan kazanır)", async () => {
+    const id = await textNote();
+    const a = await join(id, "mehmet");
+    await form("/api/notlar", { intent: "update", id, title: "Son başlık" }, jar.suleyman);
+    await a.waitFor((m) => m.t === "not" && m.title === "Son başlık");
+    // Daha önceki bir yazımın gecikmiş bildirimi: yayın yine D1'deki başlığı taşır.
+    await room(id).noteChanged({ by: ID.mehmet, meta: { title: "Eski başlık" } });
+    const last = await a.waitFor((m) => m.t === "not" && m.by === ID.mehmet);
+    expect(last).toMatchObject({ title: "Son başlık" });
+  });
+
   it("sürüm geri yükleme belgeyi sıfırlar: bağlantı kapanır, yeniden bağlanan D1'den alır", async () => {
     const id = await textNote("<p>v1</p>");
     const a = await join(id, "mehmet");

@@ -500,9 +500,26 @@ export class NoteRoom extends DurableObject<Env> {
       return;
     }
     if (change.meta && Object.keys(change.meta).length) {
-      this.broadcast(
-        JSON.stringify({ t: "not", by: change.by, ...change.meta } satisfies NoteServerMessage),
-      );
+      const meta = change.meta;
+      await this.queue(async () => {
+        // Başlık: bildirimler (ayrı isteklerin waitUntil'i) sırasız gelebilir; yayın D1'deki
+        // güncel başlığı taşır, böylece herkes sunucudaki son yazımda buluşur.
+        const patch = { ...meta };
+        if (patch.title !== undefined) {
+          const noteId = this.meta("noteId");
+          const row = noteId
+            ? await createDb(this.env.DB)
+                .select({ title: notes.title })
+                .from(notes)
+                .where(eq(notes.id, noteId))
+                .get()
+            : undefined;
+          if (row) patch.title = row.title;
+        }
+        this.broadcast(
+          JSON.stringify({ t: "not", by: change.by, ...patch } satisfies NoteServerMessage),
+        );
+      });
     }
   }
 
