@@ -1,9 +1,17 @@
-import { FileText, ImageIcon, SquareCheckBig } from "lucide-react";
-import { useRef } from "react";
-import { AppShell } from "~/components/shell/app-shell";
-import { ViewSwitch } from "~/components/shell/view-switch";
+import { FileText } from "lucide-react";
+import { useState } from "react";
+import { Outlet, useNavigate } from "react-router";
+import { Composer, type ComposerDraft } from "~/components/notes/composer";
+import { MobileNewNote } from "~/components/notes/mobile-new-note";
+import { NoteGrid } from "~/components/notes/note-grid";
+import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
+import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
-import { useShellData } from "~/lib/shell";
+import { applyPendingIntents } from "~/domain/notes/optimistic";
+import { splitPinned } from "~/domain/notes/ordering";
+import { getCloudflare } from "~/lib/context";
+import { personalNotes } from "~/lib/notes.server";
+import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/home";
 
 export const meta: Route.MetaFunction = () => [
@@ -11,66 +19,74 @@ export const meta: Route.MetaFunction = () => [
   { name: "description", content: "Kişisel notların ve ekip projelerin, tek yerde." },
 ];
 
-export default function Home() {
-  const composerRef = useRef<HTMLInputElement>(null);
-  const shell = useShellData();
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { user } = await requireUser(request, context);
+  return { notes: await personalNotes(getCloudflare(context).env, user.id).list("notlar") };
+}
+
+/** Notlarım: not al alanı, sabitlenmiş ve diğer notlar; açık not alt rotada (/not/:id). */
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const actions = useNoteActions();
+  const navigate = useNavigate();
+  const pending = usePendingNoteIntents();
+  const [mobileComposer, setMobileComposer] = useState(false);
+  const notes = applyPendingIntents(loaderData.notes, pending, "notlar");
+  const { pinned, others } = splitPinned(notes);
+
+  const save = (draft: ComposerDraft) => actions.create(draft);
+  const grid = {
+    view: "notlar" as const,
+    actions,
+    hrefFor: (n: { id: string }) => `/not/${n.id}`,
+    onVersions: (id: string) => navigate(`/not/${id}?surumler`, { preventScrollReset: true }),
+  };
+  const openComposer = () => {
+    if (window.matchMedia("(min-width: 768px)").matches) document.getElementById("not-al")?.click();
+    else setMobileComposer(true);
+  };
 
   return (
-    <AppShell {...shell} showViewSwitch>
-      <section className="flex flex-col gap-[18px] px-4 pt-2 pb-10 md:gap-6 md:px-7 md:pt-3 lg:px-8">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="m-0 text-[22px] font-bold tracking-[-0.01em] md:text-2xl">Notlarım</h1>
-          <ViewSwitch className="md:hidden" />
-        </div>
+    <NotesPage>
+      <Composer onSave={save} className="max-md:hidden" />
 
-        {/* "Not al" alanı: YER TUTUCU, Aşama 1'de not oluşturmaya bağlanacak. */}
-        <form
-          aria-label="Yeni not"
-          onSubmit={(e) => e.preventDefault()}
-          className="mx-auto flex w-full max-w-[600px] items-center gap-0.5 rounded-2xl border border-line bg-surface py-1 pr-1.5 pl-[18px] shadow-elevated md:gap-1"
+      {notes.length === 0 ? (
+        <EmptyState
+          icon={<FileText strokeWidth={1.75} aria-hidden="true" />}
+          title="Henüz not yok"
+          actions={<Button onClick={openComposer}>Not al</Button>}
         >
-          <label htmlFor="not-al" className="sr-only">
-            Not al
-          </label>
-          <input
-            ref={composerRef}
-            id="not-al"
-            placeholder="Not al…"
-            autoComplete="off"
-            className="h-11 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="button"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg md:size-9"
-            aria-label="Yeni yapılacaklar notu"
-            title="Yeni yapılacaklar notu"
-          >
-            <SquareCheckBig className="size-5" strokeWidth={1.75} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg md:size-9"
-            aria-label="Görsel ekleyerek not başlat"
-            title="Görsel ekle"
-          >
-            <ImageIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        </form>
+          Yukarıdaki &ldquo;Not al&rdquo; alanına yaz ya da bir yapılacaklar notu başlat. Notların
+          yalnızca sana görünür.
+        </EmptyState>
+      ) : (
+        <>
+          {pinned.length > 0 && (
+            <div>
+              <SectionHeading>Sabitlenmiş</SectionHeading>
+              <NoteGrid
+                {...grid}
+                label="Sabitlenmiş notlar"
+                notes={pinned}
+                onMove={(id, to) => actions.move(id, true, to)}
+              />
+            </div>
+          )}
+          {others.length > 0 && (
+            <div>
+              {pinned.length > 0 && <SectionHeading>Diğerleri</SectionHeading>}
+              <NoteGrid
+                {...grid}
+                label={pinned.length > 0 ? "Diğer notlar" : "Notlar"}
+                notes={others}
+                onMove={(id, to) => actions.move(id, false, to)}
+              />
+            </div>
+          )}
+        </>
+      )}
 
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center md:py-24">
-          <span className="inline-flex size-16 items-center justify-center rounded-[18px] bg-primary-soft text-primary">
-            <FileText className="size-[30px]" strokeWidth={1.75} aria-hidden="true" />
-          </span>
-          <h2 className="m-0 text-lg font-semibold">Henüz not yok</h2>
-          <p className="m-0 max-w-[280px] text-muted-foreground">
-            Yukarıdaki &ldquo;Not al&rdquo; alanına yaz ya da bir yapılacaklar notu başlat. Notların
-            yalnızca sana görünür.
-          </p>
-          <Button className="mt-2" onClick={() => composerRef.current?.focus()}>
-            Not al
-          </Button>
-        </div>
-      </section>
-    </AppShell>
+      <MobileNewNote onSave={save} open={mobileComposer} onOpenChange={setMobileComposer} />
+      <Outlet />
+    </NotesPage>
   );
 }

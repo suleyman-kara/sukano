@@ -1,5 +1,5 @@
 import { Bell, Menu, Search } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { AccountMenu } from "./account-menu";
 import type { ShellUser } from "./types";
 import { ViewSwitch } from "./view-switch";
@@ -19,6 +19,11 @@ export function Topbar({
   menuExpanded,
   onMenuClick,
 }: TopbarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const q =
+    location.pathname === "/ara" ? (new URLSearchParams(location.search).get("q") ?? "") : "";
+
   return (
     <header className="flex items-center gap-1 px-2 pt-3 pb-2 md:gap-2 md:pt-3 md:pr-5 md:pb-2 md:pl-4 lg:gap-3 lg:px-8 lg:pt-3.5 lg:pb-1.5">
       <button
@@ -34,8 +39,14 @@ export function Topbar({
 
       <form
         role="search"
+        method="get"
+        action="/ara"
         className="relative block min-w-0 flex-1 lg:max-w-[620px]"
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const value = String(new FormData(e.currentTarget).get("q") ?? "").trim();
+          navigate(value ? `/ara?q=${encodeURIComponent(value)}` : "/ara");
+        }}
       >
         <label htmlFor="genel-arama" className="sr-only">
           Ara
@@ -46,8 +57,12 @@ export function Topbar({
           aria-hidden="true"
         />
         <input
+          key={q}
           id="genel-arama"
+          name="q"
           type="search"
+          defaultValue={q}
+          enterKeyHint="search"
           placeholder="Notlarda ve projelerde ara"
           className="h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:pl-11 md:text-sm"
         />
