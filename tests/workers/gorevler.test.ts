@@ -311,7 +311,12 @@ describe("metin ↔ yapılacaklar dönüşümü", () => {
     expect(list.every((t) => t.parentId === null)).toBe(true);
     const versions = await notesSvc().listVersions(id);
     expect(versions).toHaveLength(2);
-    expect((await notesSvc().getVersion(id, versions[0]!.id)).html).toContain("<li><p>Süt</p>");
+    const preview = await notesSvc().getVersion(id, versions[0]!.id);
+    expect(preview.html).toContain("<li><p>Süt</p>");
+    // Yapılacaklar sürümünün önizlemesi görev ağacını da taşır.
+    expect(titles(preview.tasks ?? [])).toEqual(["Süt", "Ekmek", "Taze"]);
+    expect((await notesSvc().getVersion(id, versions[1]!.id)).tasks).toBeUndefined();
+    expect((await notesSvc().get(id)).attachmentCount).toBe(0);
     // Aynı türe dönüştürmek değişiklik yapmaz.
     await svc().convert(id, "todo");
     expect(await notesSvc().listVersions(id)).toHaveLength(2);
