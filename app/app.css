@@ -1,0 +1,338 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ------------------------------------------------------------------ */
+/* Yazı tipi: Onest (self-host, değişken font; 400–700)                */
+/* ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/onest-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/onest-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ------------------------------------------------------------------ */
+/* Varyantlar                                                          */
+/* ------------------------------------------------------------------ */
+/* Koyu tema: <html data-theme="dark"> (app/lib/theme.ts ayarlar). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Sol panel ray hali: tablette (768–1023) her zaman, masaüstünde
+   <html data-nav="rail"> iken. Çekmecedeki (Sheet) gezinme bu varyantı
+   kullanmaz. */
+@custom-variant railed {
+  @media (width >= 48rem) and (width < 64rem) {
+    @slot;
+  }
+  @media (width >= 64rem) {
+    &:where([data-nav="rail"] *) {
+      @slot;
+    }
+  }
+}
+
+/* Hareketi azalt: sistem tercihi ya da <html data-motion="reduced">. */
+@custom-variant reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion="reduced"] *) {
+    @slot;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tasarım belirteçleri (PLAN §10, docs/design/Main.dc.html .sk)       */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --fg: #1c1b19;
+  --muted: #5f5d57;
+  --line: #e4e2dc;
+  --hover: #ecebe6;
+  --accent: #2e6b55;
+  --accent-fg: #ffffff;
+  --accent-soft: #e2eee8;
+  --danger: #a8423a;
+  --danger-soft: #f8e4e1;
+  --warn: #8a5a0b;
+  --warn-soft: #fbefd6;
+  --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.08);
+  /* Giriş ekranı sol paneli ve mobil karartma */
+  --panel: #e8efe9;
+  --dim: rgba(28, 27, 25, 0.45);
+
+  /* Not renkleri: varsayılan + 9 pastel */
+  --n-default: #ffffff;
+  --n-sari: #fbf0bf;
+  --n-turuncu: #fbe2cc;
+  --n-pembe: #f9dada;
+  --n-mor: #e9e0f7;
+  --n-mavi: #dce9f7;
+  --n-turkuaz: #d4eeea;
+  --n-yesil: #def0d6;
+  --n-kahve: #eadfd3;
+  --n-gri: #e6e6e1;
+
+  /* Proje renkleri (iki temada aynı; üzerinde beyaz metin ≥ 4,5:1) */
+  --p-turuncu: #ad5a34;
+  --p-mavi: #3f6db5;
+  --p-yesil: #4a7d45;
+  --p-pembe: #9e4f72;
+  --p-mor: #6f5dae;
+  --p-sari: #87691a;
+  --p-grimavi: #4f6c7a;
+
+  /* Hareket ölçeği */
+  --dur-micro: 120ms;
+  --dur-small: 180ms;
+  --dur-medium: 240ms;
+  --dur-large: 320ms;
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* JS çalışmadığında (data-theme yokken) sistem tercihine uy. */
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #141413;
+    --surface: #1e1e1c;
+    --fg: #eceae4;
+    --muted: #afada6;
+    --line: #2f2f2c;
+    --hover: #2a2a27;
+    --accent: #7fc2a6;
+    --accent-fg: #0f1f19;
+    --accent-soft: #233a30;
+    --danger: #e58a7d;
+    --danger-soft: #3e2622;
+    --warn: #ddaf55;
+    --warn-soft: #3a2f17;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+    --panel: #1b2420;
+    --dim: rgba(0, 0, 0, 0.6);
+    --n-default: #1e1e1c;
+    --n-sari: #45401f;
+    --n-turuncu: #4a3827;
+    --n-pembe: #4a2e2e;
+    --n-mor: #38304c;
+    --n-mavi: #27374a;
+    --n-turkuaz: #223e3a;
+    --n-yesil: #2c3f27;
+    --n-kahve: #423831;
+    --n-gri: #30302e;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413;
+  --surface: #1e1e1c;
+  --fg: #eceae4;
+  --muted: #afada6;
+  --line: #2f2f2c;
+  --hover: #2a2a27;
+  --accent: #7fc2a6;
+  --accent-fg: #0f1f19;
+  --accent-soft: #233a30;
+  --danger: #e58a7d;
+  --danger-soft: #3e2622;
+  --warn: #ddaf55;
+  --warn-soft: #3a2f17;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --panel: #1b2420;
+  --dim: rgba(0, 0, 0, 0.6);
+  --n-default: #1e1e1c;
+  --n-sari: #45401f;
+  --n-turuncu: #4a3827;
+  --n-pembe: #4a2e2e;
+  --n-mor: #38304c;
+  --n-mavi: #27374a;
+  --n-turkuaz: #223e3a;
+  --n-yesil: #2c3f27;
+  --n-kahve: #423831;
+  --n-gri: #30302e;
+}
+
+/* shadcn/ui tema değişkenleri → Sukano belirteçleri.
+   Not: shadcn'in kendi --muted/--accent (arka plan) değişkenleri bizim
+   --muted (soluk metin) ve --accent (vurgu yeşili) adlarıyla çakıştığı için
+   tanımlanmaz; Tailwind renkleri aşağıdaki @theme bloğunda doğrudan eşlenir. */
+:root,
+[data-theme="dark"] {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--hover);
+  --secondary-foreground: var(--fg);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+}
+
+@theme inline {
+  --font-sans: "Onest", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-sans);
+
+  /* shadcn renkleri */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--accent-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--hover);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sukano renkleri (bg-surface, text-fg, border-line, bg-hover …) */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-line: var(--line);
+  --color-hover: var(--hover);
+  --color-panel: var(--panel);
+  --color-dim: var(--dim);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --color-note-default: var(--n-default);
+  --color-note-sari: var(--n-sari);
+  --color-note-turuncu: var(--n-turuncu);
+  --color-note-pembe: var(--n-pembe);
+  --color-note-mor: var(--n-mor);
+  --color-note-mavi: var(--n-mavi);
+  --color-note-turkuaz: var(--n-turkuaz);
+  --color-note-yesil: var(--n-yesil);
+  --color-note-kahve: var(--n-kahve);
+  --color-note-gri: var(--n-gri);
+
+  --color-project-turuncu: var(--p-turuncu);
+  --color-project-mavi: var(--p-mavi);
+  --color-project-yesil: var(--p-yesil);
+  --color-project-pembe: var(--p-pembe);
+  --color-project-mor: var(--p-mor);
+  --color-project-sari: var(--p-sari);
+  --color-project-grimavi: var(--p-grimavi);
+
+  --shadow-elevated: var(--shadow);
+
+  /* Radius: düğme 10, mobil kart 12, kart 14 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: var(--radius);
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
+
+  --ease-spring: var(--ease-spring);
+}
+
+/* ------------------------------------------------------------------ */
+/* Temel                                                               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  @media (width >= 48rem) {
+    body {
+      font-size: 14px;
+    }
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Giriş ekranı arka planı: "Yükselen ızgara" (yalnızca transform +     */
+/* opacity; app/components/rising-grid.tsx)                            */
+/* ------------------------------------------------------------------ */
+@keyframes rising-grid {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: var(--rg-o0);
+  }
+  to {
+    transform: translate3d(0, var(--rg-amp, -24px), 0);
+    opacity: var(--rg-o1);
+  }
+}
+
+@layer components {
+  .rising-grid-mark {
+    --rg-o0: 0.085;
+    --rg-o1: 0.13;
+    position: absolute;
+    opacity: var(--rg-o0);
+    will-change: transform, opacity;
+    animation: rising-grid var(--rg-dur, 11s) cubic-bezier(0.45, 0, 0.55, 1) var(--rg-delay, 0s)
+      infinite alternate both;
+  }
+  [data-theme="dark"] .rising-grid-mark {
+    --rg-o0: 0.11;
+    --rg-o1: 0.16;
+  }
+  [data-motion="reduced"] .rising-grid-mark {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rising-grid-mark {
+      animation: none;
+    }
+  }
+}
