@@ -379,26 +379,66 @@
     color: var(--muted);
     pointer-events: none;
   }
-  /* Ortak düzenleme: diğerlerinin imleci (CollaborationCaret). Asgari; cilası Aşama 4b. */
-  .note-prose .collaboration-carets__caret {
+  /*
+   * Ortak düzenleme: diğerlerinin imleci ve seçimi (CollaborationCaret, `collab.ts`).
+   * Renk kişinin avatar rengidir (`--caret`, `--sel`); etiket beyaz metinle ≥ 4,5:1.
+   * Seçim yalnızca zemini renklendirir, metin rengi değişmez (iki temada okunur).
+   */
+  .note-prose .collab-caret {
     position: relative;
     margin-inline: -1px;
-    border-left: 2px solid;
+    border-left: 2px solid var(--caret);
     word-break: normal;
     pointer-events: none;
   }
-  .note-prose .collaboration-carets__label {
+  .note-prose .collab-caret__label {
     position: absolute;
-    top: -1.4em;
+    bottom: 100%;
     left: -2px;
-    padding: 0 6px;
+    z-index: 1;
+    max-width: 16ch;
+    overflow: hidden;
+    padding: 1px 6px;
     border-radius: 6px 6px 6px 0;
+    background: var(--caret);
     font-size: 11px;
     font-weight: 600;
-    line-height: 1.5;
+    font-style: normal;
+    line-height: 1.4;
     color: #fff;
+    text-overflow: ellipsis;
     white-space: nowrap;
     user-select: none;
+    animation: collab-label-in var(--dur-small) var(--ease-out-quart);
+  }
+  .note-prose .collab-selection {
+    background-color: color-mix(in srgb, var(--sel) 24%, transparent);
+    border-radius: 2px;
+  }
+  /* Koyu temada çizgi açılır (koyu zeminde ≥ 3:1); etiket zemini aynı kalır (beyaz metin). */
+  :root[data-theme="dark"] .note-prose .collab-caret {
+    border-left-color: color-mix(in srgb, var(--caret) 60%, #fff);
+  }
+  :root[data-theme="dark"] .note-prose .collab-selection {
+    background-color: color-mix(in srgb, var(--sel) 45%, transparent);
+  }
+  @keyframes collab-label-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+  }
+  [data-motion="reduced"] .note-prose .collab-caret__label {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .note-prose .collab-caret__label {
+      animation: none;
+    }
+  }
+  /* Çevrimdışı: düzenleme kapalı, içerik soluk (PLAN §5; MOffline). */
+  [data-canli="cevrimdisi"] :is(.note-prose, .task-title, .task-cb) {
+    opacity: 0.72;
   }
 }
 

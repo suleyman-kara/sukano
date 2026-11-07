@@ -7,6 +7,7 @@ import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
+import { OfflineInert } from "~/components/realtime/live-status";
 import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
 import { applyPendingIntents } from "~/domain/notes/optimistic";
 import { splitPinned } from "~/domain/notes/ordering";
@@ -58,8 +59,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <NotesPage>
-      <Composer onSave={save} className="max-md:hidden" />
+    <NotesPage live={live.live}>
+      <OfflineInert live={live.live}>
+        <Composer onSave={save} className="max-md:hidden" />
+      </OfflineInert>
 
       {notes.length === 0 ? (
         <EmptyState

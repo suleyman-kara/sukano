@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { memo } from "react";
 import { cn } from "cn";
+import { Avatar } from "~/components/avatar";
+import { taskFocusLabel } from "~/domain/realtime/live-ui";
+import type { Peer } from "~/domain/realtime/presence";
 import { formatRange, isOverdue } from "~/domain/tasks/dates";
 import { isDone } from "~/domain/tasks/model";
 import type { TaskRow as TaskRowData } from "~/domain/tasks/tree";
@@ -59,6 +62,8 @@ export type TaskRowProps = {
   onOpenWho?: (id: string) => void;
   /** Görüntüleyici: kutucuk yerine madde işareti, başlık salt okunur, araç simgesi yok. */
   readOnly?: boolean;
+  /** Bu göreve odaklanmış diğer kişiler (varlık; `peersOnTask`). */
+  focusPeers?: readonly Peer[];
   children?: React.ReactNode;
 };
 
@@ -96,6 +101,7 @@ export const TaskRow = memo(function TaskRow({
   whoOpen = false,
   onOpenWho,
   readOnly = false,
+  focusPeers,
   children,
 }: TaskRowProps) {
   const { task, id, depth } = row;
@@ -141,8 +147,16 @@ export const TaskRow = memo(function TaskRow({
           "pointer-coarse:min-h-11 pointer-coarse:gap-0.5 pointer-coarse:py-0 pointer-coarse:pr-0 pointer-coarse:pl-0.5",
           detailOpen && "bg-hover",
           blocked && "task-nodel",
+          focusPeers?.length && "relative",
         )}
       >
+        {focusPeers && focusPeers.length > 0 && (
+          <span
+            className="task-peer-bar pointer-events-none absolute inset-y-1 left-0 w-0.5 rounded-full"
+            style={{ background: focusPeers[0]!.color }}
+            aria-hidden="true"
+          />
+        )}
         <span
           data-drag-handle=""
           className={cn(
@@ -234,6 +248,7 @@ export const TaskRow = memo(function TaskRow({
             {range}
           </span>
         )}
+        {focusPeers && focusPeers.length > 0 && <TaskFocusPeers peers={focusPeers} />}
         {assignees && assignees.length > 0 && (
           <AssigneeAvatars people={assignees} className="[--row-ring:var(--surface)]" />
         )}
@@ -293,3 +308,36 @@ export const TaskRow = memo(function TaskRow({
     </div>
   );
 });
+
+/**
+ * Görevdeki diğer kişiler: kişinin renginde halkalı küçük avatar (atanan avatarlarından
+ * halkasıyla ayrılır) ve satırın solunda aynı renkte ince çizgi.
+ */
+function TaskFocusPeers({ peers }: { peers: readonly Peer[] }) {
+  const label = taskFocusLabel(peers);
+  const shown = peers.slice(0, 2);
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      data-testid="gorevde-kisi"
+      className="inline-flex shrink-0 items-center"
+    >
+      {shown.map((p, i) => (
+        <span
+          key={p.userId}
+          className={cn("inline-flex rounded-full p-px", i > 0 && "-ml-1.5")}
+          style={{ boxShadow: `0 0 0 2px ${p.color}` }}
+        >
+          <Avatar name={p.name} color={p.color} src={p.avatarUrl} size={18} />
+        </span>
+      ))}
+      {peers.length > shown.length && (
+        <span className="ml-0.5 text-[11px] font-semibold text-muted-foreground" aria-hidden="true">
+          +{peers.length - shown.length}
+        </span>
+      )}
+    </span>
+  );
+}

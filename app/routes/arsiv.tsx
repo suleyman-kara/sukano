@@ -24,7 +24,7 @@ export default function ArchiveRoute({ loaderData }: Route.ComponentProps) {
   const notes = applyPendingIntents(live.notes, usePendingNoteIntents(), "arsiv");
 
   return (
-    <NotesPage subtitle="Arşiv · yalnızca bu alan">
+    <NotesPage subtitle="Arşiv · yalnızca bu alan" live={live.live}>
       {notes.length === 0 ? (
         <EmptyState icon={<Archive strokeWidth={1.75} aria-hidden="true" />} title="Arşiv boş">
           Arşivlediğin notlar burada durur, aramada görünmeye devam eder.

@@ -1,25 +1,34 @@
+import { GridLiveStatus } from "~/components/realtime/live-status";
+import type { LiveChannelState } from "~/components/realtime/use-live-channel";
 import { AppShell } from "~/components/shell/app-shell";
 import { ViewSwitch } from "~/components/shell/view-switch";
 import { useShellData } from "~/lib/shell";
 
-/** Alan sayfası iskeleti (Notlarım, Arşiv, Çöp): kabuk + başlık + görünüm kapsülü. */
+/**
+ * Alan sayfası iskeleti (Notlarım, Arşiv, Çöp): kabuk + başlık + görünüm kapsülü.
+ * `live` (kanal durumu) koptuysa üstte çevrimdışı bandı, başlık altında son eşitleme.
+ */
 export function NotesPage({
   title = "Notlarım",
   subtitle,
+  live,
   children,
 }: {
   title?: string;
   subtitle?: string;
+  live?: LiveChannelState | null;
   children: React.ReactNode;
 }) {
   const shell = useShellData();
   return (
     <AppShell {...shell} showViewSwitch>
       <section className="flex flex-col gap-[18px] px-4 pt-2 pb-32 md:gap-6 md:px-7 md:pt-3 md:pb-10 lg:px-8">
+        <GridLiveStatus live={live} part="banner" />
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <h1 className="m-0 text-[22px] font-bold tracking-[-0.01em] md:text-2xl">{title}</h1>
             {subtitle && <p className="m-0 text-[13px] text-muted-foreground">{subtitle}</p>}
+            <GridLiveStatus live={live} part="sync" />
           </div>
           <ViewSwitch className="md:hidden" />
         </div>

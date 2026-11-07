@@ -19,12 +19,15 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher, useNavigate, useRevalidator, useSubmit } from "react-router";
+import { toast } from "sonner";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useLiveConfig } from "~/components/realtime/live-context";
+import { OfflineBanner, SyncStatus, useOfflineShown } from "~/components/realtime/live-status";
+import { PresenceAvatars } from "~/components/realtime/presence-avatars";
 import { useLiveNote, type LiveNote } from "~/components/realtime/use-live-note";
 import type { TodoPeople } from "~/components/tasks/person-picker";
 import {
@@ -36,6 +39,8 @@ import {
 import type { NoteColor } from "~/db/schema";
 import { authorshipLine } from "~/domain/notes/authorship";
 import { formatShortDateTime } from "~/domain/notes/dates";
+import { remoteNoteOutcome, type RemoteNoteOutcome } from "~/domain/realtime/live-ui";
+import type { NoteMetaPatch } from "~/domain/realtime/protocol";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import type { NoteDetail } from "~/lib/notes.server";
 import { ColorPalette } from "./color-palette";
@@ -90,6 +95,7 @@ export function NoteDialog({
 }: NoteDialogProps) {
   const navigate = useNavigate();
   const actions = useNoteActions();
+  const { me } = useLiveConfig();
   const revalidator = useRevalidator();
   const tabletUp = useMediaQuery(TABLET_UP_QUERY, true);
   const coarse = useMediaQuery(COARSE_QUERY, false);
@@ -112,6 +118,8 @@ export function NoteDialog({
   const viewer = !canWrite;
   // Canlı katman (not odası): ortak düzenleme, varlık, görev yayınları, başka yerden gelen
   // başlık / renk / sabit. Kapalıysa (sağlayıcı yok) `null`: eski HTTP davranışı.
+  /** Başka yerden gelen yıkıcı değişiklik (çöp, arşiv, taşıma) işleyicisi; aşağıda bağlanır. */
+  const onRemote = useRef<(m: NoteMetaPatch & { by: string }) => void>(() => {});
   const live = useLiveNote({
     noteId: note.id,
     kind: note.kind,
@@ -122,8 +130,13 @@ export function NoteDialog({
       if (m.color !== undefined) setColor(m.color as NoteColor);
       if (m.pinned !== undefined) setPinned(m.pinned);
       if (m.trashed !== undefined) setTrashedLive(m.trashed);
+      onRemote.current(m);
     },
+    // Sunucu düzenlemeyi reddetti (görüntüleyici, rolü düşürülen): tek toast.
+    onError: (message) => toast.error(message, { id: `salt-okunur:${note.id}` }),
   });
+  // Çevrimdışı bandı (kısa kopmalarda gecikmeli); düzenleme `live.canWrite` ile hemen kapanır.
+  const offline = useOfflineShown(live?.status) && !live?.fatal;
   // Çevrimdışıyken düzenleme kapalı (PLAN §5); metin gövdesi ayrıca eşitleme bekler.
   const editable =
     note.trashedAt === null && !trashedLive && canWrite && (live ? live.canWrite : true);
@@ -159,6 +172,62 @@ export function NoteDialog({
     void flushTasks().then(fn);
     navigate(closeTo, { preventScrollReset: true });
   };
+
+  // Başka biri notu çöpe attı / arşivledi / taşıdı ya da erişim kalktı: bekleyen yazım
+  // (başlık, görevler, Yjs → D1) önce gönderilir, sonra not kapanır ve toast söyler.
+  const closedRemotely = useRef(false);
+  const closeRemotely = (outcome: RemoteNoteOutcome) => {
+    if (closedRemotely.current || !outcome.close) return;
+    closedRemotely.current = true;
+    saver.flush();
+    void flushTasks();
+    navigate(closeTo, { preventScrollReset: true });
+    const t = outcome.toast;
+    if (!t) return;
+    const undo =
+      t.undo && canWrite
+        ? t.undo === "restore"
+          ? { label: "Geri yükle", onClick: () => actions.restore(note.id) }
+          : { label: "Arşivden çıkar", onClick: () => actions.unarchive(note.id) }
+        : undefined;
+    toast(t.title, { description: t.description, action: undo, id: `uzak:${note.id}` });
+  };
+  useEffect(() => {
+    onRemote.current = (m) =>
+      closeRemotely(
+        remoteNoteOutcome(m, {
+          me: me?.id ?? null,
+          people: project?.members,
+          view: archived ? "arsiv" : "notlar",
+        }),
+      );
+  });
+  // Erişim kalktı (projeden çıkarıldın, not kalıcı silindi): oda 4404 ile kapandı.
+  const fatal = live?.fatal ?? false;
+  useEffect(() => {
+    if (!fatal) return;
+    closeRemotely({
+      close: true,
+      toast: {
+        title: "Bu nota artık erişemiyorsun",
+        description: "Not silinmiş ya da erişimin kaldırılmış olabilir.",
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fatal]);
+  // Rol düşürüldü (düzenleyici → görüntüleyici): düzenleme kapanır, rol yeniden yüklenir.
+  const liveReadOnly = live?.readOnly ?? false;
+  const [seenReadOnly, setSeenReadOnly] = useState(liveReadOnly);
+  if (seenReadOnly !== liveReadOnly) {
+    setSeenReadOnly(liveReadOnly);
+    if (liveReadOnly && canWrite) {
+      toast("Rolün değişti", {
+        description: "Artık görüntüleyicisin; not salt okunur.",
+        id: `rol:${note.id}`,
+      });
+      void revalidator.revalidate();
+    }
+  }
 
   const changeColor = (c: NoteColor) => {
     setColor(c);
@@ -217,12 +286,21 @@ export function NoteDialog({
       }
     : undefined;
 
+  const presence = live ? (
+    <PresenceAvatars
+      peers={live.peers}
+      size={tabletUp ? 28 : 26}
+      className="[--presence-ring:var(--note-bg)]"
+    />
+  ) : null;
+
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
         showCloseButton={false}
         data-canli={live?.status ?? "kapali"}
         data-canli-kisi={live?.peers.length ?? 0}
+        data-salt-okunur={live?.readOnly ? "" : undefined}
         aria-describedby={undefined}
         onEscapeKeyDown={(e) => {
           // Görev satırı, ayrıntı ve seçicide Esc katmanlıdır; not kapanmaz.
@@ -248,7 +326,7 @@ export function NoteDialog({
               )
             : "inset-0 top-0 left-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 rounded-none sm:max-w-none",
         )}
-        style={{ background: noteBg(color) }}
+        style={{ background: noteBg(color), ["--note-bg" as string]: noteBg(color) }}
       >
         <DialogTitle className="sr-only">{note.title || "Başlıksız not"}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -272,6 +350,7 @@ export function NoteDialog({
             tabletUp ? (
               <div className="flex items-center gap-2.5 pt-[18px] pr-5 pb-1 pl-7">
                 {titleInput}
+                {presence}
                 {viewer && <ViewerBadge />}
                 <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
                 <button
@@ -290,6 +369,7 @@ export function NoteDialog({
                   <ArrowLeft aria-hidden="true" />
                 </button>
                 <span className="flex-1" />
+                {presence}
                 {viewer ? (
                   <>
                     <ViewerBadge />
@@ -464,7 +544,11 @@ export function NoteDialog({
                   </DropdownMenu>
                 )}
                 <span className="flex-1 px-3 text-right text-xs text-muted-foreground">
-                  {project ? null : edited}
+                  {offline ? (
+                    <SyncStatus at={live?.lastSyncedAt ?? null} />
+                  ) : project ? null : (
+                    edited
+                  )}
                 </span>
                 <Button
                   variant="outline"
@@ -483,12 +567,23 @@ export function NoteDialog({
                   Sana atanan görevi de işaretleyemezsin; rol için proje yöneticisine yaz.
                 </p>
               )}
-              {!project && <p className="m-0 mt-4 text-xs text-muted-foreground">{edited}</p>}
+              {offline ? (
+                <SyncStatus at={live?.lastSyncedAt ?? null} className="mt-4" />
+              ) : (
+                !project && <p className="m-0 mt-4 text-xs text-muted-foreground">{edited}</p>
+              )}
               {toolbar}
             </>
           )}
           meta={meta}
-          lockbar={viewer ? <LockBar /> : live?.status === "cevrimdisi" ? <OfflineBar /> : null}
+          lockbar={
+            offline || viewer ? (
+              <>
+                {offline && <OfflineBanner onRetry={live?.reconnect} />}
+                {viewer && <LockBar />}
+              </>
+            ) : null
+          }
           people={people}
           colorButton={<ColorButton color={color} onChange={changeColor} />}
         />
@@ -578,22 +673,6 @@ function ViewerBadge() {
       <Lock className="size-3.5" aria-hidden="true" />
       Görüntüleyici
     </span>
-  );
-}
-
-/** Çevrimdışı açıklaması (asgari; görsel cilası Aşama 4b). */
-function OfflineBar() {
-  return (
-    <div
-      role="status"
-      data-testid="cevrimdisi"
-      className="flex items-start gap-2.5 rounded-xl bg-hover px-3.5 py-3 text-[13px] text-muted-foreground"
-    >
-      <span>
-        <b className="font-semibold text-fg">Çevrimdışısın.</b> Bağlantı gelince düzenleme yeniden
-        açılır.
-      </span>
-    </div>
   );
 }
 
@@ -858,6 +937,7 @@ function NoteBody({
         initialAssignees={note.assignees}
         live={live?.tasks}
         onActiveTaskChange={live?.setFocus}
+        peers={live?.peers}
         people={people}
         editable={editable}
         onHelpChange={onHelpChange}

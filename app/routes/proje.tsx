@@ -19,7 +19,9 @@ import { AppShell } from "~/components/shell/app-shell";
 import type { View } from "~/components/shell/view-switch";
 import { Button } from "~/components/ui/button";
 import { trashDaysLeft } from "~/domain/notes/dates";
-import { useLiveGrid } from "~/components/realtime/use-live-channel";
+import { GridLiveStatus, OfflineInert } from "~/components/realtime/live-status";
+import { useLiveGrid, type LiveChannelState } from "~/components/realtime/use-live-channel";
+import { useProjectChannelGuard } from "~/components/realtime/use-project-guard";
 import { applyPendingIntents, type NoteCardData, type NoteView } from "~/domain/notes/optimistic";
 import { splitPinned } from "~/domain/notes/ordering";
 import type { NoteIntent } from "~/domain/notes/validation";
@@ -87,7 +89,12 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
     () => ({ kind: "project" as const, projectId: project.id }),
     [project.id],
   );
-  const live = useLiveGrid(page.notes, view, channel);
+  // Proje silindi / bu kişinin üyeliği değişti: yönlendirme ve toast.
+  const guard = useProjectChannelGuard(
+    project,
+    useMemo(() => members.map((m) => ({ id: m.userId, name: m.name })), [members]),
+  );
+  const live = useLiveGrid(page.notes, view, channel, { onEvent: guard });
   const notes = applyPendingIntents(
     live.notes,
     pendingFor(project.id, usePendingNoteIntents()),
@@ -97,6 +104,7 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
   return (
     <AppShell {...shell} showViewSwitch viewSwitch={{ base, views }}>
       <section className="flex flex-col gap-[18px] px-4 pt-2 pb-32 md:gap-6 md:px-7 md:pt-3 md:pb-10 lg:px-8">
+        <GridLiveStatus live={live.live} part="banner" />
         <ProjectHeader
           project={project}
           role={myRole}
@@ -112,7 +120,10 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
                 : undefined
           }
         />
-        {view === "notlar" && <NotesView loaderData={loaderData} notes={notes} base={base} />}
+        <GridLiveStatus live={live.live} part="sync" />
+        {view === "notlar" && (
+          <NotesView loaderData={loaderData} notes={notes} base={base} live={live.live} />
+        )}
         {view === "arsiv" && <ArchiveView loaderData={loaderData} notes={notes} base={base} />}
         {view === "cop" && <TrashView loaderData={loaderData} notes={notes} />}
         <Outlet />
@@ -125,6 +136,7 @@ type ViewProps = {
   loaderData: Route.ComponentProps["loaderData"];
   notes: NoteCardData[];
   base: string;
+  live?: LiveChannelState | null;
 };
 
 const noopSubscribe = () => () => {};
@@ -164,7 +176,7 @@ function JoinedBanner({ projectName }: { projectName: string }) {
   );
 }
 
-function NotesView({ loaderData, notes, base }: ViewProps) {
+function NotesView({ loaderData, notes, base, live }: ViewProps) {
   const { project, permissions } = loaderData.page;
   const actions = useNoteActions();
   const navigate = useNavigate();
@@ -201,7 +213,11 @@ function NotesView({ loaderData, notes, base }: ViewProps) {
   return (
     <>
       <JoinedBanner projectName={project.name} />
-      {canWrite && <Composer onSave={save} label="Projeye not ekle…" className="max-md:hidden" />}
+      {canWrite && (
+        <OfflineInert live={live}>
+          <Composer onSave={save} label="Projeye not ekle…" className="max-md:hidden" />
+        </OfflineInert>
+      )}
       {notes.length === 0 ? (
         <EmptyState
           icon={<LayoutGrid strokeWidth={1.75} aria-hidden="true" />}

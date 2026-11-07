@@ -34,7 +34,7 @@ export default function TrashRoute({ loaderData }: Route.ComponentProps) {
   const n = notes.length;
 
   return (
-    <NotesPage subtitle="Çöp · 7 gün sonra kalıcı silinir">
+    <NotesPage subtitle="Çöp · 7 gün sonra kalıcı silinir" live={live.live}>
       {n === 0 ? (
         <EmptyState icon={<Trash2 strokeWidth={1.75} aria-hidden="true" />} title="Çöp boş">
           Çöpe attığın notlar 7 gün burada kalır, sonra kalıcı olarak silinir.

@@ -24,6 +24,7 @@ import {
 import { cn } from "cn";
 import { Popover, PopoverAnchor, PopoverContent } from "~/components/ui/popover";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
+import type { Peer } from "~/domain/realtime/presence";
 import { clearCompleted as clearCompletedTasks } from "~/domain/tasks/completion";
 import { fixRange, parseNaturalDate, pickDate, todayIn, type DateSlot } from "~/domain/tasks/dates";
 import {
@@ -138,6 +139,8 @@ export type TodoEditorProps = {
   live?: LiveTaskSource | null;
   /** Odaklı görev değişince (varlıkta "şu görevde" bilgisi için). */
   onActiveTaskChange?: (taskId: string | null) => void;
+  /** Notu açık tutan diğer kişiler (görev satırında odak göstergesi). */
+  peers?: readonly Peer[];
 };
 
 /**
@@ -159,6 +162,7 @@ export function TodoEditor({
   initialAssignees,
   live,
   onActiveTaskChange,
+  peers,
 }: TodoEditorProps) {
   const { tasks, apply, current, whenIdle, assignees, assign } = useTodoTasks(
     noteId,
@@ -167,6 +171,13 @@ export function TodoEditor({
     live,
   );
   const canAssign = editable && Boolean(people?.canAssign);
+  // Görev → o göreve odaklanmış kişiler (satır `memo`'su bozulmasın diye kararlı diziler).
+  const focusPeers = useMemo(() => {
+    const map = new Map<string, Peer[]>();
+    for (const p of peers ?? [])
+      for (const id of p.focusTaskIds) map.set(id, [...(map.get(id) ?? []), p]);
+    return map;
+  }, [peers]);
   const view = useTaskViewState(noteId);
   const coarse = useMediaQuery(COARSE_QUERY, false);
   const mobile = !useMediaQuery(TABLET_UP_QUERY, true);
@@ -973,6 +984,7 @@ export function TodoEditor({
                     whoOpen={who?.id === r.id}
                     onOpenWho={openWho}
                     readOnly={!editable}
+                    focusPeers={focusPeers.get(r.id)}
                   >
                     {!mobile && detail?.id === r.id && (
                       <TaskDetail

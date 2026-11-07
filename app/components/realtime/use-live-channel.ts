@@ -89,13 +89,19 @@ export const GRID_REVALIDATE_MS = 250;
 /**
  * Canlı ızgara: loader'ın not listesine kanal olaylarını uygular (`applyChannelEvent`) ve
  * gerektiğinde loader'ları (kısa bir birikmeyle) yeniden doğrular. Yeni loader verisi
- * gelince biriken olaylar atılır (sunucu verisi onları zaten içerir).
+ * gelince biriken olaylar atılır (sunucu verisi onları zaten içerir). `onEvent`: her olay
+ * (ör. proje silindi / üyelik değişti → yönlendirme).
  */
 export function useLiveGrid(
   notes: NoteCardData[],
   view: NoteView,
   channel: LiveChannel | null,
+  { onEvent }: { onEvent?: (event: ChannelEvent) => void } = {},
 ): { notes: NoteCardData[]; live: LiveChannelState | null } {
+  const eventHandler = useRef(onEvent);
+  useEffect(() => {
+    eventHandler.current = onEvent;
+  });
   const [overlay, setOverlay] = useState<{ base: NoteCardData[]; events: ChannelEventBody[] }>({
     base: notes,
     events: [],
@@ -134,6 +140,7 @@ export function useLiveGrid(
         return { base: current.current, events: [...events, event] };
       });
       if (applyChannelEvent(current.current, event, view).revalidate) schedule();
+      eventHandler.current?.(event);
     },
     { onGap: schedule },
   );
