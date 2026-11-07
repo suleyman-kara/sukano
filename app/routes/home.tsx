@@ -100,7 +100,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </>
       )}
 
-      <MobileNewNote onSave={save} open={mobileComposer} onOpenChange={setMobileComposer} />
+      <OfflineInert live={live.live}>
+        <MobileNewNote onSave={save} open={mobileComposer} onOpenChange={setMobileComposer} />
+      </OfflineInert>
       <Outlet />
     </NotesPage>
   );

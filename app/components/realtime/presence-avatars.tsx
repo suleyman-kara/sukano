@@ -27,7 +27,6 @@ export function PresenceAvatars({ peers, max = 3, size = 28, className }: Presen
       <TooltipTrigger asChild>
         <button
           type="button"
-          aria-label={label}
           data-testid="varlik"
           data-kisi={peers.length}
           className={cn(
@@ -35,6 +34,7 @@ export function PresenceAvatars({ peers, max = 3, size = 28, className }: Presen
             className,
           )}
         >
+          <span className="sr-only">{label}</span>
           {shown.map((p, i) => (
             <span
               key={p.userId}

@@ -266,12 +266,14 @@ function NotesView({ loaderData, notes, base, live }: ViewProps) {
         </>
       )}
       {canWrite && (
-        <MobileNewNote
-          onSave={save}
-          open={mobileComposer}
-          onOpenChange={setMobileComposer}
-          label="Projeye not ekle…"
-        />
+        <OfflineInert live={live}>
+          <MobileNewNote
+            onSave={save}
+            open={mobileComposer}
+            onOpenChange={setMobileComposer}
+            label="Projeye not ekle…"
+          />
+        </OfflineInert>
       )}
       {permissions.canManage && (
         <InviteDialog open={inviting} onOpenChange={setInviting} project={project} />
