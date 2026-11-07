@@ -78,8 +78,9 @@ export function MembersList({
         }
         description={
           <>
-            Notlar projede kalır, {removing?.name ?? "kişinin"} görev atamaları kaldırılır.
-            Oluşturduğu ve düzenlediği notlarda adı görünmeye devam eder. Kendisine bildirim gider.
+            Notlar projede kalır; {removing?.name ?? "üyenin"} adlı üyenin görev atamaları
+            kaldırılır. Oluşturduğu ve düzenlediği notlarda adı görünmeye devam eder. Kendisine
+            bildirim gider.
           </>
         }
         confirmLabel="Projeden çıkar"

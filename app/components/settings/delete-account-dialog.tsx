@@ -68,7 +68,7 @@ export function DeleteAccountDialog({
           Hesabımı sil
         </Button>
       </DialogTrigger>
-      <DialogContent className="gap-4 rounded-2xl border border-line bg-surface p-6 text-fg shadow-elevated ring-0 max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-[20px] max-sm:rounded-b-none sm:max-w-[420px] [&>[data-slot=dialog-close]]:top-5 [&>[data-slot=dialog-close]]:right-5">
+      <DialogContent className="gap-4 rounded-2xl border border-line bg-surface p-6 text-fg shadow-elevated ring-0 max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-[20px] max-sm:rounded-b-none sm:max-w-[420px] [&>[data-slot=dialog-close]]:top-5 [&>[data-slot=dialog-close]]:right-5 max-sm:[&>[data-slot=dialog-close]]:hidden">
         <fetcher.Form method="post" action="/ayarlar" className="flex flex-col gap-4">
           <input type="hidden" name="intent" value="delete-account" />
           <div className="flex items-center gap-3 pr-8">
