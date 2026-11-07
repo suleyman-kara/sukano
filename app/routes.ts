@@ -13,6 +13,7 @@ export default [
   route("ara", "routes/ara.tsx"),
   route("api/notlar", "routes/api.notlar.ts"),
   route("api/notlar/:id/surumler", "routes/api.notlar.surumler.ts"),
+  route("api/notlar/:id/gorevler", "routes/api.notlar.gorevler.ts"),
   route("ayarlar", "routes/ayarlar.tsx"),
   // Kimlik sayfaları: kabuksuz düzen, oturum varsa `/`'a yönlendirir.
   layout("routes/_kimlik.tsx", [

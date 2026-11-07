@@ -1,8 +1,9 @@
 import { data } from "react-router";
 import { parseNoteIntent } from "~/domain/notes/validation";
 import { getCloudflare } from "~/lib/context";
-import { NoteNotFoundError, personalNotes } from "~/lib/notes.server";
+import { NoteConflictError, NoteNotFoundError, personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
+import { personalTasks } from "~/lib/tasks.server";
 import type { Route } from "./+types/api.notlar";
 
 /**
@@ -15,11 +16,19 @@ export async function action({ request, context }: Route.ActionArgs) {
   const parsed = parseNoteIntent(Object.fromEntries(await request.formData()));
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
   try {
-    const result = await personalNotes(getCloudflare(context).env, user.id).run(parsed.value);
+    const env = getCloudflare(context).env;
+    const intent = parsed.value;
+    const result =
+      intent.intent === "create-todo" || intent.intent === "convert"
+        ? await personalTasks(env, user.id).run(intent)
+        : await personalNotes(env, user.id).run(intent);
     return { ok: true as const, ...(result ?? {}) };
   } catch (error) {
     if (error instanceof NoteNotFoundError) {
       return data({ ok: false as const, error: "Not bulunamadı" }, { status: 404 });
+    }
+    if (error instanceof NoteConflictError) {
+      return data({ ok: false as const, error: error.message }, { status: 409 });
     }
     throw error;
   }
