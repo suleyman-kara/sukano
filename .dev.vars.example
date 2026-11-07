@@ -1,0 +1,23 @@
+# Yerel gizli değişkenler. Bu dosyayı `.dev.vars` olarak kopyala ve doldur:
+#   cp .dev.vars.example .dev.vars
+# `.dev.vars` git'e girmez. Üretimde her biri için: npx wrangler secret put <AD>
+
+# Better Auth: en az 32 karakter rastgele değer (ör. `openssl rand -base64 32`).
+BETTER_AUTH_SECRET=yerel-gelistirme-icin-en-az-32-karakterlik-gizli-deger
+# Uygulamanın kök adresi (OAuth geri dönüşleri ve e-posta bağlantıları için).
+BETTER_AUTH_URL=http://localhost:5173
+
+# Google OAuth (Google Cloud Console → Credentials → OAuth client ID, Web).
+# Yetkili yönlendirme URI'si: <BETTER_AUTH_URL>/api/auth/callback/google
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# E-posta (Resend). Boşsa e-postalar konsola yazılır.
+RESEND_API_KEY=
+
+# Cloudflare Turnstile gizli anahtarı. Aşağıdaki değer her zaman geçen test anahtarıdır.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# Web Push (VAPID). Üretmek için: npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=

@@ -3,18 +3,70 @@
   "name": "sukano",
   "main": "./workers/app.ts",
   "compatibility_date": "2026-11-01",
+  // Better Auth ve bağımlılıkları node:crypto, node:async_hooks vb. kullanır.
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./build/client",
   },
   "observability": {
     "enabled": true,
   },
-  // Binding'ler veri katmanı aşamasında eklenecek:
-  // "compatibility_flags": ["nodejs_compat"],
-  // "vars": { ... },
-  // "d1_databases": [{ "binding": "DB", ... }],
-  // "r2_buckets": [{ "binding": "FILES", ... }],
-  // "durable_objects": { "bindings": [...] },
-  // "migrations": [...],
-  // "triggers": { "crons": [...] },
+  // Gizli olmayan yapılandırma. Gizli değerler: yerelde `.dev.vars`
+  // (bkz. `.dev.vars.example`), üretimde `wrangler secret put <AD>`.
+  "vars": {
+    "APP_NAME": "Sukano",
+    "EMAIL_FROM": "Sukano <bildirim@sukano.app>",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+  },
+  // Gizli değişken adları: `Env` tipi bunlardan üretilir (CI'da `.dev.vars` olmasa da)
+  // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. README.
+  "secrets": {
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "BETTER_AUTH_URL",
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "RESEND_API_KEY",
+      "TURNSTILE_SECRET_KEY",
+      "VAPID_PUBLIC_KEY",
+      "VAPID_PRIVATE_KEY",
+    ],
+  },
+  // D1. `database_id`, `wrangler d1 create sukano` çıktısıyla değiştirilmeli.
+  // Yerel geliştirme kimliğe bakmaz; `.wrangler/state` altında SQLite kullanır.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sukano",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // R2: not ekleri ve avatarlar. Panelde R2 etkinleştirilip
+  // `wrangler r2 bucket create sukano-files` ile oluşturulmalı.
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "sukano-files",
+    },
+  ],
+  // Not başına bir oda: ortak düzenleme, varlık, canlı ızgara (Aşama 4).
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NOTE_ROOM",
+        "class_name": "NoteRoom",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["NoteRoom"],
+    },
+  ],
+  // Dakikada bir: hatırlatıcı gönderimi, çöp / silinmiş proje / davet temizliği.
+  "triggers": {
+    "crons": ["* * * * *"],
+  },
 }
