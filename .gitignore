@@ -23,3 +23,8 @@ dist/
 .eslintcache
 *.tsbuildinfo
 coverage/
+
+# Testler
+playwright-report/
+test-results/
+blob-report/
