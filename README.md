@@ -460,6 +460,39 @@ Aşama 3b-1: proje düzeyindeki ekranlar (tasarım: `Project`, `ProjectSettings`
   kısıtlar → ayrıl → sil → geri getir) ve `erisilebilirlik.spec.ts`'de proje sayfası, ayarlar,
   davetler, silinmiş projeler (açık ve koyu).
 
+## Proje notları arayüzü
+
+Aşama 3b-2: notun içindeki proje arayüzü (proje sayfası, ayarlar ve davetler Aşama 3b-1).
+
+- **Açık not** (`app/routes/not.tsx`): kişisel ve proje notunu `noteAccess.forNote` ile yükler;
+  rol, üyeler ve "Taşı veya kopyala…" hedefleri (üyesi olunan projeler, rolüyle) birlikte gelir.
+  Aynı rota `/not/:id`, `/arsiv/not/:id`, `/proje/:projeId(/arsiv)/not/:id` ve `/ara/not/:id`
+  altında açılır; kapanınca yoldaki `/not/:id` atılır (`note-links.ts` → `closeHref`).
+- **Yazar satırı:** proje notunda "Ayşe Demir oluşturdu · Son düzenleyen Mehmet Kaya, 2 saat
+  önce" (`app/domain/notes/authorship.ts`; silinmiş kişi "Silinmiş kullanıcı").
+- **Görüntüleyici:** kilitli "Görüntüleyici" rozeti, "Salt okunur." notu; başlık ve gövde salt
+  okunur, görevlerde kutucuk yerine madde işareti, araç simgeleri yok; menü yerine yalnızca
+  Sürüm geçmişi (geri yükleme kapalı) ve Kapat.
+- **Taşı / kopyala** (`app/components/notes/move-copy.tsx`): kişisel notta "Taşı veya kopyala…"
+  (Taşı / Kopyala sekmeleri; taşıma sonrası 10 sn "Geri al" toast'ı `undo-move` gönderir),
+  proje notunda "Kopyala…" (Kişisel alanım ya da başka proje). Görüntüleyici olunan projeler
+  seçilemez. Mobilde alttan açılan sayfa. Kanonik menü sırasında (⋯ ve mobil not sayfası).
+- **Kişi seçici** (`app/components/tasks/person-picker.tsx`, yalnızca proje notunda):
+  Ctrl+Shift+A, satırdaki kişi simgesi, ayrıntıdaki kişi çipi, dokunmatik araç çubuğu ve mobil
+  kişi sayfası. ↑ / ↓ / Home / End gezinir, Enter ya da Boşluk seçer veya kaldırır, Esc katmanlı
+  kapatır ve odak satıra döner. Birden fazla kişi; sıra sen → rol → ad; görüntüleyiciler soluk
+  ("görüntüleyici · işaretleyemez"). Atama `{ op: "assign" }` olarak görev kuyruğundan gider;
+  yanıttaki `assignees` kuyruktaki atamalar yeniden uygulanarak gösterilir. Satırda ve proje
+  kartında atanan avatarları (kart verisinde `CardTask.assignees`).
+- **Birleşik arama** (`app/routes/ara.tsx`): `searchAccessible`; kaynak süzgeci
+  (`?kaynak=notlarim` ya da proje kimliği), kaynağa göre bölümler, proje rengi ve adıyla kaynak
+  etiketi; sonuç aramanın üstünde açılır.
+- **Testler:** bileşen `tests/unit/tasks/kisi-secici.test.tsx`,
+  `tests/unit/notes/tasi-kopyala.test.tsx`, `tests/unit/notes/goruntuleyici.test.tsx`; uçtan uca
+  `tests/e2e/proje-notlari.spec.ts` (taşı + Geri al, kopyala, klavyeyle ve mobil sayfayla atama,
+  görüntüleyici, arama, yazar satırı, axe). Uçtan uca testler ayrı bir yerel durumla da koşabilir:
+  `E2E_PORT`, `E2E_PERSIST_DIR`, `E2E_OTURUM_AYSE`.
+
 ## Cloudflare tarafında yapılacaklar
 
 İlk dağıtımdan önce bir kez (`wrangler login` ya da `CLOUDFLARE_API_TOKEN` ile):

@@ -185,7 +185,7 @@ describe("atama yardımcıları", () => {
       applyAssignOps(start, [
         { op: "assign", id: "b", userIds: ["u2", "u3"] },
         { op: "assign", id: "a", userIds: [] },
-        { op: "complete", id: "b", completed: true },
+        { op: "complete", id: "b" },
       ]),
     ).toEqual({ b: ["u2", "u3"] });
     expect(start).toEqual({ a: ["u1"] });
