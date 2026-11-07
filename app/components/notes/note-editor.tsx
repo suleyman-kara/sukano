@@ -1,32 +1,17 @@
-import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { Bold, Heading2, Italic, Link2, List } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { noteExtensions } from "~/domain/notes/editor-schema";
 
 /**
- * Metin notu düzenleyicisi: Tiptap StarterKit'in sınırlı hali — kalın, italik,
- * başlık (H2), madde listesi, bağlantı. Markdown kısayolları (`## `, `- `,
- * `**kalın**`, `*italik*`) StarterKit'in giriş kurallarıyla gelir.
+ * Metin notu düzenleyicisinin eklentileri (şema tek kaynakta: `editor-schema.ts`;
+ * Worker'daki not odası da aynı şemayı kullanır).
  */
 export function createNoteExtensions(placeholder?: string) {
-  return [
-    StarterKit.configure({
-      heading: { levels: [2] },
-      blockquote: false,
-      code: false,
-      codeBlock: false,
-      horizontalRule: false,
-      orderedList: false,
-      strike: false,
-      underline: false,
-      link: { openOnClick: false, autolink: true, defaultProtocol: "https" },
-    }),
-    ...(placeholder ? [Placeholder.configure({ placeholder })] : []),
-  ];
+  return noteExtensions({ placeholder });
 }
 
 type UseNoteEditorOptions = {

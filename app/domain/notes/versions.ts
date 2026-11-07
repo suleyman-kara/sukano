@@ -35,3 +35,34 @@ export function versionsToPrune(
     .slice(0, versions.length - max)
     .map((v) => v.id);
 }
+
+/**
+ * Ortak düzenlemede sürüm kararı (NoteRoom'un periyodik D1 yazımı). `editors`: son
+ * yazımdan bu yana belgeyi değiştiren kişiler, en son düzenleyen sonda.
+ *
+ * Kural yine "kişi başına + 5 dk": son sürümün sahibi bu aralıkta düzenleyenlerden
+ * biriyse ve pencere açıksa o sürüm güncellenir (iki kişi aynı anda yazarken sürümler
+ * her yazımda el değiştirmez); değilse en son düzenleyen adına yeni sürüm açılır.
+ */
+export type CollabVersionWrite =
+  | { action: "update"; versionId: string; authorId: string }
+  | { action: "create"; authorId: string }
+  | { action: "none" };
+
+export function decideCollabVersionWrite(
+  latest: LatestVersion | null,
+  editors: readonly string[],
+  now: Date,
+): CollabVersionWrite {
+  const last = editors.at(-1);
+  if (!last) return { action: "none" };
+  if (
+    latest &&
+    latest.authorId !== null &&
+    editors.includes(latest.authorId) &&
+    now.getTime() - latest.createdAt.getTime() < VERSION_WINDOW_MS
+  ) {
+    return { action: "update", versionId: latest.id, authorId: latest.authorId };
+  }
+  return { action: "create", authorId: last };
+}
