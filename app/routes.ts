@@ -4,6 +4,7 @@ export default [
   index("routes/home.tsx"),
   route("giris", "routes/giris.tsx"),
   route("health", "routes/health.ts"),
-  // Veri katmanı buraya API rotalarını ekleyecek (ör. "api/auth/*").
+  // API rotaları "*" rotasından önce gelmeli.
+  route("api/auth/*", "routes/api.auth.$.ts"),
   route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;
