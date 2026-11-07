@@ -511,10 +511,11 @@ export class NoteRoom extends DurableObject<Env> {
    * işlemleri tek sıraya dizer, sonuç sıra numarasıyla tüm bağlantılara yayınlanır.
    */
   async applyTaskOps(noteId: string, userId: string, ops: TaskOp[]): Promise<TaskApplyResult> {
-    if (!this.meta("noteId")) this.setMeta("noteId", noteId);
     return this.queue(async () => {
       try {
         const { scope, tasks } = await noteAccess(this.env, userId).forNote(noteId);
+        // Oda kimliği yalnızca erişim doğrulanınca yazılır (olmayan not için depo açılmaz).
+        if (!this.meta("noteId")) this.setMeta("noteId", noteId);
         const state = await tasks.apply(noteId, ops);
         const seq = Number(this.meta("seq") ?? 0) + 1;
         this.setMeta("seq", String(seq));

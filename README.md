@@ -18,16 +18,17 @@ npm run dev      # http://localhost:5173
 
 Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içinde çalıştırır.
 
-| Yol                 | Açıklama                                                                  |
-| ------------------- | ------------------------------------------------------------------------- |
-| `/`                 | Uygulama kabuğu + Notlarım (oturum ister)                                 |
-| `/giris`, `/kayit`  | Giriş ve kayıt; bkz. [Kimlik doğrulama](#kimlik-doğrulama)                |
-| `/ayarlar`          | Ayarlar: profil, görünüm, hesap ve güvenlik                               |
-| `/proje/:projeId`   | Proje sayfası; bkz. [Proje arayüzü](#proje-arayüzü)                       |
-| `/davetler`         | Gelen davetler                                                            |
-| `/health`           | Sağlık denetimi, `{ "ok": true }`                                         |
-| `/api/auth/*`       | Better Auth uçları (`/api/auth/ok`, `/api/auth/get-session` …)            |
-| `/api/notes/:id/ws` | Not odası WebSocket'i (NoteRoom; oturum gerekli; Aşama 4'e kadar iskelet) |
+| Yol                     | Açıklama                                                       |
+| ----------------------- | -------------------------------------------------------------- |
+| `/`                     | Uygulama kabuğu + Notlarım (oturum ister)                      |
+| `/giris`, `/kayit`      | Giriş ve kayıt; bkz. [Kimlik doğrulama](#kimlik-doğrulama)     |
+| `/ayarlar`              | Ayarlar: profil, görünüm, hesap ve güvenlik                    |
+| `/proje/:projeId`       | Proje sayfası; bkz. [Proje arayüzü](#proje-arayüzü)            |
+| `/davetler`             | Gelen davetler                                                 |
+| `/health`               | Sağlık denetimi, `{ "ok": true }`                              |
+| `/api/auth/*`           | Better Auth uçları (`/api/auth/ok`, `/api/auth/get-session` …) |
+| `/api/notlar/:id/canli` | Not odası WebSocket'i; bkz. [Gerçek zamanlı](#gerçek-zamanlı)  |
+| `/api/kanal/*`          | Proje / kişisel alan yayın kanalı (WebSocket)                  |
 
 ## Betikler
 
@@ -63,6 +64,8 @@ app/
     shell/                app-shell, sidebar, topbar, account-menu, view-switch, types
     ui/                   shadcn/ui bileşenleri (CLI ile eklenir: npx shadcn add …)
   hooks/                  use-media-query
+  components/realtime/    Canlı istemci: LiveSocket, not odası sağlayıcısı, useLiveNote, useLiveChannel
+  domain/realtime/        Protokol, Yjs ↔ HTML, varlık, yeniden bağlanma, ızgara olayları (saf)
   db/
     schema.ts             Drizzle şeması (PLAN §6 veri modeli)
     client.ts             createDb(env.DB)
@@ -77,8 +80,10 @@ app/
     email.server.ts       E-posta (şimdilik konsola yazar)
     theme.ts, nav-state.ts, utils.ts
 workers/
-  app.ts                  Worker giriş noktası: React Router, NoteRoom, scheduled
-  note-room.ts            NoteRoom Durable Object (WebSocket Hibernation iskeleti)
+  app.ts                  Worker giriş noktası: canlı yollar, React Router, scheduled
+  live-routes.ts          Canlı WebSocket yollarının yetki denetimi ve odaya yönlendirme
+  note-room.ts            NoteRoom Durable Object (Yjs, varlık, görev sırası, D1 kopyası)
+  project-room.ts         ProjectRoom Durable Object (proje / kişisel alan yayın kanalı)
   scheduled.ts            Dakikalık cron işleri (gövdeler TODO)
 migrations/               drizzle-kit ile üretilen D1 SQL migration'ları
 scripts/
@@ -176,7 +181,8 @@ listelidir; `Env` tipi (`npm run cf-typegen` → `worker-configuration.d.ts`) bu
 Gizli olmayan değerler `wrangler.jsonc` → `vars`: `APP_NAME`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`.
 
 Binding'ler: `DB` (D1 `sukano`), `FILES` (R2 `sukano-files`), `NOTE_ROOM` (Durable Object
-`NoteRoom`), cron `* * * * *` (`workers/scheduled.ts`). Loader/action içinde
+`NoteRoom`), `PROJECT_ROOM` (Durable Object `ProjectRoom`), cron `* * * * *`
+(`workers/scheduled.ts`). Loader/action içinde
 `getCloudflare(context).env` ile erişilir. Yerelde cron'u elle tetiklemek için:
 `curl "http://localhost:5173/cdn-cgi/handler/scheduled?cron=*+*+*+*+*"`. NoteRoom duman testi:
 `npm run dev` açıkken `npx tsx scripts/ws-smoke.ts`.
@@ -294,7 +300,8 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   `app/lib/tasks.server.ts` (`personalTasks(env, userId)`): işlemler aynı saf kodla uygulanır,
   tamamlanma zinciri sunucuda yeniden hesaplanır, fark not güncellemesi ve sürümle tek batch'te
   yazılır. Eki olan metin notu yapılacaklara dönüştürülemez (409).
-- **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt; not al alanı kapatınca kaydeder,
+- **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt (canlı katmanda yalnızca başlık; metin
+  gövdesi not odasıyla eşitlenir, bkz. [Gerçek zamanlı](#gerçek-zamanlı)); not al alanı kapatınca kaydeder,
   boşsa kaydetmez. Arşivle, çöpe at ve kopyasını oluştur "Geri al" toast'ı gösterir (6 sn).
 - **Cron:** `purgeTrashedNotes` 7 günden eski çöp notlarını (kişisel ve proje) sürüm ve ekleriyle
   siler (`purgeExpiredTrash`).
@@ -493,6 +500,186 @@ Aşama 3b-2: notun içindeki proje arayüzü (proje sayfası, ayarlar ve davetle
   görüntüleyici, arama, yazar satırı, axe). Uçtan uca testler ayrı bir yerel durumla da koşabilir:
   `E2E_PORT`, `E2E_PERSIST_DIR`, `E2E_OTURUM_AYSE`.
 
+## Gerçek zamanlı
+
+Aşama 4a: sunucu katmanı, protokol ve istemci eşitleme kitaplığı (görsel cilası Aşama 4b).
+PLAN §5 ve §6: not başına bir Durable Object, proje başına bir yayın kanalı.
+
+### Durable Object'ler
+
+| Sınıf         | Ad (binding)                                           | İş                                                         |
+| ------------- | ------------------------------------------------------ | ---------------------------------------------------------- |
+| `NoteRoom`    | not kimliği (`NOTE_ROOM`)                              | Yjs ortak düzenleme, varlık, görev işlemlerinin tek sırası |
+| `ProjectRoom` | `proje:<projectId>` / `kisi:<userId>` (`PROJECT_ROOM`) | Canlı ızgara olayları (yalnızca sunucu → istemci)          |
+
+İkisi de WebSocket Hibernation API'siyle çalışır (`ctx.acceptWebSocket`; bağlantı bilgisi ekte,
+etiket kullanıcı kimliği; boşta bağlantı odayı uyanık tutmaz; `{"t":"ping"}` uyandırmadan
+`pong` ile yanıtlanır). Durum DO SQLite deposundadır: tahliye ve uykudan sonra oradan kurulur.
+
+### Bağlantı ve yetki (`workers/live-routes.ts`)
+
+| Yol                         | Yetki                                    | Hata                                          |
+| --------------------------- | ---------------------------------------- | --------------------------------------------- |
+| `GET /api/notlar/:id/canli` | notun sahibi ya da proje üyesi (her rol) | 401 oturum yok, 404 not yok / üye değil / çöp |
+| `GET /api/kanal/proje/:id`  | proje üyesi (her rol)                    | 401, 404                                      |
+| `GET /api/kanal/kisisel`    | oturumdaki kişi                          | 401                                           |
+
+Ortak: WebSocket değilse 426, başka kökenden (Origin) 403. Yetki React Router'dan önce
+Worker'da denetlenir; odaya kişi, not ve salt okunurluk güvenilir başlıklarla gider.
+Görüntüleyici bağlanır, güncellemeleri alır; gönderdiği Yjs düzenlemeleri uygulanmaz ve
+yayınlanmaz (bir kez `hata: salt_okunur`). Rol, bağlantı açıkken en çok 30 sn'de bir
+düzenleme gelince D1'den yeniden denetlenir (düşürüldüyse `rol`, erişim kalktıysa 4404).
+
+### Protokol (`app/domain/realtime/protocol.ts`)
+
+**Not odası.** İkili çerçeveler y-protocols'tür (y-websocket ile aynı): `varUint tür` + yük;
+`0` eşitleme (adım 1 / adım 2 / güncelleme), `1` farkındalık, `3` farkındalık sorgusu.
+Metin çerçeveleri JSON:
+
+| Yön   | İleti                                                         | Anlamı                                                  |
+| ----- | ------------------------------------------------------------- | ------------------------------------------------------- |
+| S → İ | `{t:"hosgeldin", docId, kind, readOnly, user, seq}`           | İlk ileti; ardından (metin notunda) sunucu adım 1       |
+| S → İ | `{t:"gorevler", seq, tasks, assignees, by}`                   | Görev yazımının yetkili sonucu (tek sıra numarası)      |
+| S → İ | `{t:"not", by, title?, color?, pinned?, archived?, trashed?}` | HTTP ile değişen alanlar                                |
+| S → İ | `{t:"kaydedildi", at}`                                        | D1 kopyası yazıldı                                      |
+| S → İ | `{t:"sifirla"}` + kapanış 4009                                | Belge D1'den yeniden kurulacak (istemci belgesini atar) |
+| S → İ | `{t:"rol", readOnly}`, `{t:"hata", code, message}`            | Rol değişti; düzenleme reddedildi                       |
+| İ → S | `{t:"kaydet"}`                                                | Bekleyeni hemen D1'e yaz (not kapanırken)               |
+
+Farkındalık durumu `{ user: {id, name, color, avatarUrl}, focus: {taskId} | null, cursor? }`;
+sunucu `user` alanını her zaman oturumdaki kişiyle değiştirir (başkası adına görünülemez).
+Kapanış kodları: 4000 yeniden bağlan, 4009 sıfırlandı (hemen yeniden bağlan, yeni belge),
+4404 erişim yok (yeniden denenmez).
+
+**Kanal.** `{t:"hosgeldin", seq}` ve `{t:"olay", seq, event}`; olay türleri
+(`app/domain/realtime/grid-events.ts`, hepsinde `by` ve `at`): `olusturuldu`, `icerik`,
+`renk`, `sabit`, `sira`, `arsivlendi`, `arsivden-cikti`, `cope-atildi`, `geri-yuklendi`,
+`tasindi` (alandan ayrıldı), `silindi` (`noteIds`), `proje`, `uyelik` (`userId`),
+`proje-silindi`. Görüntüleyici de alır. Yeniden bağlanınca sıra numarası atladıysa istemci
+yeniden doğrular.
+
+### Metin notu: Yjs ve D1 kopyası
+
+- **İlk açılış:** odada Yjs durumu yoksa notun D1 HTML'i editör şemasına
+  (`app/domain/notes/editor-schema.ts`, tarayıcı ile aynı) DOM'suz ayrıştırıcıyla çevrilip
+  belgeye yazılır (`app/domain/realtime/note-doc.ts`; `@tiptap/y-tiptap`).
+- **Depolama:** her kabul edilen güncelleme DO SQLite'a eklenir; her D1 yazımından sonra tek
+  duruma birleştirilir.
+- **D1'e yazım (kadans):** ilk değişiklikten **2 sn** sonra alarm (PLAN sınırı ≤ 5 sn; yazarken
+  en çok 2 sn'de bir), son bağlantı kapanınca **hemen**, istemci `kaydet` deyince hemen.
+  `body_html` (editörün `getHTML()` biçimi; Tiptap statik oluşturucusu), `body_text`,
+  `updated_by` (en son düzenleyen), `updated_at`; ardından kanala `icerik`.
+- **Sürümler:** kural "kişi başına + 5 dk" (`decideCollabVersionWrite`): son sürümün sahibi bu
+  aralıkta düzenleyenlerden biriyse ve pencere açıksa o sürüm güncellenir, değilse en son
+  düzenleyen adına yeni sürüm. İki kişi birlikte yazarken sürümler her yazımda el değiştirmez.
+- **Oda dışı değişiklik:** HTTP ile gövde yazımı (`update` + `bodyHtml`), sürüm geri yükleme ve
+  dönüşüm odayı sıfırlar (`noteChanged({reset})`): bağlantılar `sifirla` alır, istemci belgesini
+  atar, oda D1'den yeniden dolar. D1 yazımı koşulludur (`body_html` odanın bildiğiyle aynıysa);
+  araya giren değişiklik ezilmez, oda kendini sıfırlar. Kalıcı silmede bağlantılar 4404.
+- **Başlık** HTTP ile kalır (`update` + `title`); oda açık bağlantılara `not` ile iletir.
+
+### Yapılacaklar: yazım yolu
+
+Görev işlemleri **HTTP ile** gider (`POST /api/notlar/:id/gorevler`, `task-sync` kuyruğu aynen),
+ama Worker işlemi notun odasının `applyTaskOps` RPC'sine verir. Oda, mevcut
+`noteAccess(...).tasks.apply` kodunu (doğrulama, tamamlanma zincirinin sunucuda yeniden
+hesaplanması, tek D1 batch'i, sürüm, atama bildirimi) kendi kuyruğunda çalıştırır, sonra
+sonucu tüm bağlantılara `gorevler` + artan `seq` ile yayınlar; HTTP yanıtı da aynı `seq`'i
+taşır. Gerekçe: yetki, doğrulama ve D1 atomikliği tek yerde kalır, WebSocket'e yazım izni
+gerekmez; DO tek iş parçacıklı olduğu için tüm yazımlar **tek toplam sırada** olur (aynı
+başlığa eşzamanlı iki yazımda sunucu sırasında son yazan kazanır) ve yayın sırası D1 sırasıyla
+aynıdır (yazımdan sonra ayrıca yayınlamak sıranın karışmasına açıktı). İstemcide
+`createTaskSync().remote(state)`: eski `seq` yok sayılır, istek uçarken gelen yayın bekletilir
+ve yanıttan büyükse (yani bizim işlemimizi de içeriyorsa) onun yerine kullanılır; kuyruktaki
+gönderilmemiş işlemler her zaman gelen durumun üstüne yeniden uygulanır (yazılan metin ezilmez).
+
+### Canlı ızgara
+
+`/api/notlar` eylemleri (`noteIntentEffects`), proje eylemleri (`applyProjectIntentEffects`)
+ve davet kabulü D1'e yazdıktan sonra `ctx.waitUntil` ile kanala olay yayınlar; NoteRoom görev
+yazımında ve D1 kopyasında `icerik` yayınlar. Projeden çıkarılan / ayrılanın kanal bağlantısı
+4404 ile kapanır. İstemci olayı `applyChannelEvent` ile hemen uygular (iyimser arayüzle aynı
+kurallar: renk, sabit, sıra, görünümden çıkma, silme); kurulamayanlarda (yeni not, içerik,
+görünüme giren not, proje / üyelik) loader'lar 250 ms birikmeyle yeniden doğrulanır.
+Notlarım, Arşiv, Çöp kişisel kanala; proje sayfası (üç görünüm) proje kanalına bağlıdır.
+
+### İstemci kancaları (Aşama 4b için)
+
+Canlı katman `app/root.tsx`'te `LiveConfigProvider` ile oturum varsa açılır; sağlayıcı yoksa
+(bileşen testleri) kancalar `null` döner ve not eski HTTP davranışıyla çalışır.
+
+```ts
+const live = useLiveNote({ noteId, kind, readOnly, enabled, onMeta, onError }); // LiveNote | null
+live.status; // "baglaniyor" | "bagli" | "cevrimdisi"
+live.lastSyncedAt; // ms | null — son eşitleme / yayın / gönderim
+live.lastSavedAt; // ms | null — D1 kopyasının son yazımı
+live.peers; // Peer[]: { userId, name, color, avatarUrl, clientIds, focusTaskIds }
+live.canEdit; // metin gövdesi: bağlı + ilk eşitleme bitti + salt okunur değil
+live.canWrite; // HTTP ile yazılanlar (başlık, görevler …): çevrimdışı değil + salt okunur değil
+live.readOnly;
+live.fatal;
+live.synced;
+live.generation;
+live.provider; // NoteSyncProvider: doc (Y.Doc), awareness
+live.editorExtensions(user, placeholder); // Collaboration + CollaborationCaret (Yjs tembel yüklenir)
+live.tasks; // LiveTaskSource → useTodoTasks(noteId, tasks, assignees, live.tasks)
+live.setFocus(taskId | null);
+live.flush();
+live.reconnect();
+
+const state = useLiveChannel(channel, (event) => {}, { onGap }); // { status, lastEventAt } | null
+const { notes, live } = useLiveGrid(loaderNotes, view, channel); // PERSONAL_CHANNEL | { kind: "project", projectId }
+```
+
+Saf yardımcılar: `mergePresence`, `peersOnTask` (`presence.ts`), `reconnectDelay` /
+`backoffSchedule` (500 ms → 15 sn, ±%20 titreşim; `backoff.ts`), `applyChannelEvent(s)`.
+Asgari bağlama yapıldı: `NoteDialog` metin notunda Collaboration + imleç (`app.css`'te asgari
+imleç stili), çevrimdışıyken düzenleme kapalı ve "Çevrimdışısın" satırı, başka yerden gelen
+başlık / renk / sabit; `TodoEditor` canlı görevler ve odaklı görev (`onActiveTaskChange`);
+diyalogda `data-canli` (durum) ve `data-canli-kisi` (diğer kişi sayısı) öznitelikleri.
+
+### Testler
+
+- **Birim** `tests/unit/realtime/`: Yjs ↔ HTML/JSON (editörün `getHTML`/`getJSON`'u ile
+  gidiş-dönüş), varlık birleştirme ve farkındalık tel biçimi, bekleme çizelgesi, protokol
+  doğrulama, ortak sürüm kararı, kanal olayı → ızgara yaması, `LiveSocket` (sahte soket ve
+  zamanlayıcı), `NoteSyncProvider`, görev eşitleyicisinin `remote`'u, `useLiveGrid` /
+  `useLiveNote`.
+- **Worker** `tests/workers/canli.test.ts`, `canli-kanal.test.ts`
+  (`tests/workers/canli-yardimcilar.ts`: Yjs eşitlemeli WebSocket istemcisi): oturumsuz 401,
+  Origin 403, üye olmayan / başkasının notu / çöp 404, görüntüleyici salt okunur, yayın,
+  varlık temizliği, alarmla D1 yazımı (`runDurableObjectAlarm`), sürüm kuralı, son
+  bağlantıda yazım, tahliyeden sonra durum (`evictDurableObject`), sıfırlama, silme 4404,
+  görev sırası + son yazan kazanır, kanal olayları (her eylem, reddedilen eylem yayınlanmaz,
+  taşıma iki kanal, rol / çıkarma).
+- **Uçtan uca** `tests/e2e/canli.spec.ts` (`@duman`, masaüstü): iki tarayıcı bağlamı; canlı
+  ızgara, varlık sayısı, bir tarafta yazılan metin diğerinde 1 sn içinde, kapanınca kart güncel.
+- Elle: `npm run dev` açıkken `npx tsx scripts/ws-smoke.ts`.
+
+### Bilinen sınırlar
+
+- Çevrimdışı düzenleme yok (PLAN): kopukken metin editörü ve HTTP yazımları kapalı; kopmadan
+  hemen önce yazılan ama gitmeyen Yjs güncellemesi yeniden bağlanınca (sunucu adım 1) gider.
+- Varlık bilgisi odanın belleğindedir; uykudan sonra istemcilerden yeniden istenir (kısa
+  süre boş görünebilir).
+- Rol düşürme / çıkarma açık not odasına en geç 30 sn'de (düzenleme gelince) yansır; proje
+  kanalı hemen kapanır. Hesap silme kanal olayı yayınlamaz.
+- Cron'un (çöp, silinmiş proje) kalıcı sildiği notların oda deposu temizlenmez (yazım `gone`
+  döner; veri sızmaz ama DO deposunda kalır).
+- Kanal olayları en iyi çabadır (yayın hatası günlüğe yazılır); kaçan olay yeniden
+  bağlanınca sıra numarası farkıyla yakalanır, bağlıyken kaçan olay bir sonraki yeniden
+  doğrulamaya kadar görünmez.
+- Başlık ortak düzenlenmez (HTTP, son yazan kazanır); gövde Yjs'tir.
+
+### Aşama 4b'ye kalanlar
+
+Varlık avatarları (not köşesi, `live.peers`; görev satırında `peersOnTask`), imleç ve seçim
+stilleri (renk, etiket, hareket), çevrimdışı bandı ve "Yeniden dene" (`live.reconnect`),
+"Son eşitleme …" metni (`lastSyncedAt` / `lastSavedAt`), salt okunur reddi toast'ı
+(`onError`), başkası çöpe atınca / proje silinince / çıkarılınca yönlendirme ve toast
+(`uyelik`, `proje-silindi` olayları), canlı ızgara animasyonları (PLAN §10 Motion `layout`),
+iki tarayıcı uçtan uca matrisi (üç görünüm, görüntüleyici, görevler, çevrimdışı).
+
 ## Cloudflare tarafında yapılacaklar
 
 İlk dağıtımdan önce bir kez (`wrangler login` ya da `CLOUDFLARE_API_TOKEN` ile):
@@ -501,8 +688,8 @@ Aşama 3b-2: notun içindeki proje arayüzü (proje sayfası, ayarlar ve davetle
    `00000000-0000-0000-0000-000000000000` yerine yaz; ardından `npm run db:migrate:remote`.
 2. **R2:** panelden R2'yi etkinleştir, sonra `npx wrangler r2 bucket create sukano-files`.
 3. **Gizli değişkenler:** yukarıdaki tablodaki her biri için `npx wrangler secret put <AD>`.
-4. **Durable Objects:** ek işlem yok; ilk `wrangler deploy`, `migrations` (v1,
-   `new_sqlite_classes: ["NoteRoom"]`) ile sınıfı oluşturur.
+4. **Durable Objects:** ek işlem yok; `wrangler deploy`, `migrations` (v1
+   `new_sqlite_classes: ["NoteRoom"]`, v2 `["ProjectRoom"]`) ile sınıfları oluşturur.
 5. **Cron:** ek işlem yok; `triggers.crons` dağıtımla kaydolur.
 6. **Google OAuth:** Google Cloud Console'da Web istemcisi; yetkili yönlendirme URI'si
    `<BETTER_AUTH_URL>/api/auth/callback/google`.
