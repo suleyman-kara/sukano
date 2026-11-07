@@ -33,6 +33,8 @@ export type NoteIntent =
       bodyHtml: string;
       color: NoteColor;
       pinned: boolean;
+      /** Proje notu ise proje (yoksa kişisel alan). */
+      projectId?: string;
     }
   | {
       intent: "create-todo";
@@ -42,16 +44,23 @@ export type NoteIntent =
       pinned: boolean;
       /** Üst seviye görev başlıkları (sırayla). */
       tasks: string[];
+      projectId?: string;
     }
   | { intent: "update"; id: string; title?: string; bodyHtml?: string }
   | { intent: "convert"; id: string; to: NoteKind }
   | { intent: "color"; id: string; color: NoteColor }
   | { intent: "pin"; id: string; pinned: boolean }
   | { intent: "archive" | "unarchive" | "trash" | "restore" | "delete" | "discard"; id: string }
-  | { intent: "empty-trash" }
+  | { intent: "empty-trash"; projectId?: string }
   | { intent: "duplicate"; id: string; newId: string }
   | { intent: "move"; id: string; pinned: boolean; toIndex: number }
-  | { intent: "restore-version"; id: string; versionId: string };
+  | { intent: "restore-version"; id: string; versionId: string }
+  /** "Taşı veya kopyala…" → Taşı: kişisel notu projeye taşır (10 sn geri alınabilir). */
+  | { intent: "move-to-project"; id: string; projectId: string }
+  /** Taşıma toast'ındaki "Geri al". */
+  | { intent: "undo-move"; id: string }
+  /** "Kopyala…" / "Taşı veya kopyala…" → Kopyala; `projectId` null ise kişisel alana. */
+  | { intent: "copy-to"; id: string; newId: string; projectId: string | null };
 
 export type IntentName = NoteIntent["intent"];
 
@@ -95,10 +104,20 @@ function taskTitles(v: unknown): string[] | null {
   return parsed as string[];
 }
 
+/** İsteğe bağlı proje kimliği: yok/boş → undefined, geçersiz → null. */
+function projectIdOf(input: Input): string | undefined | null {
+  const v = input.projectId;
+  if (v === undefined || v === null || v === "") return undefined;
+  return isNoteId(v) ? v : null;
+}
+
 /** Form verisini (`Object.fromEntries(formData)`) doğrular. */
 export function parseNoteIntent(input: Input): ParseResult {
   const intent = input.intent;
-  if (intent === "empty-trash") return { ok: true, value: { intent } };
+  const projectId = projectIdOf(input);
+  if (projectId === null) return fail("Geçersiz proje");
+  if (intent === "empty-trash")
+    return { ok: true, value: projectId ? { intent, projectId } : { intent } };
 
   const id = input.id;
   if (!isNoteId(id)) return fail("Geçersiz not kimliği");
@@ -115,7 +134,15 @@ export function parseNoteIntent(input: Input): ParseResult {
       if (pinned === null) return fail("Geçersiz sabitleme");
       return {
         ok: true,
-        value: { intent, id, title: title ?? "", bodyHtml: bodyHtml ?? "", color, pinned },
+        value: {
+          intent,
+          id,
+          title: title ?? "",
+          bodyHtml: bodyHtml ?? "",
+          color,
+          pinned,
+          projectId,
+        },
       };
     }
     case "create-todo": {
@@ -130,7 +157,7 @@ export function parseNoteIntent(input: Input): ParseResult {
       if (tasks === null) return fail("Geçersiz görevler");
       return {
         ok: true,
-        value: { intent, id, title: title ?? "", color, pinned, tasks },
+        value: { intent, id, title: title ?? "", color, pinned, tasks, projectId },
       };
     }
     case "convert": {
@@ -176,6 +203,15 @@ export function parseNoteIntent(input: Input): ParseResult {
       if (!isNoteId(input.versionId)) return fail("Geçersiz sürüm");
       return { ok: true, value: { intent, id, versionId: input.versionId } };
     }
+    case "move-to-project":
+      if (!projectId) return fail("Geçersiz proje");
+      return { ok: true, value: { intent, id, projectId } };
+    case "undo-move":
+      return { ok: true, value: { intent, id } };
+    case "copy-to": {
+      if (!isUuid(input.newId)) return fail("Geçersiz kopya kimliği");
+      return { ok: true, value: { intent, id, newId: input.newId, projectId: projectId ?? null } };
+    }
     default:
       return fail("Bilinmeyen işlem");
   }
@@ -185,7 +221,7 @@ export function parseNoteIntent(input: Input): ParseResult {
 export function intentToForm(intent: NoteIntent): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(intent)) {
-    if (v !== undefined) out[k] = Array.isArray(v) ? JSON.stringify(v) : String(v);
+    if (v !== undefined && v !== null) out[k] = Array.isArray(v) ? JSON.stringify(v) : String(v);
   }
   return out;
 }

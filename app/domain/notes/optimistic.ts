@@ -37,8 +37,8 @@ export type NoteCardData = {
 
 /** Bu görünümden çıkaran eylemler. */
 const LEAVES: Record<NoteView, NoteIntent["intent"][]> = {
-  notlar: ["archive", "trash", "delete", "discard"],
-  arsiv: ["unarchive", "trash", "delete", "discard"],
+  notlar: ["archive", "trash", "delete", "discard", "move-to-project"],
+  arsiv: ["unarchive", "trash", "delete", "discard", "move-to-project"],
   cop: ["restore", "delete"],
 };
 
