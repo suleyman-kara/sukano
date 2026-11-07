@@ -44,12 +44,11 @@ body{margin:0}
 .col[data-sel="yes"] .pill.sel{display:inline-block}
 .desc{font-size:12.5px;color:var(--muted);line-height:1.4}
 
-/* A — yükselen ızgara: her kare kendi 8–14 sn sinüs döngüsünde yükselip alçalır */
-.ga-sq{position:absolute;background:currentColor;will-change:transform,opacity;animation:ga-rise 8s var(--ease-amb) infinite alternate both}
-.ga-sq.st{opacity:var(--o-st);--o0:var(--o-st);--o1:calc(var(--o-st) * 1.5)}
-.ga-sq.wk{opacity:var(--o-wk);--o0:var(--o-wk);--o1:calc(var(--o-wk) * 2.2)}
+/* A — yükselen ızgara: her 2×2 logo işareti bütün halde, kendi 7–11 sn döngüsünde yükselip alçalır */
+.ga-g{position:absolute;color:currentColor;opacity:var(--o-st);--o0:var(--o-st);--o1:calc(var(--o-st) * 1.5);will-change:transform,opacity;animation:ga-rise 9s var(--ease-amb) infinite alternate both}
+.ga-g svg{display:block;width:100%;height:100%}
 @keyframes ga-rise{from{transform:translate3d(0,0,0);opacity:var(--o0)}to{transform:translate3d(0,var(--amp,-42px),0);opacity:var(--o1)}}
-.ga1{animation-duration:7s;animation-delay:-5.3s;--amp:-39px}.ga2{animation-duration:9s;animation-delay:-0.72s;--amp:-48px}.ga3{animation-duration:11s;animation-delay:-8.26s;--amp:-57px}.ga4{animation-duration:6s;animation-delay:-1.08s;--amp:-36px}.ga5{animation-duration:8s;animation-delay:-7.15s;--amp:-45px}.ga6{animation-duration:10s;animation-delay:-2.34s;--amp:-54px}.ga7{animation-duration:5s;animation-delay:-5.68s;--amp:-33px}.ga8{animation-duration:7s;animation-delay:-2.4s;--amp:-42px}.ga9{animation-duration:9s;animation-delay:-9.24s;--amp:-51px}.ga10{animation-duration:11s;animation-delay:-4.2s;--amp:-30px}.ga11{animation-duration:6s;animation-delay:-7.47s;--amp:-39px}.ga12{animation-duration:8s;animation-delay:-3.96s;--amp:-48px}.ga13{animation-duration:10s;animation-delay:-11.57s;--amp:-57px}.ga14{animation-duration:5s;animation-delay:-3.36s;--amp:-36px}.ga15{animation-duration:7s;animation-delay:-9.5s;--amp:-45px}.ga16{animation-duration:9s;animation-delay:-5.76s;--amp:-54px}
+.ga1{animation-duration:9s;animation-delay:-3s;--amp:-48px}.ga2{animation-duration:11s;animation-delay:-6.5s;--amp:-60px}.ga3{animation-duration:7s;animation-delay:-1.5s;--amp:-36px}.ga4{animation-duration:8s;animation-delay:-5s;--amp:-42px}
 
 /* B — nefes alan logo: diyagonal vurgu sırayla dolaşır, grup çok hafif ölçeklenir */
 .gb-wrap{position:absolute;right:-96px;top:404px;width:380px;height:380px;opacity:.2;animation:gb-scale 8s var(--ease-amb) infinite alternate both}
@@ -103,22 +102,10 @@ body{margin:0}
     <section class="col" data-sel="{{selA}}" aria-label="A, Yükselen ızgara">
       <div class="pv">
       <div class="pv-bg" aria-hidden="true">
-        <span class="ga-sq ga1 st" style="left:262px; top:-26px; width:96px; height:96px; border-radius:27px"></span>
-        <span class="ga-sq ga2 wk" style="left:379px; top:-26px; width:96px; height:96px; border-radius:27px"></span>
-        <span class="ga-sq ga3 wk" style="left:262px; top:91px; width:96px; height:96px; border-radius:27px"></span>
-        <span class="ga-sq ga4 st" style="left:379px; top:91px; width:96px; height:96px; border-radius:27px"></span>
-        <span class="ga-sq ga5 st" style="left:-58px; top:548px; width:120px; height:120px; border-radius:34px"></span>
-        <span class="ga-sq ga6 wk" style="left:88px; top:548px; width:120px; height:120px; border-radius:34px"></span>
-        <span class="ga-sq ga7 wk" style="left:-58px; top:694px; width:120px; height:120px; border-radius:34px"></span>
-        <span class="ga-sq ga8 st" style="left:88px; top:694px; width:120px; height:120px; border-radius:34px"></span>
-        <span class="ga-sq ga9 st" style="left:318px; top:452px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga10 wk" style="left:406px; top:452px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga11 wk" style="left:318px; top:540px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga12 st" style="left:406px; top:540px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga13 st" style="left:36px; top:150px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga14 wk" style="left:124px; top:150px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga15 wk" style="left:36px; top:238px; width:72px; height:72px; border-radius:20px"></span>
-        <span class="ga-sq ga16 st" style="left:124px; top:238px; width:72px; height:72px; border-radius:20px"></span>
+        <span class="ga-g ga1" style="left:262px; top:-26px; width:213px; height:213px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga2" style="left:-58px; top:548px; width:266px; height:266px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga3" style="left:318px; top:452px; width:160px; height:160px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga4" style="left:36px; top:150px; width:160px; height:160px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
       </div>
       <div class="pv-fg">
         <div class="pv-brand"><span class="mk"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span class="wm">sukano</span></div>
@@ -130,7 +117,7 @@ body{margin:0}
       </div>
       </div>
       <p class="lbl"><b>A</b> Yükselen ızgara <span class="pill rec">Önerilen</span><span class="pill sel">Auth’a uygulanacak</span></p>
-      <p class="desc">Logodaki 2×2 kare matrisleri; her kare 5–11 sn’lik kendi döngüsünde 30–60 px yükselip alçalıyor, saydamlığı %35 dilinde açılıp kapanıyor. Önizlemede genlik büyütüldü; uygulamada yaklaşık yarısı kullanılacak.</p>
+      <p class="desc">Logo işareti dört boyutta, kendi 2×2 düzeni bozulmadan; her işaret bütün halde 7–11 sn’lik kendi döngüsünde 36–60 px yükselip alçalıyor ve hafifçe parlıyor. Önizlemede genlik büyütüldü; uygulamada yaklaşık yarısı kullanılacak.</p>
     </section>
 
     <section class="col" data-sel="{{selB}}" aria-label="B, Nefes alan logo">
