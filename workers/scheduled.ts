@@ -2,6 +2,7 @@
  * Cron işleri (`wrangler.jsonc` → `triggers.crons: ["* * * * *"]`, dakikada bir).
  * Her iş birbirinden bağımsız çalışır; biri hata verirse diğerleri sürer.
  */
+import { purgeTrashedPersonalNotes } from "~/lib/notes.server";
 
 type Job = (env: Env, now: Date) => Promise<void>;
 
@@ -13,8 +14,9 @@ export async function sendDueReminders(_env: Env, _now: Date): Promise<void> {
 }
 
 /** 7 günden uzun süredir çöpte duran notları kalıcı siler (R2 ekleri dahil). */
-export async function purgeTrashedNotes(_env: Env, _now: Date): Promise<void> {
-  // TODO(Aşama 1): notes.trashed_at <= now - 7 gün; ekleri FILES'tan sil, notu sil.
+export async function purgeTrashedNotes(env: Env, now: Date): Promise<void> {
+  // Proje notlarının çöpü Aşama 3'te (aynı kural, proje alanında).
+  await purgeTrashedPersonalNotes(env, now);
 }
 
 /** 7 günden uzun süredir silinmiş durumdaki projeleri kalıcı siler. */
