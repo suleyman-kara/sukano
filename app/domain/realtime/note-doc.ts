@@ -19,8 +19,9 @@ import type * as Y from "yjs";
 import { noteExtensions, noteSchema } from "~/domain/notes/editor-schema";
 import { htmlToText } from "~/domain/notes/html";
 
-/** Collaboration eklentisinin varsayılan alanı (`field: "default"`). */
-export const NOTE_FRAGMENT = "default";
+import { NOTE_FRAGMENT } from "./protocol";
+
+export { NOTE_FRAGMENT };
 
 /* ------------------------------------------------------------------ */
 /* HTML ayrıştırıcı                                                     */

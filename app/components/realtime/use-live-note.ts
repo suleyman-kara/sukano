@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { NoteMetaPatch, TaskBroadcast } from "~/domain/realtime/protocol";
 import type { LiveTaskSource } from "~/components/tasks/use-todo-tasks";
+import type { Extensions } from "@tiptap/core";
+import type { PresenceUser } from "~/domain/realtime/presence";
 import { useLiveConfig } from "./live-context";
-import { NoteSyncProvider, type NoteSyncSnapshot } from "./note-provider";
+import type * as CollabModuleType from "./collab";
+import type { NoteSyncProvider, NoteSyncSnapshot } from "./note-provider";
+
+type CollabModule = typeof CollabModuleType;
 
 export type UseLiveNoteOptions = {
   noteId: string;
@@ -25,8 +30,9 @@ export type UseLiveNoteOptions = {
  * - `canEdit`: metin gövdesi düzenlenebilir mi — bağlı, ilk eşitleme bitti, salt okunur
  *   değil. `canWrite`: HTTP ile yazılanlar (başlık, görevler, renk …) için — çevrimdışı
  *   değil ve salt okunur değil. PLAN §5: çevrimdışıyken düzenleme kapalı.
- * - `provider` / `doc` / `awareness`: Tiptap Collaboration ve CollaborationCaret için.
- *   `generation` sunucu belgeyi sıfırlayınca artar; editör bununla yeniden kurulmalı.
+ * - `provider` (Yjs `doc` + `awareness`) ve `editorExtensions(user, placeholder)`: Tiptap
+ *   Collaboration + CollaborationCaret eklentileri (Yjs tembel yüklenir). `generation`
+ *   sunucu belgeyi sıfırlayınca artar; editör bununla yeniden kurulmalı.
  * - `tasks`: yapılacaklar notunda görev yayınları (`useTodoTasks`'in `live` parametresi).
  * - `setFocus(taskId)`: varlıkta odaklanılan görev; `flush()`: bekleyeni hemen D1'e yazdır.
  *
@@ -37,6 +43,8 @@ export type LiveNote = NoteSyncSnapshot & {
   canEdit: boolean;
   canWrite: boolean;
   provider: NoteSyncProvider | null;
+  /** Ortak metin editörünün eklentileri (sağlayıcı hazır değilse null). */
+  editorExtensions: (user: PresenceUser, placeholder?: string) => Extensions | null;
   generation: number;
   tasks: LiveTaskSource;
   setFocus: (taskId: string | null) => void;
@@ -66,6 +74,7 @@ export function useLiveNote({
   const config = useLiveConfig();
   const active = config.enabled && enabled && config.me !== null;
   const [provider, setProvider] = useState<NoteSyncProvider | null>(null);
+  const [collabModule, setCollabModule] = useState<CollabModule | null>(null);
   const [generation, setGeneration] = useState(0);
   const handlers = useRef({ onMeta, onError });
   useEffect(() => {
@@ -76,21 +85,34 @@ export function useLiveNote({
 
   useEffect(() => {
     if (!active || !me) return;
-    const p = new NoteSyncProvider({
-      noteId,
-      kind,
-      me,
-      readOnly,
-      onTasks: (s) => taskListeners.current.forEach((l) => l(s)),
-      onMeta: (m) => handlers.current.onMeta?.(m),
-      onError: (m) => handlers.current.onError?.(m),
-      onReset: () => setGeneration((g) => g + 1),
+    let cancelled = false;
+    let p: NoteSyncProvider | null = null;
+    const create = (mod: CollabModule) => {
+      const created = new mod.NoteSyncProvider({
+        noteId,
+        kind,
+        me,
+        readOnly,
+        onTasks: (s) => taskListeners.current.forEach((l) => l(s)),
+        onMeta: (m) => handlers.current.onMeta?.(m),
+        onError: (m) => handlers.current.onError?.(m),
+        onReset: () => setGeneration((g) => g + 1),
+      });
+      setProvider(created);
+      return created;
+    };
+    void import("./collab").then((mod) => {
+      if (cancelled) return;
+      setCollabModule(mod);
+      p = create(mod);
     });
-    setProvider(p);
     return () => {
-      setProvider((cur) => (cur === p ? null : cur));
+      cancelled = true;
+      const closing = p;
+      if (!closing) return;
+      setProvider((cur) => (cur === closing ? null : cur));
       // Bekleyen kayıt istenir, sonra kapanır (son bağlantıda sunucu zaten yazar).
-      void p.close();
+      void closing.close();
     };
     // `readOnly` yalnızca başlangıç ipucu; değişince yeniden bağlanmaya gerek yok.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,6 +136,11 @@ export function useLiveNote({
   const setFocus = useCallback((taskId: string | null) => provider?.setFocus(taskId), [provider]);
   const flush = useCallback(() => provider?.flush() ?? Promise.resolve(), [provider]);
   const reconnect = useCallback(() => provider?.reconnect(), [provider]);
+  const editorExtensions = useCallback(
+    (user: PresenceUser, placeholder?: string) =>
+      provider && collabModule ? collabModule.collabExtensions(provider, user, placeholder) : null,
+    [provider, collabModule],
+  );
 
   if (!active) return null;
   const effectiveReadOnly = readOnly || snapshot.readOnly;
@@ -123,6 +150,7 @@ export function useLiveNote({
     canEdit: snapshot.status === "bagli" && snapshot.synced && !effectiveReadOnly,
     canWrite: snapshot.status !== "cevrimdisi" && !effectiveReadOnly,
     provider,
+    editorExtensions,
     generation,
     tasks,
     setFocus,

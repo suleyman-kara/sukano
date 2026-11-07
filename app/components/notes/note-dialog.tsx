@@ -765,10 +765,14 @@ function NoteBody({
   }
   const { me } = useLiveConfig();
   // Canlı metin notu: gövde Yjs belgesinden (ilk eşitlemeden sonra); HTTP'ye gövde gitmez.
-  const collab =
-    live?.provider && live.synced && me && note.kind === "text"
-      ? { provider: live.provider, user: me }
-      : null;
+  const ready = Boolean(live?.provider && live.synced && me && note.kind === "text");
+  const editorExtensions = live?.editorExtensions;
+  const collab = useMemo(() => {
+    const extensions = ready && me ? editorExtensions?.(me, "Not al…") : null;
+    return extensions && live?.provider ? { key: live.provider, extensions } : null;
+    // Sağlayıcı değişmedikçe aynı eklentiler (editör yeniden kurulmaz).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, live?.provider, editorExtensions]);
   const editor = useNoteEditor({
     initialHtml: note.bodyHtml,
     editable: editable && note.kind === "text" && (live ? live.canEdit : true),

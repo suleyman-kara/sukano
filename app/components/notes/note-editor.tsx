@@ -1,15 +1,11 @@
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import type { Extensions } from "@tiptap/core";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import { Bold, Heading2, Italic, Link2, List } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import type { NoteSyncProvider } from "~/components/realtime/note-provider";
 import { noteExtensions } from "~/domain/notes/editor-schema";
-import { NOTE_FRAGMENT } from "~/domain/realtime/note-doc";
-import type { PresenceUser } from "~/domain/realtime/presence";
 
 /**
  * Metin notu düzenleyicisinin eklentileri (şema tek kaynakta: `editor-schema.ts`;
@@ -19,21 +15,12 @@ export function createNoteExtensions(placeholder?: string) {
   return noteExtensions({ placeholder });
 }
 
-/** Ortak düzenleme: belge ve farkındalık not odasından (`useLiveNote` → `provider`). */
-export type NoteEditorCollab = {
-  provider: Pick<NoteSyncProvider, "doc" | "awareness">;
-  /** Diğerlerinin imlecinde görünen ad ve renk (farkındalıktaki `user`). */
-  user: PresenceUser;
-};
-
-/** Ortak düzenleme eklentileri (Yjs belgesi + imleçler; geçmiş Yjs'te). */
-function collabExtensions(collab: NoteEditorCollab, placeholder?: string) {
-  return [
-    ...noteExtensions({ placeholder, collaborative: true }),
-    Collaboration.configure({ document: collab.provider.doc, field: NOTE_FRAGMENT }),
-    CollaborationCaret.configure({ provider: collab.provider, user: collab.user }),
-  ];
-}
+/**
+ * Ortak düzenleme: Yjs eklentileri (Collaboration + CollaborationCaret) not odası
+ * sağlayıcısıyla birlikte tembel yüklenen modülde kurulur (`realtime/collab.ts`); Yjs
+ * yalnızca not açılınca indirilir. `key` değişince (yeni sağlayıcı) editör yeniden kurulur.
+ */
+export type NoteEditorCollab = { key: object; extensions: Extensions };
 
 type UseNoteEditorOptions = {
   initialHtml: string;
@@ -66,9 +53,7 @@ export function useNoteEditor({
   });
   const editor = useEditor(
     {
-      extensions: collab
-        ? collabExtensions(collab, placeholder)
-        : createNoteExtensions(placeholder),
+      extensions: collab ? collab.extensions : createNoteExtensions(placeholder),
       ...(collab ? {} : { content: initialHtml || "" }),
       editable,
       autofocus: autofocus ? "end" : false,
@@ -85,7 +70,7 @@ export function useNoteEditor({
         if (!collab) onChangeRef.current?.(editor.isEmpty ? "" : editor.getHTML());
       },
     },
-    [collab?.provider],
+    [collab?.key],
   );
   // Düzenlenebilirlik (çevrimdışı, salt okunur) editörü yeniden kurmadan değişir.
   useEffect(() => {

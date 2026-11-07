@@ -47,6 +47,9 @@ export type ChannelKey =
 export const channelName = (key: ChannelKey) =>
   key.kind === "project" ? `proje:${key.projectId}` : `kisi:${key.userId}`;
 
+/** Yjs belgesinde not gövdesinin alanı (Collaboration eklentisinin varsayılanı). */
+export const NOTE_FRAGMENT = "default";
+
 /* ------------------------------------------------------------------ */
 /* İkili (y-protocols) ileti türleri                                    */
 /* ------------------------------------------------------------------ */

@@ -144,6 +144,8 @@ describe("useLiveNote", () => {
         <WithTasks />
       </LiveConfigProvider>,
     );
+    // Sağlayıcı (Yjs) tembel yüklenir.
+    await vi.waitFor(() => expect(FakeSocket.all).toHaveLength(2));
     expect(FakeSocket.all[0]!.url).toMatch(/\/api\/notlar\/n1\/canli$/);
     act(() => FakeSocket.all.forEach((s) => s.open()));
     act(() =>
