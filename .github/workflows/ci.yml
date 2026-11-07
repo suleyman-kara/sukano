@@ -1,0 +1,109 @@
+name: CI
+
+# PLAN §11:
+# - her push ve PR: typecheck + lint + birim/bileşen (kapsam eşiğiyle) + derleme
+# - PR: ek olarak Worker testleri ve uçtan uca duman seti (@duman)
+# - main: tam uçtan uca set
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  # Wrangler'ın anonim kullanım ölçümünü kapat.
+  WRANGLER_SEND_METRICS: false
+
+jobs:
+  denetim:
+    name: Typecheck, lint, birim testleri, derleme
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Birim + bileşen testleri (kapsam eşiği %85)
+        run: npm run coverage
+      - run: npm run build
+      - name: Kapsam raporu
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kapsam
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  workers:
+    name: Worker / API testleri
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:workers
+
+  e2e:
+    name: Uçtan uca (${{ github.event_name == 'pull_request' && 'duman seti' || 'tam set' }})
+    # PR'da duman seti, main'e push'ta tam set. Diğer dallara push'ta koşmaz.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Playwright sürümü
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Playwright tarayıcı önbelleği
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Chromium kurulumu
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Chromium sistem bağımlılıkları
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Duman seti
+        if: github.event_name == 'pull_request'
+        run: npm run e2e:duman
+      - name: Tam set
+        if: github.event_name != 'pull_request'
+        run: npm run e2e
+      - name: Playwright raporu
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-raporu
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
