@@ -166,6 +166,7 @@ export function TodoEditor({
   const addRef = useRef<HTMLButtonElement>(null);
   const pending = useRef<Focus | null>(null);
   const pickerReturn = useRef<string | null>(null);
+  const helpReturn = useRef<string | null>(null);
   const detailReturn = useRef<string | null>(null);
   const settleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const blockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -404,7 +405,10 @@ export function TodoEditor({
       expandAll: () => viewRef.current.setExpanded(idsWithChildren(current())),
       collapseAll: () => viewRef.current.setExpanded([]),
       clearCompleted: clearDone,
-      toggleHelp: () => setHelp(!help),
+      toggleHelp: () => {
+        helpReturn.current = null;
+        setHelp(!help);
+      },
       flush: whenIdle,
     }),
     [clearDone, help, setHelp, current, whenIdle],
@@ -529,6 +533,7 @@ export function TodoEditor({
 
       if (mod && k === "/") {
         e.preventDefault();
+        helpReturn.current = id;
         setHelp(!help);
         return;
       }
@@ -1036,7 +1041,17 @@ export function TodoEditor({
         </>
       )}
 
-      <ShortcutCard open={help} onOpenChange={setHelp} />
+      <ShortcutCard
+        open={help}
+        onOpenChange={setHelp}
+        onClosed={() => {
+          const id = helpReturn.current;
+          helpReturn.current = null;
+          if (!id || !findTask(current(), id)) return false;
+          focusRow(id, "end");
+          return true;
+        }}
+      />
     </div>
   );
 }
