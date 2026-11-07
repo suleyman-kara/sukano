@@ -4,6 +4,7 @@ import { cn } from "cn";
 import { NoteEditorContent, useNoteEditor } from "~/components/notes/note-editor";
 import { formatChip, isOverdue } from "~/domain/tasks/dates";
 import { isDone, type Task } from "~/domain/tasks/model";
+import { PersonChip, type Assignable } from "./person-picker";
 
 /** Tarih çipinin metni ve erişilebilir adı (prototip `dateChip`). */
 export function dateChipText(task: Task, today: string) {
@@ -16,11 +17,13 @@ export function DateChip({
   today,
   onClick,
   large,
+  disabled,
 }: {
   task: Task;
   today: string;
   onClick: () => void;
   large?: boolean;
+  disabled?: boolean;
 }) {
   const chip = dateChipText(task, today);
   const overdue = isOverdue(task.dueDate, today, isDone(task));
@@ -28,9 +31,10 @@ export function DateChip({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={chip.aria}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border border-line pr-2.5 pl-2 text-[13px] font-medium outline-none hover:bg-hover focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-[15px] [&_svg]:text-muted-foreground",
+        "inline-flex items-center gap-1.5 rounded-lg border border-line pr-2.5 pl-2 text-[13px] font-medium outline-none hover:bg-hover focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none [&_svg]:size-[15px] [&_svg]:text-muted-foreground",
         large ? "h-11" : "h-[30px]",
         chip.set && "border-transparent bg-primary-soft text-primary [&_svg]:text-primary",
         overdue && "border-transparent bg-danger-soft text-danger [&_svg]:text-danger",
@@ -42,10 +46,20 @@ export function DateChip({
   );
 }
 
+/** Ayrıntıdaki kişi çipi (yalnızca proje notunda). */
+export type DetailPeople = {
+  assignees: readonly Assignable[];
+  canAssign: boolean;
+  onOpenWho: () => void;
+};
+
 export type TaskDetailProps = {
   task: Task;
   today: string;
   focusOnOpen: boolean;
+  people?: DetailPeople;
+  /** Görüntüleyici: açıklama ve çipler salt okunur; alt görev ekleme ve silme yok. */
+  readOnly?: boolean;
   onDescription: (html: string) => void;
   onOpenDate: () => void;
   onAddChild: () => void;
@@ -59,29 +73,32 @@ export function DescriptionEditor({
   focusOnOpen,
   onDescription,
   className,
+  editable = true,
 }: {
   task: Task;
   focusOnOpen: boolean;
   onDescription: (html: string) => void;
   className?: string;
+  editable?: boolean;
 }) {
   const editor = useNoteEditor({
     initialHtml: task.description,
+    editable,
     onChange: onDescription,
     label: "Açıklama",
-    placeholder: "Açıklama ekle",
+    placeholder: editable ? "Açıklama ekle" : "Açıklama yok",
     className: cn("min-h-[52px] py-1 text-[14px] leading-normal", className),
   });
   useEffect(() => {
-    if (focusOnOpen && editor) editor.commands.focus("end");
-  }, [focusOnOpen, editor]);
+    if (focusOnOpen && editable && editor) editor.commands.focus("end");
+  }, [focusOnOpen, editable, editor]);
   return <NoteEditorContent editor={editor} />;
 }
 
 /**
  * Görev ayrıntısı akordeonu (satırın hemen altında): açıklama, tarih çipi, "Alt görev
- * ekle" ve görevi silme. Kişi çipi yalnızca proje notunda (Aşama 3). Esc kapatır,
- * odak satıra döner.
+ * ekle" ve görevi silme. Kişi çipi yalnızca proje notunda. Esc kapatır, odak satıra
+ * döner. Görüntüleyicide salt okunur.
  */
 export function TaskDetail({
   task,
@@ -92,6 +109,8 @@ export function TaskDetail({
   onAddChild,
   onDelete,
   onClose,
+  people,
+  readOnly = false,
 }: TaskDetailProps) {
   return (
     // Esc, açıklama düzenleyicisinden ve düğmelerden kabarcıkla gelir.
@@ -109,30 +128,46 @@ export function TaskDetail({
         }
       }}
     >
-      <DescriptionEditor task={task} focusOnOpen={focusOnOpen} onDescription={onDescription} />
+      <DescriptionEditor
+        task={task}
+        focusOnOpen={focusOnOpen}
+        onDescription={onDescription}
+        editable={!readOnly}
+      />
       <div className="flex flex-wrap items-center gap-2">
-        <DateChip task={task} today={today} onClick={onOpenDate} />
+        <DateChip task={task} today={today} onClick={onOpenDate} disabled={readOnly} />
+        {people && (
+          <PersonChip
+            people={people.assignees}
+            onClick={people.onOpenWho}
+            disabled={readOnly || !people.canAssign}
+          />
+        )}
       </div>
-      <button
-        type="button"
-        onClick={onAddChild}
-        className="inline-flex items-center gap-1.5 self-start rounded-md text-[13px] font-medium text-primary outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4"
-      >
-        <Plus aria-hidden="true" />
-        Alt görev ekle
-      </button>
-      <div className="h-px bg-line" aria-hidden="true" />
-      <button
-        type="button"
-        onClick={onDelete}
-        className="inline-flex items-center gap-1.5 self-start rounded-md text-[13px] font-medium text-danger outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4"
-      >
-        <Trash2 aria-hidden="true" />
-        Görevi sil
-        <small className="text-xs font-normal text-muted-foreground">
-          alt görevleriyle birlikte · geri alınabilir
-        </small>
-      </button>
+      {!readOnly && (
+        <>
+          <button
+            type="button"
+            onClick={onAddChild}
+            className="inline-flex items-center gap-1.5 self-start rounded-md text-[13px] font-medium text-primary outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4"
+          >
+            <Plus aria-hidden="true" />
+            Alt görev ekle
+          </button>
+          <div className="h-px bg-line" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={onDelete}
+            className="inline-flex items-center gap-1.5 self-start rounded-md text-[13px] font-medium text-danger outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4"
+          >
+            <Trash2 aria-hidden="true" />
+            Görevi sil
+            <small className="text-xs font-normal text-muted-foreground">
+              alt görevleriyle birlikte · geri alınabilir
+            </small>
+          </button>
+        </>
+      )}
     </div>
   );
 }

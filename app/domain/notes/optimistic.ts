@@ -13,7 +13,16 @@ export type NoteView = "notlar" | "arsiv" | "cop";
 export const CARD_TASK_LIMIT = 5;
 
 /** Kartta görünen görev; `id` null ise henüz sunucuya ulaşmamış (iyimser) görevdir. */
-export type CardTask = { id: string | null; title: string; done: boolean };
+export type CardTask = {
+  id: string | null;
+  title: string;
+  done: boolean;
+  /** Proje notunda atananlar (kartta sessiz ipucu avatarları). */
+  assignees?: CardPerson[];
+};
+
+/** Kartta atanan avatarı. */
+export type CardPerson = { id: string; name: string; color: string };
 
 /** Izgaradaki kartın verisi (loader'dan gelir). */
 export type NoteCardData = {

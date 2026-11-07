@@ -53,11 +53,12 @@ import {
 } from "~/domain/tasks/tree";
 import { applyUndo, SETTLE_MS, toggleWithUndo } from "~/domain/tasks/undo";
 import { DatePicker } from "./date-picker";
+import { PersonList, resolveAssignees, type TodoPeople } from "./person-picker";
 import { projectDrop, type DragRow } from "./drag";
 import { ShortcutCard } from "./shortcut-card";
 import { DoneGroupHeader, TaskDetail } from "./task-detail";
 import { checkboxLabel, INDENT, MOBILE_INDENT, rowIndent, TaskRow } from "./task-row";
-import { DateSheetHeader, TaskDetailSheet, TodoSheet } from "./todo-sheets";
+import { DateSheetHeader, TaskDetailSheet, TodoSheet, WhoSheetHeader } from "./todo-sheets";
 import { TodoToasts } from "./todo-toasts";
 import { TodoToolbar, useKeyboardInset } from "./todo-toolbar";
 import { useTaskViewState } from "./use-task-view-state";
@@ -99,6 +100,8 @@ type Picker = {
   warning: string | null;
 };
 
+type Who = { id: string; viaKeyboard: boolean };
+
 type Focus = { id: string; caret: number | "end" } | { el: "add" | "help" };
 
 type Drag = { id: string; overId: string; offsetX: number };
@@ -127,6 +130,10 @@ export type TodoEditorProps = {
   onHelpChange?: (open: boolean) => void;
   ref?: React.Ref<TodoEditorHandle>;
   className?: string;
+  /** Proje notu: üyeler ve atama yetkisi (kişisel notta yok: atama arayüzü yok). */
+  people?: TodoPeople;
+  /** Görev kimliği → atanan kullanıcı kimlikleri. */
+  initialAssignees?: Record<string, string[]>;
 };
 
 /**
@@ -144,8 +151,15 @@ export function TodoEditor({
   onHelpChange,
   ref,
   className,
+  people,
+  initialAssignees,
 }: TodoEditorProps) {
-  const { tasks, apply, current, whenIdle } = useTodoTasks(noteId, initialTasks);
+  const { tasks, apply, current, whenIdle, assignees, assign } = useTodoTasks(
+    noteId,
+    initialTasks,
+    initialAssignees,
+  );
+  const canAssign = editable && Boolean(people?.canAssign);
   const view = useTaskViewState(noteId);
   const coarse = useMediaQuery(COARSE_QUERY, false);
   const mobile = !useMediaQuery(TABLET_UP_QUERY, true);
@@ -154,6 +168,7 @@ export function TodoEditor({
 
   const [detail, setDetail] = useState<{ id: string; focus: boolean } | null>(null);
   const [picker, setPickerState] = useState<Picker | null>(null);
+  const [who, setWhoState] = useState<Who | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [help, setHelpState] = useState(false);
@@ -168,6 +183,8 @@ export function TodoEditor({
   const addRef = useRef<HTMLButtonElement>(null);
   const pending = useRef<Focus | null>(null);
   const pickerReturn = useRef<string | null>(null);
+  const whoReturn = useRef<string | null>(null);
+  const whoRef = useRef<Who | null>(null);
   const helpReturn = useRef<string | null>(null);
   const detailReturn = useRef<string | null>(null);
   const settleTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -187,6 +204,11 @@ export function TodoEditor({
       pickerRef.current = next;
       return next;
     });
+  }, []);
+
+  const setWho = useCallback((w: Who | null) => {
+    whoRef.current = w;
+    setWhoState(w);
   }, []);
 
   const setHelp = useCallback(
@@ -422,13 +444,14 @@ export function TodoEditor({
 
   const openPicker = useCallback(
     (id: string) => {
+      setWho(null);
       setPicker((p) =>
         p?.id === id
           ? null
           : { id, slot: "due", timeOpen: false, text: "", textError: false, warning: null },
       );
     },
-    [setPicker],
+    [setPicker, setWho],
   );
 
   const closePickerToRow = useCallback(() => {
@@ -494,6 +517,40 @@ export function TodoEditor({
   }, [update, closePickerToRow]);
 
   /* -------------------------------------------------------------- */
+  /* Kişi seçici (proje notu)                                        */
+  /* -------------------------------------------------------------- */
+
+  const openWho = useCallback(
+    (id: string, viaKeyboard = false) => {
+      if (!canAssign) return;
+      setPicker(null);
+      setWho(whoRef.current?.id === id && !viaKeyboard ? null : { id, viaKeyboard });
+    },
+    [canAssign, setPicker, setWho],
+  );
+
+  const assigneesRef = useRef(assignees);
+  useLayoutEffect(() => {
+    assigneesRef.current = assignees;
+  });
+
+  /** Seçimi aç/kapat; liste üye sırasıyla (sen önce) gönderilir. */
+  const toggleAssignee = useCallback(
+    (userId: string) => {
+      const w = whoRef.current;
+      if (!w || !people) return;
+      const now = new Set(assigneesRef.current[w.id] ?? []);
+      if (now.has(userId)) now.delete(userId);
+      else now.add(userId);
+      assign(
+        w.id,
+        people.members.filter((m) => now.has(m.id)).map((m) => m.id),
+      );
+    },
+    [assign, people],
+  );
+
+  /* -------------------------------------------------------------- */
   /* Ayrıntı                                                         */
   /* -------------------------------------------------------------- */
 
@@ -502,9 +559,10 @@ export function TodoEditor({
       const opening = detailRef.current?.id !== id;
       setDetail(opening ? { id, focus } : null);
       setPicker(null);
+      setWho(null);
       if (!opening) focusRow(id, "end");
     },
-    [setPicker, focusRow],
+    [setPicker, setWho, focusRow],
   );
 
   const closeDetailToRow = useCallback(() => {
@@ -547,7 +605,14 @@ export function TodoEditor({
         }
         return;
       }
-      if (!editable) return;
+      // Görüntüleyici: yalnızca gezinme, aç/kapat ve ayrıntı (salt okunur).
+      const navKey =
+        ((k === "ArrowUp" || k === "ArrowDown") && !e.altKey) ||
+        k === "ArrowRight" ||
+        k === "ArrowLeft" ||
+        k === "Escape" ||
+        (k === "Enter" && e.shiftKey && !mod);
+      if (!editable && !navKey) return;
       if (k === "Enter") {
         if (e.nativeEvent.isComposing) return;
         e.preventDefault();
@@ -608,12 +673,14 @@ export function TodoEditor({
         return;
       }
       if (mod && e.shiftKey && (k === "a" || k === "A")) {
-        // Kişi seçici yalnızca proje notunda (Aşama 3).
+        // Kişi seçici yalnızca proje notunda; kişisel notta tuş hiçbir şey yapmaz.
         e.preventDefault();
+        openWho(id, true);
         return;
       }
       if (mod && (k === "d" || k === "D")) {
         e.preventDefault();
+        setWho(null);
         setPicker({
           id,
           slot: "due",
@@ -628,6 +695,7 @@ export function TodoEditor({
       if (k === "Escape") {
         e.preventDefault();
         if (pickerRef.current) return setPicker(null);
+        if (whoRef.current) return setWho(null);
         if (detailRef.current?.id === id) return setDetail(null);
         leaveList();
       }
@@ -648,6 +716,8 @@ export function TodoEditor({
       moveRow,
       shake,
       setPicker,
+      setWho,
+      openWho,
       leaveList,
     ],
   );
@@ -717,6 +787,7 @@ export function TodoEditor({
     setDrag({ id, overId: id, offsetX: 0 });
     setDetail(null);
     setPicker(null);
+    setWho(null);
   };
   const onDragMove = (e: DragMoveEvent) =>
     setDrag((d) =>
@@ -740,14 +811,25 @@ export function TodoEditor({
 
   const pickerTask = picker ? findTask(tasks, picker.id) : undefined;
   const detailTask = detail ? findTask(tasks, detail.id) : undefined;
+  const whoTask = who ? findTask(tasks, who.id) : undefined;
+  const assigneesOf = (id: string) =>
+    people ? resolveAssignees(assignees[id], people.members) : undefined;
+  const detailPeople = (id: string) =>
+    people
+      ? {
+          assignees: assigneesOf(id) ?? [],
+          canAssign,
+          onOpenWho: () => openWho(id),
+        }
+      : undefined;
   const activeTask = activeId ? findTask(tasks, activeId) : undefined;
   const showToolbar = coarse && editable && Boolean(activeTask);
   const keyboardInset = useKeyboardInset(showToolbar && mobile);
 
   // Seçicinin çapası: masaüstünde satır, tablette listenin üstü (TTodo).
-  const anchorInfo = useRef({ tablet, pickerId: picker?.id ?? null });
+  const anchorInfo = useRef({ tablet, pickerId: picker?.id ?? who?.id ?? null });
   useLayoutEffect(() => {
-    anchorInfo.current = { tablet, pickerId: picker?.id ?? null };
+    anchorInfo.current = { tablet, pickerId: picker?.id ?? who?.id ?? null };
   });
   const [anchorRef] = useState(() => ({
     current: {
@@ -803,6 +885,7 @@ export function TodoEditor({
         className="flex min-h-0 flex-1 flex-col overflow-y-auto"
         onScroll={() => {
           if (pickerRef.current && !tablet && !mobile) setPicker(null);
+          if (whoRef.current && !tablet && !mobile) setWho(null);
         }}
       >
         {header}
@@ -873,6 +956,11 @@ export function TodoEditor({
                     onBlur={onBlurRow}
                     onOpenDate={openPicker}
                     onOpenDetail={(id) => toggleDetail(id, false)}
+                    assignees={assigneesOf(r.id)}
+                    canAssign={canAssign}
+                    whoOpen={who?.id === r.id}
+                    onOpenWho={openWho}
+                    readOnly={!editable}
                   >
                     {!mobile && detail?.id === r.id && (
                       <TaskDetail
@@ -884,6 +972,8 @@ export function TodoEditor({
                         onAddChild={() => addChild(r.id)}
                         onDelete={() => deleteTask(r.id)}
                         onClose={closeDetailToRow}
+                        people={detailPeople(r.id)}
+                        readOnly={!editable}
                       />
                     )}
                   </TaskRow>
@@ -933,6 +1023,8 @@ export function TodoEditor({
           onOutdent={() => outdentRow(activeTask.id)}
           onIndent={() => indentRow(activeTask.id)}
           onDate={() => openPicker(activeTask.id)}
+          onWho={canAssign ? () => openWho(activeTask.id) : undefined}
+          whoOpen={who?.id === activeTask.id}
           onDetail={() => toggleDetail(activeTask.id, false)}
           onMove={(dir) => moveRow(activeTask.id, dir)}
           onComplete={() => toggleDone(activeTask.id, true)}
@@ -989,6 +1081,54 @@ export function TodoEditor({
             )}
           >
             {datePicker}
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {!mobile && people && (
+        <Popover
+          open={Boolean(whoTask)}
+          onOpenChange={(open) => {
+            if (!open) setWho(null);
+          }}
+        >
+          <PopoverAnchor virtualRef={anchorRef} />
+          <PopoverContent
+            data-todo-esc=""
+            role="dialog"
+            aria-label="Kişiye ata"
+            side="bottom"
+            align="end"
+            sideOffset={2}
+            alignOffset={tablet ? 0 : 44}
+            collisionPadding={8}
+            onOpenAutoFocus={(e) => {
+              // Odak ilk kişiye (sen); ↑ / ↓ gezinir, Enter seçer.
+              e.preventDefault();
+              (e.currentTarget as HTMLElement | null)
+                ?.querySelector<HTMLElement>("[role=option]")
+                ?.focus();
+            }}
+            onEscapeKeyDown={() => {
+              whoReturn.current = whoRef.current?.id ?? null;
+            }}
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+              const id = whoReturn.current;
+              whoReturn.current = null;
+              if (id) focusRow(id, "end");
+            }}
+            className="w-[280px] gap-0 rounded-xl border border-line bg-surface p-2 text-fg shadow-elevated ring-0 reduced-motion:animate-none"
+          >
+            {whoTask && (
+              <PersonList
+                key={whoTask.id}
+                members={people.members}
+                selected={assignees[whoTask.id] ?? []}
+                onToggle={toggleAssignee}
+                label={`Kişiye ata: ${whoTask.title.trim() || "Adsız görev"}`}
+              />
+            )}
           </PopoverContent>
         </Popover>
       )}
@@ -1051,7 +1191,66 @@ export function TodoEditor({
             }}
             onAddChild={addChild}
             onDelete={deleteTask}
+            people={
+              detailTask && people
+                ? {
+                    assignees: assigneesOf(detailTask.id) ?? [],
+                    canAssign,
+                    onOpenWho: () => {
+                      const id = detailTask.id;
+                      setDetail(null);
+                      openWho(id);
+                    },
+                  }
+                : undefined
+            }
+            readOnly={!editable}
           />
+          {people && (
+            <TodoSheet
+              open={Boolean(whoTask)}
+              onOpenChange={(open) => {
+                if (!open) {
+                  whoReturn.current = whoRef.current?.id ?? null;
+                  setWho(null);
+                }
+              }}
+              label="Kişiye ata"
+              description="Proje üyelerinden seç; değişiklikler hemen uygulanır."
+              initialFocus={() =>
+                whoRef.current?.viaKeyboard
+                  ? document.querySelector<HTMLElement>(`[data-who-sheet] [role=option]`)
+                  : null
+              }
+              onCloseAutoFocus={(e) => {
+                e.preventDefault();
+                const id = whoReturn.current;
+                whoReturn.current = null;
+                if (id && findTask(current(), id)) focusRow(id, "end");
+              }}
+              header={
+                <WhoSheetHeader
+                  title={whoTask?.title ?? ""}
+                  onDone={() => {
+                    whoReturn.current = whoRef.current?.id ?? null;
+                    setWho(null);
+                  }}
+                />
+              }
+            >
+              {whoTask && (
+                <div data-who-sheet="">
+                  <PersonList
+                    members={people.members}
+                    selected={assignees[whoTask.id] ?? []}
+                    onToggle={toggleAssignee}
+                    large
+                    label={`Kişiye ata: ${whoTask.title.trim() || "Adsız görev"}`}
+                  />
+                </div>
+              )}
+            </TodoSheet>
+          )}
         </>
       )}
 

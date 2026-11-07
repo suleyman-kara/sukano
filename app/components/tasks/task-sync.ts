@@ -18,13 +18,31 @@ import { applyTaskOps, type TaskOp } from "~/domain/tasks/ops";
 export const TYPING_FLUSH_MS = 500;
 const RETRY_MS = 3000;
 
-export type SendResult = { ok: true; tasks: Task[] } | { ok: false; status: number };
+/** Görev kimliği → atanan kullanıcı kimlikleri (yalnızca proje notunda dolu). */
+export type AssigneeMap = Record<string, string[]>;
+
+export type SendResult =
+  { ok: true; tasks: Task[]; assignees?: AssigneeMap } | { ok: false; status: number };
+
+/** `assign` işlemlerini atama haritasına uygular (tam liste; boş liste atamayı kaldırır). */
+export function applyAssignOps(map: AssigneeMap, ops: readonly TaskOp[]): AssigneeMap {
+  let out = map;
+  for (const op of ops) {
+    if (op.op !== "assign") continue;
+    if (out === map) out = { ...map };
+    if (op.userIds.length) out[op.id] = [...op.userIds];
+    else delete out[op.id];
+  }
+  return out;
+}
 
 export type TaskSyncOptions = {
   send: (ops: TaskOp[]) => Promise<SendResult>;
   reload: () => Promise<Task[] | null>;
   /** Sunucudan gelen (kuyruktaki işlemler yeniden uygulanmış) liste. */
   onTasks: (tasks: Task[]) => void;
+  /** Sunucudan gelen atamalar (kuyruktaki `assign` işlemleri yeniden uygulanmış). */
+  onAssignees?: (assignees: AssigneeMap) => void;
   /** Kuyruk boşalıp istek kalmayınca (ör. ızgarayı yeniden doğrulamak için). */
   onIdle?: () => void;
   /** Yeniden yükleme gerektiren hata (409 …). */
@@ -46,6 +64,9 @@ export function mergeOps(queue: readonly TaskOp[], ops: readonly TaskOp[]): Task
     const last = out.at(-1);
     if (op.op === "update" && last?.op === "update" && last.id === op.id) {
       out[out.length - 1] = { ...last, ...op };
+    } else if (op.op === "assign" && last?.op === "assign" && last.id === op.id) {
+      // Atama tam listedir: aynı görevin son ataması öncekinin yerine geçer.
+      out[out.length - 1] = op;
     } else {
       out.push(op);
     }
@@ -106,6 +127,7 @@ export function createTaskSync(options: TaskSyncOptions) {
       settleIdle();
       return;
     }
+    if (result.assignees) options.onAssignees?.(applyAssignOps(result.assignees, queue));
     if (queue.length === 0) {
       options.onTasks(result.tasks);
     } else {

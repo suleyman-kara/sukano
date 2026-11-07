@@ -15,6 +15,7 @@ import { Link } from "react-router";
 import { cn } from "cn";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { AssigneeAvatars } from "~/components/tasks/person-picker";
 import { checkboxLabel } from "~/components/tasks/task-row";
 import { useCardTaskToggle } from "~/components/tasks/use-card-task-toggle";
 import { trashDaysLeft, trashLeftLabel } from "~/domain/notes/dates";
@@ -275,7 +276,10 @@ function CardBody({
                   aria-hidden="true"
                 />
               )}
-              <span className="min-w-0 break-words">{t.title}</span>
+              <span className="min-w-0 flex-1 break-words">{t.title}</span>
+              {t.assignees && (
+                <AssigneeAvatars people={t.assignees} size={18} max={2} className="mt-px" />
+              )}
             </li>
           ))}
         </ul>

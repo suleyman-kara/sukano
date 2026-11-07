@@ -4,11 +4,17 @@ import { toast } from "sonner";
 import type { Task } from "~/domain/tasks/model";
 import type { TaskOp } from "~/domain/tasks/ops";
 import type { TreeEdit } from "~/domain/tasks/tree";
-import { createTaskSync, type SendResult, type TaskSync } from "./task-sync";
+import {
+  applyAssignOps,
+  createTaskSync,
+  type AssigneeMap,
+  type SendResult,
+  type TaskSync,
+} from "./task-sync";
 
 export const tasksUrl = (noteId: string) => `/api/notlar/${encodeURIComponent(noteId)}/gorevler`;
 
-/** Görev işlemlerini gönderir; yanıt `{ ok, tasks }`. */
+/** Görev işlemlerini gönderir; yanıt `{ ok, tasks, assignees? }`. */
 export async function postTaskOps(
   noteId: string,
   ops: TaskOp[],
@@ -21,15 +27,22 @@ export async function postTaskOps(
     ...init,
   });
   if (!res.ok) return { ok: false, status: res.status };
-  const data = (await res.json()) as { ok: boolean; tasks?: Task[] };
-  return data.ok && data.tasks ? { ok: true, tasks: data.tasks } : { ok: false, status: 500 };
+  const data = (await res.json()) as { ok: boolean; tasks?: Task[]; assignees?: AssigneeMap };
+  if (!data.ok || !data.tasks) return { ok: false, status: 500 };
+  return data.assignees
+    ? { ok: true, tasks: data.tasks, assignees: data.assignees }
+    : { ok: true, tasks: data.tasks };
 }
 
-async function loadTasks(noteId: string): Promise<Task[] | null> {
+async function loadState(
+  noteId: string,
+): Promise<{ tasks: Task[]; assignees?: AssigneeMap } | null> {
   const res = await fetch(tasksUrl(noteId), { headers: { accept: "application/json" } });
   if (!res.ok) return null;
-  return ((await res.json()) as { tasks: Task[] }).tasks;
+  return (await res.json()) as { tasks: Task[]; assignees?: AssigneeMap };
 }
+
+const EMPTY_ASSIGNEES: AssigneeMap = {};
 
 /** Izgarayı yeniden doğrulamadan önce kuyruk bu kadar sessiz kalmalı (ms). */
 const REVALIDATE_IDLE_MS = 700;
@@ -39,9 +52,19 @@ const REVALIDATE_IDLE_MS = 700;
  * `apply(edit)` yeni listeyi hemen gösterir ve işlemleri kuyruğa ekler. Olay
  * işleyicileri zincirleme düzenlemelerde güncel listeyi `current()` ile okur.
  */
-export function useTodoTasks(noteId: string, initial: Task[]) {
+export function useTodoTasks(
+  noteId: string,
+  initial: Task[],
+  initialAssignees: AssigneeMap = EMPTY_ASSIGNEES,
+) {
   const [tasks, setTasks] = useState<Task[]>(initial);
   const ref = useRef<Task[]>(initial);
+  const [assignees, setAssigneesState] = useState<AssigneeMap>(initialAssignees);
+  const assigneesRef = useRef<AssigneeMap>(initialAssignees);
+  const setAssignees = useCallback((next: AssigneeMap) => {
+    assigneesRef.current = next;
+    setAssigneesState(next);
+  }, []);
   const revalidator = useRevalidator();
   const revalidate = useRef(revalidator.revalidate);
   useEffect(() => {
@@ -55,11 +78,16 @@ export function useTodoTasks(noteId: string, initial: Task[]) {
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
     syncRef.current = createTaskSync({
       send: (ops) => postTaskOps(noteId, ops),
-      reload: () => loadTasks(noteId),
+      reload: async () => {
+        const state = await loadState(noteId);
+        if (state?.assignees) setAssignees(state.assignees);
+        return state?.tasks ?? null;
+      },
       onTasks: (next) => {
         ref.current = next;
         setTasks(next);
       },
+      onAssignees: setAssignees,
       onConflict: () => {
         toast("Görevler başka bir yerde değişmiş; liste yenilendi.");
       },
@@ -69,7 +97,7 @@ export function useTodoTasks(noteId: string, initial: Task[]) {
       },
     });
     return syncRef.current;
-  }, [noteId]);
+  }, [noteId, setAssignees]);
 
   useEffect(() => {
     const onHide = () =>
@@ -96,11 +124,21 @@ export function useTodoTasks(noteId: string, initial: Task[]) {
     [getSync],
   );
 
+  /** Görevin atananlarını değiştirir (tam liste); hemen gösterilir, kuyruğa eklenir. */
+  const assign = useCallback(
+    (taskId: string, userIds: string[]) => {
+      const op = { op: "assign" as const, id: taskId, userIds };
+      setAssignees(applyAssignOps(assigneesRef.current, [op]));
+      getSync().push([op]);
+    },
+    [getSync, setAssignees],
+  );
+
   const current = useCallback(() => ref.current, []);
   /** Bekleyen işlemler sunucuya ulaşıp yanıtlanınca çözülür. */
   const whenIdle = useCallback(() => syncRef.current?.whenIdle() ?? Promise.resolve(), []);
 
-  return { tasks, apply, current, whenIdle };
+  return { tasks, apply, current, whenIdle, assignees, assign };
 }
 
 export type TodoTasks = ReturnType<typeof useTodoTasks>;

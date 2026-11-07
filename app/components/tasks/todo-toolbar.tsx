@@ -5,6 +5,7 @@ import {
   IndentDecrease,
   IndentIncrease,
   TextAlignStart,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "cn";
@@ -52,6 +53,9 @@ export type TodoToolbarProps = {
   onIndent: () => void;
   onDate: () => void;
   onDetail: () => void;
+  /** Kişi seçici (yalnızca proje notunda, yönetici / düzenleyici). */
+  onWho?: () => void;
+  whoOpen?: boolean;
   onMove: (dir: -1 | 1) => void;
   onComplete: () => void;
   onDone: () => void;
@@ -59,7 +63,7 @@ export type TodoToolbarProps = {
 
 /**
  * Klavye üstü araç çubuğu (dokunmatik; MTodo, TTodo): girintiyi azalt, alt görev yap,
- * tarih, ayrıntılar, (tablette) taşı, Tamamla, Bitti. Odaklı satır varken not altında
+ * tarih, (proje notunda) kişi, ayrıntılar, (tablette) taşı, Tamamla, Bitti. Odaklı satır varken not altında
  * sabittir; mobilde ekran klavyesinin hemen üstüne kalkar.
  */
 export function TodoToolbar(p: TodoToolbarProps) {
@@ -103,6 +107,17 @@ export function TodoToolbar(p: TodoToolbarProps) {
       >
         <Calendar aria-hidden="true" />
       </button>
+      {p.onWho && (
+        <button
+          type="button"
+          className={KBTN}
+          aria-label="Kişiye ata"
+          aria-expanded={Boolean(p.whoOpen)}
+          onClick={p.onWho}
+        >
+          <UserRound aria-hidden="true" />
+        </button>
+      )}
       <button
         type="button"
         className={KBTN}

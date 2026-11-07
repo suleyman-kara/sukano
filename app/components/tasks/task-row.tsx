@@ -1,11 +1,19 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, ChevronRight, GripVertical, TextAlignStart } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  ChevronRight,
+  GripVertical,
+  TextAlignStart,
+  UserRound,
+} from "lucide-react";
 import { memo } from "react";
 import { cn } from "cn";
 import { formatRange, isOverdue } from "~/domain/tasks/dates";
 import { isDone } from "~/domain/tasks/model";
 import type { TaskRow as TaskRowData } from "~/domain/tasks/tree";
+import { AssigneeAvatars, type Assignable } from "./person-picker";
 
 export const EMPTY_ROW_PLACEHOLDER = "Görev yaz · Enter yeni görev · Tab alt görev";
 
@@ -43,6 +51,14 @@ export type TaskRowProps = {
   onBlur: (id: string, e: React.FocusEvent) => void;
   onOpenDate: (id: string) => void;
   onOpenDetail: (id: string) => void;
+  /** Proje notu: atananlar (sessiz ipucu avatarları). */
+  assignees?: readonly Assignable[];
+  /** Kişi simgesi (proje notunda, yönetici / düzenleyici). */
+  canAssign?: boolean;
+  whoOpen?: boolean;
+  onOpenWho?: (id: string) => void;
+  /** Görüntüleyici: kutucuk yerine madde işareti, başlık salt okunur, araç simgesi yok. */
+  readOnly?: boolean;
   children?: React.ReactNode;
 };
 
@@ -53,7 +69,8 @@ const HOV =
  * Görev satırı (prototip TodoNote `.row`): tutamak, alt görev oku, kutucuk, tek satırlık
  * başlık, sessiz ipuçları (1/3, tarih / Bugün / gecikmiş) ve üzerine gelince ya da
  * odakta beliren takvim ve "Ayrıntılar" simgeleri. Dokunmatikte simgeler hep soluk
- * görünür; kişi simgesi yalnızca proje notunda (Aşama 3).
+ * görünür; kişi simgesi ve atanan avatarları yalnızca proje notunda. Görüntüleyicide
+ * kutucuk yerine madde işareti (States2 → Görüntüleyici).
  */
 export const TaskRow = memo(function TaskRow({
   row,
@@ -74,6 +91,11 @@ export const TaskRow = memo(function TaskRow({
   onBlur,
   onOpenDate,
   onOpenDetail,
+  assignees,
+  canAssign = false,
+  whoOpen = false,
+  onOpenWho,
+  readOnly = false,
   children,
 }: TaskRowProps) {
   const { task, id, depth } = row;
@@ -123,7 +145,10 @@ export const TaskRow = memo(function TaskRow({
       >
         <span
           data-drag-handle=""
-          className="inline-flex w-3.5 shrink-0 cursor-grab justify-center text-muted-foreground opacity-0 group-hover/row:opacity-70 pointer-coarse:hidden [&_svg]:size-3.5"
+          className={cn(
+            "inline-flex w-3.5 shrink-0 cursor-grab justify-center text-muted-foreground opacity-0 group-hover/row:opacity-70 pointer-coarse:hidden [&_svg]:size-3.5",
+            readOnly && "invisible",
+          )}
           aria-hidden="true"
         >
           <GripVertical />
@@ -147,21 +172,41 @@ export const TaskRow = memo(function TaskRow({
             aria-hidden="true"
           />
         </button>
-        <label className="inline-flex shrink-0 items-center justify-center pointer-coarse:h-11 pointer-coarse:w-10">
-          <input
-            type="checkbox"
-            className="task-cb"
-            checked={done}
-            onChange={() => onToggleDone(id)}
-            aria-label={checkboxLabel(task.title)}
-          />
-        </label>
+        {readOnly ? (
+          <span className="inline-flex size-[18px] shrink-0 items-center justify-center pointer-coarse:h-11 pointer-coarse:w-10">
+            {done ? (
+              <span
+                role="img"
+                aria-label="tamamlandı"
+                className="inline-flex size-[18px] items-center justify-center rounded-[5px] bg-muted-foreground/70 text-surface"
+              >
+                <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
+              </span>
+            ) : (
+              <span
+                className="size-2 rounded-full border-[1.5px] border-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
+          </span>
+        ) : (
+          <label className="inline-flex shrink-0 items-center justify-center pointer-coarse:h-11 pointer-coarse:w-10">
+            <input
+              type="checkbox"
+              className="task-cb"
+              checked={done}
+              onChange={() => onToggleDone(id)}
+              aria-label={checkboxLabel(task.title)}
+            />
+          </label>
+        )}
         <input
           data-task-input={id}
           className="task-title h-[30px] min-w-20 flex-1 border-0 bg-transparent px-1.5 text-[15px] outline-none placeholder:text-muted-foreground pointer-coarse:h-10 pointer-coarse:px-1"
           value={task.title}
-          placeholder={focused && !task.title ? EMPTY_ROW_PLACEHOLDER : "Görev"}
+          placeholder={readOnly ? "" : focused && !task.title ? EMPTY_ROW_PLACEHOLDER : "Görev"}
           aria-label="Görev başlığı"
+          readOnly={readOnly}
           autoComplete="off"
           enterKeyHint="next"
           onChange={(e) => onTitle(id, e.target.value)}
@@ -189,34 +234,58 @@ export const TaskRow = memo(function TaskRow({
             {range}
           </span>
         )}
-        <button
-          type="button"
-          tabIndex={-1}
-          className={cn(
-            HOV,
-            pickerOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
-          )}
-          onClick={() => onOpenDate(id)}
-          aria-label="Tarih ver"
-          title="Tarih (Ctrl+D)"
-          aria-expanded={pickerOpen}
-        >
-          <Calendar aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          tabIndex={-1}
-          className={cn(
-            HOV,
-            detailOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
-          )}
-          onClick={() => onOpenDetail(id)}
-          aria-label="Ayrıntılar"
-          title="Ayrıntılar (Shift+Enter)"
-          aria-expanded={detailOpen}
-        >
-          <TextAlignStart aria-hidden="true" />
-        </button>
+        {assignees && assignees.length > 0 && (
+          <AssigneeAvatars people={assignees} className="[--row-ring:var(--surface)]" />
+        )}
+        {!readOnly && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className={cn(
+              HOV,
+              pickerOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
+            )}
+            onClick={() => onOpenDate(id)}
+            aria-label="Tarih ver"
+            title="Tarih (Ctrl+D)"
+            aria-expanded={pickerOpen}
+          >
+            <Calendar aria-hidden="true" />
+          </button>
+        )}
+        {canAssign && !readOnly && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className={cn(
+              HOV,
+              whoOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
+            )}
+            onClick={() => onOpenWho?.(id)}
+            aria-label="Kişiye ata"
+            title="Kişiye ata (Ctrl+Shift+A)"
+            aria-expanded={whoOpen}
+          >
+            <UserRound aria-hidden="true" />
+          </button>
+        )}
+        {/* Görüntüleyicide ayrıntı yalnızca açıklama varsa (okumak için). */}
+        {(!readOnly || task.description) && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className={cn(
+              HOV,
+              detailOpen && "opacity-100 pointer-coarse:text-primary pointer-coarse:opacity-100",
+            )}
+            onClick={() => onOpenDetail(id)}
+            aria-label="Ayrıntılar"
+            title="Ayrıntılar (Shift+Enter)"
+            aria-expanded={detailOpen}
+          >
+            <TextAlignStart aria-hidden="true" />
+          </button>
+        )}
       </div>
       {children}
     </div>

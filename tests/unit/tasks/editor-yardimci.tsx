@@ -5,6 +5,8 @@
 import { render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router";
 import { vi } from "vitest";
+import type { TodoPeople } from "~/components/tasks/person-picker";
+import { applyAssignOps, type AssigneeMap } from "~/components/tasks/task-sync";
 import { TodoEditor, type TodoEditorHandle } from "~/components/tasks/todo-editor";
 import { treeOrder, type Task } from "~/domain/tasks/model";
 import { applyTaskOps, type TaskOp } from "~/domain/tasks/ops";
@@ -12,12 +14,15 @@ import { applyTaskOps, type TaskOp } from "~/domain/tasks/ops";
 export type FakeServer = {
   calls: TaskOp[][];
   tasks: () => Task[];
+  /** Proje notunda atamalar (`assign` işlemleri uygulanmış). */
+  assignees: () => AssigneeMap;
   fetch: ReturnType<typeof vi.fn>;
 };
 
 /** `/api/notlar/:id/gorevler`: işlemleri saf `applyTaskOps` ile uygular. */
-export function fakeServer(initial: Task[]): FakeServer {
+export function fakeServer(initial: Task[], initialAssignees?: AssigneeMap): FakeServer {
   let server = [...initial];
+  let assignees = initialAssignees;
   const calls: TaskOp[][] = [];
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
@@ -33,23 +38,39 @@ export function fakeServer(initial: Task[]): FakeServer {
       } catch {
         return json({ ok: false, error: "Çakışma" }, 409);
       }
-      return json({ ok: true, tasks: treeOrder(server) });
+      if (assignees) assignees = applyAssignOps(assignees, ops);
+      return json({ ok: true, tasks: treeOrder(server), ...(assignees ? { assignees } : {}) });
     }
-    return json({ tasks: treeOrder(server) });
+    return json({ tasks: treeOrder(server), ...(assignees ? { assignees } : {}) });
   });
   vi.stubGlobal("fetch", fetchMock);
-  return { calls, tasks: () => server, fetch: fetchMock };
+  return { calls, tasks: () => server, assignees: () => assignees ?? {}, fetch: fetchMock };
 }
 
 export function renderEditor(
   tasks: Task[],
-  options: { noteId?: string; ref?: React.Ref<TodoEditorHandle> } = {},
+  options: {
+    noteId?: string;
+    ref?: React.Ref<TodoEditorHandle>;
+    people?: TodoPeople;
+    initialAssignees?: AssigneeMap;
+    editable?: boolean;
+  } = {},
 ) {
   const noteId = options.noteId ?? "not-1";
   const Stub = createRoutesStub([
     {
       path: "/",
-      Component: () => <TodoEditor noteId={noteId} initialTasks={tasks} ref={options.ref} />,
+      Component: () => (
+        <TodoEditor
+          noteId={noteId}
+          initialTasks={tasks}
+          ref={options.ref}
+          people={options.people}
+          initialAssignees={options.initialAssignees}
+          editable={options.editable}
+        />
+      ),
     },
   ]);
   return render(<Stub initialEntries={["/"]} />);

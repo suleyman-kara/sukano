@@ -4,7 +4,8 @@ import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/ui/sheet";
 import { childrenOf, isDone, type Task } from "~/domain/tasks/model";
 import { childCounts } from "~/domain/tasks/tree";
-import { DateChip, DescriptionEditor } from "./task-detail";
+import { PersonChip } from "./person-picker";
+import { DateChip, DescriptionEditor, type DetailPeople } from "./task-detail";
 import { checkboxLabel } from "./task-row";
 
 /**
@@ -94,6 +95,20 @@ export function DateSheetHeader({ title, onDone }: { title: string; onDone: () =
   );
 }
 
+/** Mobil kişi sayfası başlığı (MTodoWho): "Kişiye ata", görev adı, Bitti. */
+export function WhoSheetHeader({ title, onDone }: { title: string; onDone: () => void }) {
+  return (
+    <div className="flex min-h-11 items-center gap-2.5">
+      <SheetTitle className="m-0 text-lg font-semibold">Kişiye ata</SheetTitle>
+      <span className="min-w-0 truncate rounded-full bg-line px-[7px] py-0.5 text-xs text-muted-foreground">
+        {title.trim() || "Adsız görev"}
+      </span>
+      <span className="flex-1" />
+      <DoneButton onClick={onDone} />
+    </div>
+  );
+}
+
 /**
  * Mobil görev ayrıntısı (MTodoDetail): kutucuk ve başlık, açıklama, tarih çipi, alt
  * görevler ("Alt görevler · 1/3"), "Alt görev ekle", "Görevi sil".
@@ -110,7 +125,11 @@ export function TaskDetailSheet({
   onAddChild,
   onDelete,
   onCloseAutoFocus,
+  people,
+  readOnly = false,
 }: {
+  people?: DetailPeople;
+  readOnly?: boolean;
   open: boolean;
   task: Task | null;
   tasks: readonly Task[];
@@ -136,13 +155,15 @@ export function TaskDetailSheet({
       header={
         task && (
           <div className="flex min-h-11 items-center gap-3">
-            <input
-              type="checkbox"
-              className="task-cb"
-              checked={isDone(task)}
-              onChange={() => onToggleDone(task.id)}
-              aria-label={checkboxLabel(task.title)}
-            />
+            {!readOnly && (
+              <input
+                type="checkbox"
+                className="task-cb"
+                checked={isDone(task)}
+                onChange={() => onToggleDone(task.id)}
+                aria-label={checkboxLabel(task.title)}
+              />
+            )}
             <SheetTitle className="m-0 min-w-0 flex-1 truncate text-lg font-semibold">
               {task.title.trim() || "Adsız görev"}
             </SheetTitle>
@@ -159,10 +180,25 @@ export function TaskDetailSheet({
               focusOnOpen={false}
               onDescription={(html) => onDescription(task.id, html)}
               className="text-[15px]"
+              editable={!readOnly}
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <DateChip task={task} today={today} onClick={() => onOpenDate(task.id)} large />
+            <DateChip
+              task={task}
+              today={today}
+              onClick={() => onOpenDate(task.id)}
+              large
+              disabled={readOnly}
+            />
+            {people && (
+              <PersonChip
+                people={people.assignees}
+                onClick={people.onOpenWho}
+                large
+                disabled={readOnly || !people.canAssign}
+              />
+            )}
           </div>
           <div className="flex flex-col">
             <h3 className="mx-1.5 mt-0.5 mb-1 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase">
@@ -174,13 +210,20 @@ export function TaskDetailSheet({
                 className="flex min-h-11 items-center gap-3 px-1.5"
                 data-done={isDone(k) ? "" : undefined}
               >
-                <input
-                  type="checkbox"
-                  className="task-cb"
-                  checked={isDone(k)}
-                  onChange={() => onToggleDone(k.id)}
-                  aria-label={checkboxLabel(k.title)}
-                />
+                {readOnly ? (
+                  <span
+                    className="mx-[5px] size-2 shrink-0 rounded-full border-[1.5px] border-muted-foreground"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <input
+                    type="checkbox"
+                    className="task-cb"
+                    checked={isDone(k)}
+                    onChange={() => onToggleDone(k.id)}
+                    aria-label={checkboxLabel(k.title)}
+                  />
+                )}
                 <span
                   className={cn(
                     "min-w-0 flex-1 truncate text-[15px]",
@@ -196,27 +239,33 @@ export function TaskDetailSheet({
                 )}
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => onAddChild(task.id)}
-              className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-1.5 text-[15px] font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-5"
-            >
-              <Plus aria-hidden="true" />
-              Alt görev ekle
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => onAddChild(task.id)}
+                className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-1.5 text-[15px] font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-5"
+              >
+                <Plus aria-hidden="true" />
+                Alt görev ekle
+              </button>
+            )}
           </div>
-          <div className="h-px bg-line" aria-hidden="true" />
-          <button
-            type="button"
-            onClick={() => onDelete(task.id)}
-            className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-1.5 text-[15px] font-medium text-danger outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-5"
-          >
-            <Trash2 aria-hidden="true" />
-            <span className="flex-1 text-left">Görevi sil</span>
-            <small className="text-[13px] font-normal text-muted-foreground">
-              alt görevleriyle · Geri al
-            </small>
-          </button>
+          {!readOnly && (
+            <>
+              <div className="h-px bg-line" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => onDelete(task.id)}
+                className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-1.5 text-[15px] font-medium text-danger outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-5"
+              >
+                <Trash2 aria-hidden="true" />
+                <span className="flex-1 text-left">Görevi sil</span>
+                <small className="text-[13px] font-normal text-muted-foreground">
+                  alt görevleriyle · Geri al
+                </small>
+              </button>
+            </>
+          )}
         </>
       )}
     </TodoSheet>

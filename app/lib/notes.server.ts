@@ -57,6 +57,7 @@ import {
   versionWriteOps,
   type Batch,
 } from "./note-store.server";
+import { avatarColorFor } from "./avatar";
 import { ForbiddenError } from "./project-access.server";
 
 export { NoteConflictError };
@@ -284,7 +285,36 @@ export function scopedNotes(
       }
       byNote.set(r.noteId, entry);
     }
+    if (scope.kind === "project") await attachCardAssignees([...byNote.values()]);
     return byNote;
+  }
+
+  /** Proje notu kartlarında görünen görevlere atananların ad ve rengi. */
+  async function attachCardAssignees(entries: { tasks: CardTask[] }[]) {
+    const shown = entries.flatMap((e) => e.tasks);
+    const ids = shown.flatMap((t) => (t.id ? [t.id] : []));
+    if (ids.length === 0) return;
+    const rows = await db
+      .select({
+        taskId: taskAssignees.taskId,
+        id: user.id,
+        name: user.name,
+        color: user.avatarColor,
+      })
+      .from(taskAssignees)
+      .innerJoin(user, eq(user.id, taskAssignees.userId))
+      .where(inArray(taskAssignees.taskId, ids))
+      .orderBy(asc(taskAssignees.createdAt), asc(taskAssignees.userId));
+    const byTask = new Map<string, { id: string; name: string; color: string }[]>();
+    for (const r of rows) {
+      const list = byTask.get(r.taskId) ?? [];
+      list.push({ id: r.id, name: r.name, color: r.color ?? avatarColorFor(r.id) });
+      byTask.set(r.taskId, list);
+    }
+    for (const t of shown) {
+      const people = t.id ? byTask.get(t.id) : undefined;
+      if (people) t.assignees = people;
+    }
   }
 
   return {
