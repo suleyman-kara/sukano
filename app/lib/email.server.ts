@@ -9,6 +9,7 @@
  */
 import {
   changeEmailEmail,
+  invitationEmail,
   resetPasswordEmail,
   verificationEmail,
   type EmailKind,
@@ -99,4 +100,18 @@ export function sendChangeEmailVerification(
   { to, name, url }: { to: string; name: string; url: string },
 ) {
   return sendRendered(env, to, changeEmailEmail({ name, newEmail: to, url }));
+}
+
+export function sendInvitationEmail(
+  env: Env,
+  input: {
+    to: string;
+    name: string;
+    inviterName: string;
+    projectName: string;
+    roleLabel: string;
+    url: string;
+  },
+) {
+  return sendRendered(env, input.to, invitationEmail(input));
 }

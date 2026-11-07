@@ -3,7 +3,7 @@
  * e-posta istemcileri SVG ve <style> desteklemez) + düz metin. Türkçe.
  */
 
-export type EmailKind = "dogrulama" | "sifre-sifirlama" | "eposta-degisikligi";
+export type EmailKind = "dogrulama" | "sifre-sifirlama" | "eposta-degisikligi" | "davet";
 
 export type RenderedEmail = {
   kind: EmailKind;
@@ -152,6 +152,45 @@ export function changeEmailEmail({
       url,
       "",
       "Bağlantıya tıklayana kadar eski adresin geçerli kalır. Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.",
+    ]),
+  };
+}
+
+export function invitationEmail({
+  name,
+  inviterName,
+  projectName,
+  roleLabel,
+  url,
+}: {
+  name: string;
+  inviterName: string;
+  projectName: string;
+  /** Cümle içinde küçük harf: "düzenleyici". */
+  roleLabel: string;
+  url: string;
+}): RenderedEmail {
+  const title = `${projectName} projesine davet`;
+  return {
+    kind: "davet",
+    url,
+    subject: `Sukano: ${inviterName} seni ${projectName} projesine davet etti`,
+    html: layout({
+      title,
+      intro: `Merhaba ${escapeHtml(name)}, ${escapeHtml(inviterName)} seni <strong>${escapeHtml(projectName)}</strong> projesine ${escapeHtml(roleLabel)} olarak davet etti. Daveti Sukano'daki Davetler sayfasından kabul edebilir ya da reddedebilirsin.`,
+      action: "Davetleri aç",
+      url,
+      outro:
+        "Davet 14 gün geçerlidir. Bu kişiyi tanımıyorsan daveti reddedebilir ya da bu e-postayı yok sayabilirsin.",
+    }),
+    text: text([
+      `Merhaba ${name},`,
+      "",
+      `${inviterName} seni ${projectName} projesine ${roleLabel} olarak davet etti.`,
+      "Daveti kabul etmek ya da reddetmek için:",
+      url,
+      "",
+      "Davet 14 gün geçerlidir.",
     ]),
   };
 }

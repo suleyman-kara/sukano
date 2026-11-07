@@ -2,7 +2,9 @@
  * Cron işleri (`wrangler.jsonc` → `triggers.crons: ["* * * * *"]`, dakikada bir).
  * Her iş birbirinden bağımsız çalışır; biri hata verirse diğerleri sürer.
  */
-import { purgeTrashedPersonalNotes } from "~/lib/notes.server";
+import { purgeExpiredTrash } from "~/lib/notes.server";
+import { expirePendingInvitations } from "~/lib/invitations.server";
+import { purgeDeletedProjectsOlderThanRetention } from "~/lib/projects.server";
 
 type Job = (env: Env, now: Date) => Promise<void>;
 
@@ -13,20 +15,19 @@ export async function sendDueReminders(_env: Env, _now: Date): Promise<void> {
   // sent_at = now.
 }
 
-/** 7 günden uzun süredir çöpte duran notları kalıcı siler (R2 ekleri dahil). */
+/** 7 günden uzun süredir çöpte duran notları (kişisel ve proje) kalıcı siler (R2 ekleri dahil). */
 export async function purgeTrashedNotes(env: Env, now: Date): Promise<void> {
-  // Proje notlarının çöpü Aşama 3'te (aynı kural, proje alanında).
-  await purgeTrashedPersonalNotes(env, now);
+  await purgeExpiredTrash(env, now);
 }
 
-/** 7 günden uzun süredir silinmiş durumdaki projeleri kalıcı siler. */
-export async function purgeDeletedProjects(_env: Env, _now: Date): Promise<void> {
-  // TODO(Aşama 3): projects.deleted_at <= now - 7 gün; notlar, ekler (R2), sürümler.
+/** 7 günden uzun süredir silinmiş durumdaki projeleri notları, ekleri ve sürümleriyle kalıcı siler. */
+export async function purgeDeletedProjects(env: Env, now: Date): Promise<void> {
+  await purgeDeletedProjectsOlderThanRetention(env, now);
 }
 
 /** Süresi dolan bekleyen davetleri `suresi_doldu` olarak işaretler. */
-export async function expireInvitations(_env: Env, _now: Date): Promise<void> {
-  // TODO(Aşama 3): invitations.status = 'beklemede' AND expires_at <= now.
+export async function expireInvitations(env: Env, now: Date): Promise<void> {
+  await expirePendingInvitations(env, now);
 }
 
 export const jobs: Record<string, Job> = {
