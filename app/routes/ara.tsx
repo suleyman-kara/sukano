@@ -37,7 +37,7 @@ function Highlighted({ text, q }: { text: string; q: string }) {
     <>
       {highlight(text, q).map((p, i) =>
         p.match ? (
-          <mark key={i} className="rounded-[3px] bg-[var(--mark)] px-0.5 text-inherit">
+          <mark key={i} className="rounded-[3px] bg-[var(--mark)] px-0.5 text-fg">
             {p.text}
           </mark>
         ) : (
