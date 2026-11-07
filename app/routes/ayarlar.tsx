@@ -22,7 +22,16 @@ import {
   validateNameForm,
   validateResetForm,
 } from "~/domain/auth/forms";
-import { assertSameOrigin, authFrom, callAuth, cookieHeaders, field } from "~/lib/auth-api.server";
+import { accountDeletionBlockers, deleteAccount } from "~/lib/account.server";
+import {
+  assertSameOrigin,
+  authFrom,
+  callAuth,
+  cookieHeaders,
+  field,
+  redirectWithCookies,
+} from "~/lib/auth-api.server";
+import { ProjectRuleError } from "~/lib/project-access.server";
 import { requireUser } from "~/lib/session.server";
 import { avatarColorFor } from "~/lib/shell.server";
 import { useShellData } from "~/lib/shell";
@@ -35,7 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);
   const { env, auth } = authFrom(context);
   const db = createDb(env.DB);
-  const [accounts, sessions, prefs, credential] = await Promise.all([
+  const [accounts, sessions, prefs, credential, deletionBlockers] = await Promise.all([
     auth.api.listUserAccounts({ headers: request.headers }),
     auth.api.listSessions({ headers: request.headers }),
     db
@@ -48,6 +57,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .from(account)
       .where(and(eq(account.userId, user.id), eq(account.providerId, "credential")))
       .get(),
+    accountDeletionBlockers(env, user.id),
   ]);
   const url = new URL(request.url);
   return {
@@ -64,6 +74,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     sessionCount: sessions.length,
     theme: prefs?.theme ?? "system",
     emailChanged: url.searchParams.get("durum") === "eposta-degisti",
+    /** Tek yönetici olunan projeler: doluysa hesap silinemez (önce devir ya da silme). */
+    deletionBlockers,
   };
 }
 
@@ -190,6 +202,30 @@ export async function action({ request, context }: Route.ActionArgs) {
       );
       if (!set.ok) return result(intent, false, { message: set.message }, { status: 400 });
       return result(intent, true, { message: "Şifren belirlendi." });
+    }
+
+    case "delete-account": {
+      // Önce oturumu kapat (çerezleri temizleyen başlıklar), sonra hesabı sil.
+      try {
+        await deleteAccount(env, user.id, field(form, "email"), { dryRun: true });
+      } catch (error) {
+        if (error instanceof ProjectRuleError)
+          return result(
+            intent,
+            false,
+            error.code === "eposta_uyusmuyor"
+              ? { errors: { email: error.message } }
+              : { message: error.message },
+            { status: 409 },
+          );
+        throw error;
+      }
+      const signOut = await callAuth(() => auth.api.signOut({ headers, returnHeaders: true }));
+      await deleteAccount(env, user.id, field(form, "email"));
+      return redirectWithCookies(
+        "/giris?durum=hesap-silindi",
+        signOut.ok ? signOut.headers : undefined,
+      );
     }
 
     case "revoke-others": {
