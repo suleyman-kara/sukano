@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { AppShell } from "~/components/shell/app-shell";
 import { ViewSwitch } from "~/components/shell/view-switch";
 import { Button } from "~/components/ui/button";
-import { placeholderShell } from "~/lib/placeholder";
+import { useShellData } from "~/lib/shell";
 import type { Route } from "./+types/home";
 
 export const meta: Route.MetaFunction = () => [
@@ -13,9 +13,10 @@ export const meta: Route.MetaFunction = () => [
 
 export default function Home() {
   const composerRef = useRef<HTMLInputElement>(null);
+  const shell = useShellData();
 
   return (
-    <AppShell {...placeholderShell} showViewSwitch>
+    <AppShell {...shell} showViewSwitch>
       <section className="flex flex-col gap-[18px] px-4 pt-2 pb-10 md:gap-6 md:px-7 md:pt-3 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <h1 className="m-0 text-[22px] font-bold tracking-[-0.01em] md:text-2xl">Notlarım</h1>

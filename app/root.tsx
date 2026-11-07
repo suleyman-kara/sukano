@@ -12,6 +12,7 @@ import "./app.css";
 import { NotFoundView } from "~/components/not-found";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { loadShellData } from "~/lib/shell.server";
 import { themeInitScript } from "~/lib/theme";
 
 export const links: Route.LinksFunction = () => [
@@ -33,6 +34,11 @@ export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
   { rel: "manifest", href: "/manifest.webmanifest" },
 ];
+
+/** Kabuk verisi (kullanıcı, projeler, sayaçlar); oturum yoksa boş kabuk. */
+export async function loader({ request, context }: Route.LoaderArgs) {
+  return { shell: await loadShellData(request, context) };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
