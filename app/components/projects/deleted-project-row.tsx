@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { cn } from "cn";
+import { DEFAULT_TIME_ZONE } from "~/domain/notes/dates";
 import { Button } from "~/components/ui/button";
 import type { ProjectColor } from "~/db/schema";
 import { ProjectMark } from "./project-meta";
@@ -19,7 +20,7 @@ export type DeletedProjectRowData = {
 };
 
 const shortDate = (iso: string) =>
-  new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
+  new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", timeZone: DEFAULT_TIME_ZONE })
     .format(new Date(iso))
     .replace(".", "");
 

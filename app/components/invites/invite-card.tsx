@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { cn } from "cn";
+import { DEFAULT_TIME_ZONE } from "~/domain/notes/dates";
 import { Avatar } from "~/components/avatar";
 import { ProjectMark, RoleChip } from "~/components/projects/project-meta";
 import { useProjectRequest } from "~/components/projects/use-project-action";
@@ -30,7 +31,7 @@ const STATUS_LABELS: Record<InvitationStatus, string> = {
 };
 
 const shortDate = (iso: string) =>
-  new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
+  new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", timeZone: DEFAULT_TIME_ZONE })
     .format(new Date(iso))
     .replace(".", "");
 
