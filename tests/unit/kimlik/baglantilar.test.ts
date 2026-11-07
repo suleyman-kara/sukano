@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { readVerificationToken, resetLink, verificationLink } from "~/domain/auth/links";
+import {
+  isLocalUrl,
+  readVerificationToken,
+  resetLink,
+  verificationLink,
+} from "~/domain/auth/links";
 
 function jwt(payload: object) {
   const b64 = (o: object) =>
@@ -56,5 +61,20 @@ describe("doğrulama bağlantıları", () => {
     expect(readVerificationToken("bozuk")).toBeNull();
     expect(readVerificationToken("a.%%%.c")).toBeNull();
     expect(readVerificationToken(jwt({ email: 5 }))).toBeNull();
+  });
+});
+
+describe("yerel adres", () => {
+  it("localhost ve geri döngü adreslerini yerel sayar", () => {
+    expect(isLocalUrl("http://localhost:5173")).toBe(true);
+    expect(isLocalUrl("http://127.0.0.1:4173")).toBe(true);
+    expect(isLocalUrl("http://[::1]:4173")).toBe(true);
+  });
+
+  it("gerçek alan adlarını, boş ve bozuk değerleri yerel saymaz", () => {
+    expect(isLocalUrl("https://sukano.app")).toBe(false);
+    expect(isLocalUrl("https://localhost.kotu.example")).toBe(false);
+    expect(isLocalUrl(undefined)).toBe(false);
+    expect(isLocalUrl("bozuk")).toBe(false);
   });
 });

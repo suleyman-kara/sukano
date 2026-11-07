@@ -48,3 +48,14 @@ export function readVerificationToken(token: string): VerificationTokenInfo | nu
     return null;
   }
 }
+
+/** Uygulama adresi yerel mi (localhost, 127.0.0.1, [::1])? Test uçlarını açmak için. */
+export function isLocalUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  try {
+    const { hostname } = new URL(value);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
+}

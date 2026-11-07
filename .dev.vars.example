@@ -12,7 +12,8 @@ BETTER_AUTH_URL=http://localhost:5173
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 
-# E-posta (Resend). Boşsa e-postalar konsola yazılır.
+# E-posta (Resend). Boşsa e-postalar konsola yazılır ve yerel posta kutusuna düşer;
+# BETTER_AUTH_URL yerel adresken GET /__test/outbox ile okunabilir (uçtan uca testler).
 RESEND_API_KEY=
 
 # Cloudflare Turnstile gizli anahtarı. Aşağıdaki değer her zaman geçen test anahtarıdır.

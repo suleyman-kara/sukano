@@ -92,6 +92,10 @@ jobs:
       - name: Chromium sistem bağımlılıkları
         if: steps.pw-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
+      - name: Yerel gizli değişkenler (test değerleri)
+        # Önizleme sunucusu `.dev.vars` okur: Better Auth gizli anahtarı (yer tutucu),
+        # localhost BETTER_AUTH_URL ve Turnstile test anahtarı. Resend boş → posta kutusu.
+        run: cp .dev.vars.example .dev.vars
       - name: Duman seti
         if: github.event_name == 'pull_request'
         run: npm run e2e:duman

@@ -1,16 +1,21 @@
 import { defineConfig, devices } from "@playwright/test";
+import { AUTH_STATE, BASE_URL } from "./tests/e2e/ortam";
 
 /**
  * Uçtan uca testler (PLAN §11): üç görünüm, Chromium.
  *
  * Sunucu: üretim derlemesi `vite preview` ile (Worker yerel workerd'de çalışır).
  * Geliştirme sunucusundaki bağımlılık ön derlemesi ilk yüklemede sayfayı yeniden
- * yükleyebildiği için önizleme daha kararlıdır.
+ * yükleyebildiği için önizleme daha kararlıdır. Sunucuyu `tests/e2e/global-setup.ts`
+ * başlatır: önce ayrı yerel durumu (`.wrangler/e2e`) sıfırlayıp tohumlar, sonra
+ * önizlemeyi açar (Playwright'ın `webServer`'ı global setup'tan önce başladığı için
+ * kullanılmaz). Port 4173'te çalışan bir sunucu varsa yeniden kullanılır.
+ *
+ * Oturum: testler varsayılan olarak `ayse@test.sukano` oturumuyla koşar
+ * (`tests/e2e/.auth/ayse.json`). Oturumsuz testler: `test.use({ storageState: OTURUMSUZ })`.
  *
  * Duman seti: `@duman` etiketli testler (`npm run e2e:duman`).
  */
-const PORT = Number(process.env.E2E_PORT ?? 4173);
-const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -25,7 +30,8 @@ export default defineConfig({
   expect: { timeout: 7_000 },
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
-    baseURL,
+    baseURL: BASE_URL,
+    storageState: AUTH_STATE,
     locale: "tr-TR",
     timezoneId: "Europe/Istanbul",
     trace: "off",
@@ -57,15 +63,4 @@ export default defineConfig({
       },
     },
   ],
-  // E2E_BASE_URL verilirse (ör. önizleme dağıtımı) yerel sunucu başlatılmaz.
-  webServer: process.env.E2E_BASE_URL
-    ? undefined
-    : {
-        command: `npm run preview -- --port ${PORT} --strictPort`,
-        url: `${baseURL}/health`,
-        reuseExistingServer: !isCI,
-        timeout: 180_000,
-        stdout: "ignore",
-        stderr: "pipe",
-      },
 });

@@ -28,7 +28,12 @@ for (const arg of args) {
 // Yerel geliştirmede Durable Object uyarıları gürültü yapmasın.
 process.env.WRANGLER_LOG ??= "error";
 const { getPlatformProxy } = await import("wrangler");
-const proxy = await getPlatformProxy<Env>();
+// `SUKANO_PERSIST_DIR` verilirse o klasördeki yerel durum kullanılır (uçtan uca
+// testler: `.wrangler/e2e`); yoksa `npm run dev` ile aynı `.wrangler/state`.
+const persistDir = process.env.SUKANO_PERSIST_DIR;
+const proxy = await getPlatformProxy<Env>(
+  persistDir ? { persist: { path: `${persistDir}/v3` } } : {},
+);
 try {
   if (args.has("--temizle")) {
     await clearSeed(proxy.env.DB, data);
