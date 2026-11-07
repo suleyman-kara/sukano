@@ -39,6 +39,8 @@ export type NoteCardProps = {
   href?: string;
   actions: NoteActions;
   onVersions: (id: string) => void;
+  /** Kişisel not: "Taşı veya kopyala…" (verilmezse düğme devre dışı). */
+  onMoveCopy?: (id: string) => void;
   /** Çöp: "Kalıcı olarak sil" onay iste. */
   onRequestDelete?: (note: NoteCardData) => void;
   /** Alt+ok ile klavyeden taşıma. */
@@ -67,6 +69,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
     href,
     actions,
     onVersions,
+    onMoveCopy,
     onRequestDelete,
     onKeyMove,
     now,
@@ -187,6 +190,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           setMenuOpen={setMenuOpen}
           onSheet={() => setSheetOpen(true)}
           onVersions={() => onVersions(note.id)}
+          onMoveCopy={onMoveCopy ? () => onMoveCopy(note.id) : undefined}
           versionsDisabled={versionsDisabled}
           onConvert={onConvert}
           onRequestDelete={onRequestDelete}
@@ -214,6 +218,11 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           onVersions={() => onVersions(note.id)}
           versionsDisabled={versionsDisabled}
           onConvert={onConvert}
+          moveCopy={
+            onMoveCopy
+              ? { label: "Taşı veya kopyala…", onSelect: () => onMoveCopy(note.id) }
+              : undefined
+          }
         />
       )}
     </article>
@@ -310,6 +319,7 @@ type CardActionsProps = {
   setMenuOpen: (o: boolean) => void;
   onSheet: () => void;
   onVersions: () => void;
+  onMoveCopy?: () => void;
   versionsDisabled: boolean;
   onConvert?: () => void;
   onRequestDelete?: (note: NoteCardData) => void;
@@ -330,6 +340,7 @@ function CardActions({
   setMenuOpen,
   onSheet,
   onVersions,
+  onMoveCopy,
   versionsDisabled,
   onConvert,
   onRequestDelete,
@@ -402,9 +413,11 @@ function CardActions({
           <button
             type="button"
             className={IB}
-            disabled
+            disabled={!onMoveCopy}
             aria-label="Taşı veya kopyala…"
-            title="Taşı veya kopyala… (yakında)"
+            title="Taşı veya kopyala…"
+            aria-haspopup="dialog"
+            onClick={onMoveCopy}
           >
             <FolderInput aria-hidden="true" />
           </button>

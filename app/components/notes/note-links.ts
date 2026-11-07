@@ -22,6 +22,7 @@ export function closeHref(pathname: string, search = ""): string {
   const base = pathname.replace(/\/not\/[^/]+\/?$/, "") || "/";
   const params = new URLSearchParams(search);
   params.delete("surumler");
+  params.delete("tasi");
   const q = params.toString();
   return q ? `${base}?${q}` : base;
 }

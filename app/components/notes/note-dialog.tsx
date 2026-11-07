@@ -60,6 +60,8 @@ type NoteDialogProps = {
   closeTo: string;
   /** Sürüm geçmişi açık başlasın (`?surumler`). */
   initialVersionsOpen?: boolean;
+  /** "Taşı veya kopyala…" açık başlasın (karttan, `?tasi`). */
+  initialMoveOpen?: boolean;
   /** Notun alanı ve rol (varsayılan: kişisel not). */
   access?: NoteAccessInfo;
   /** "Taşı veya kopyala…" / "Kopyala…" hedefleri (üyesi olunan projeler). */
@@ -80,6 +82,7 @@ export function NoteDialog({
   note,
   closeTo,
   initialVersionsOpen = false,
+  initialMoveOpen = false,
   access = PERSONAL_ACCESS,
   targets = NO_TARGETS,
 }: NoteDialogProps) {
@@ -102,7 +105,7 @@ export function NoteDialog({
   const canWrite = canWriteNote(access);
   const viewer = !canWrite;
   const editable = note.trashedAt === null && canWrite;
-  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(initialMoveOpen);
   const people = useMemo(
     () => (project ? { members: project.members, canAssign: canWrite } : undefined),
     [project, canWrite],

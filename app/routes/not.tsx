@@ -71,7 +71,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 export default function NoteRoute({ loaderData }: Route.ComponentProps) {
   const location = useLocation();
   const closeTo = closeHref(location.pathname, location.search);
-  const versions = new URLSearchParams(location.search).has("surumler");
+  const params = new URLSearchParams(location.search);
+  const versions = params.has("surumler");
   return (
     <NoteDialog
       key={loaderData.note.id}
@@ -80,6 +81,7 @@ export default function NoteRoute({ loaderData }: Route.ComponentProps) {
       targets={loaderData.targets}
       closeTo={closeTo}
       initialVersionsOpen={versions}
+      initialMoveOpen={params.has("tasi")}
     />
   );
 }

@@ -47,6 +47,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     actions,
     hrefFor: (n: { id: string }) => `/not/${n.id}`,
     onVersions: (id: string) => navigate(`/not/${id}?surumler`, { preventScrollReset: true }),
+    onMoveCopy: (id: string) => navigate(`/not/${id}?tasi`, { preventScrollReset: true }),
   };
   const openComposer = () => {
     if (window.matchMedia("(min-width: 768px)").matches) document.getElementById("not-al")?.click();

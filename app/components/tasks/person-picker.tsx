@@ -204,7 +204,7 @@ export function PersonList({
                 color={m.color}
                 src={m.avatarUrl}
                 size={large ? 32 : 24}
-                className={cn(m.viewer && "opacity-50")}
+                className={cn(m.viewer && "saturate-[.35]")}
               />
               <span className="flex min-w-0 flex-col leading-tight">
                 <span
