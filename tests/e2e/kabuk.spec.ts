@@ -10,7 +10,9 @@ test.describe("uygulama kabuğu", () => {
       await expect(page).toHaveTitle("Notlarım · Sukano");
       await expect(page.getByRole("heading", { level: 1, name: "Notlarım" })).toBeVisible();
       await expect(page.getByRole("search").getByLabel("Ara")).toBeVisible();
-      await expect(page.locator("#not-al")).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Not al…" }).filter({ visible: true }),
+      ).toBeVisible();
       await expect(page.getByRole("button", { name: "Gezinme menüsü" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Hesap menüsü" })).toBeVisible();
     },

@@ -63,6 +63,7 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
   const editable = note.trashedAt === null;
 
   const saver = useAutosave(note.id);
+  const [openedAt] = useState(() => (typeof performance === "undefined" ? 0 : performance.now()));
 
   const close = useCallback(() => {
     saver.flush();
@@ -99,6 +100,11 @@ export function NoteDialog({ note, closeTo, initialVersionsOpen = false }: NoteD
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
+        onInteractOutside={(e) => {
+          // Dokunmatikte kartı açan dokunuşun gecikmiş işaretçi olayları diyaloğu
+          // hemen kapatmasın.
+          if (performance.now() - openedAt < 600) e.preventDefault();
+        }}
         onOpenAutoFocus={(e) => {
           // Radix ilk alana odaklanıp metni seçer; bunun yerine diyalogun kendisine odaklan.
           e.preventDefault();

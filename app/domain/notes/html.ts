@@ -37,7 +37,7 @@ export function htmlToText(html: string | null | undefined): string {
     .replace(/<[^>]*>/g, "");
   return decodeEntities(text)
     .split("\n")
-    .map((line) => line.replace(/[\s ]+/g, " ").trim())
+    .map((line) => line.replace(/[\s\u00a0]+/g, " ").trim())
     .filter(Boolean)
     .join("\n");
 }

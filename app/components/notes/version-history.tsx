@@ -1,5 +1,5 @@
 import { Info, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 import { cn } from "cn";
 import { Avatar } from "~/components/avatar";
@@ -58,15 +58,16 @@ export function VersionHistory({
   }, [open, current, base, loadPreview]);
 
   const restoring = restore.state !== "idle";
-  const restored = restore.state === "idle" && restore.data?.ok;
+  // Geri yükleme isteği (ve ardından gelen yeniden doğrulama) bitince kapan.
+  const awaitingRestore = useRef(false);
   useEffect(() => {
-    if (restored) {
+    if (!awaitingRestore.current || restoring || !restore.data) return;
+    awaitingRestore.current = false;
+    if (restore.data.ok) {
       onRestored?.();
       onOpenChange(false);
     }
-    // restore.data her geri yüklemede yeni nesnedir.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restore.data]);
+  }, [restoring, restore.data, onRestored, onOpenChange]);
 
   const selectedItem = versions.find((v) => v.id === current);
   const shown = preview.data?.preview?.id === current ? preview.data.preview : null;
@@ -210,6 +211,7 @@ export function VersionHistory({
         confirmLabel="Geri yükle"
         onConfirm={() => {
           if (!current) return;
+          awaitingRestore.current = true;
           void restore.submit(
             { intent: "restore-version", id: noteId, versionId: current },
             { method: "post", action: NOTES_ACTION },
