@@ -82,6 +82,8 @@ export type SeedProje = {
   uyeler: readonly { kisi: string; rol: ProjectRole }[];
   bekleyenDavetler: readonly { eposta: string; rol: ProjectRole; davetEden: string }[];
   notlar: readonly SeedNot[];
+  /** Silinmiş proje: kaç gün önce, kim sildi (7 günlük bekleme süresinde). */
+  silindi?: { gunOnce: number; silen: string };
 };
 
 export type SeedKisiselAlan = { sahip: string; notlar: readonly SeedNot[] };
@@ -261,6 +263,8 @@ export async function seedDatabase(
         color: p.renk,
         description: p.aciklama ?? null,
         createdBy: seedUserId(p.olusturan),
+        deletedAt: p.silindi ? new Date(now.getTime() - p.silindi.gunOnce * DAY) : null,
+        deletedBy: p.silindi ? seedUserId(p.silindi.silen) : null,
       }),
     );
     summary.projects++;

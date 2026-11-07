@@ -62,6 +62,8 @@ export type OrnekProje = {
   uyeler: OrnekUye[];
   bekleyenDavetler: OrnekDavet[];
   notlar: OrnekNot[];
+  /** Silinmiş proje (7 günlük bekleme süresinde): kaç gün önce, kim sildi. */
+  silindi?: { gunOnce: number; silen: HesapAnahtari };
 };
 
 export type OrnekKisiselAlan = { sahip: HesapAnahtari; notlar: OrnekNot[] };
@@ -235,7 +237,74 @@ export const kitapKulubu: OrnekProje = {
   ],
 };
 
-export const ornekProjeler: readonly OrnekProje[] = [webSitesiYenileme, evTasinma, kitapKulubu];
+/** Ayşe'nin yönettiği proje; Süleyman'ın bekleyen daveti var (tasarım: Davetler). */
+export const fotografArsivi: OrnekProje = {
+  id: "fotograf-arsivi",
+  ad: "Fotoğraf Arşivi",
+  renk: "pembe",
+  aciklama: "Aile albümlerinin taranması ve düzenlenmesi.",
+  olusturan: "ayse",
+  uyeler: [
+    { kisi: "ayse", rol: "yonetici" },
+    { kisi: "zeynep", rol: "yonetici" },
+    { kisi: "can", rol: "goruntuleyici" },
+  ],
+  bekleyenDavetler: [{ eposta: "suleyman@test.sukano", rol: "duzenleyici", davetEden: "ayse" }],
+  notlar: [
+    {
+      id: "album-secimi",
+      tur: "todo",
+      baslik: "Albüm seçimi",
+      renk: "default",
+      olusturan: "ayse",
+      gorevler: [
+        { baslik: "2019–2023 arası", atananlar: ["zeynep"] },
+        { baslik: "Annemin albümleri" },
+      ],
+    },
+    {
+      id: "tarama-listesi",
+      tur: "text",
+      baslik: "Tarama listesi",
+      renk: "sari",
+      olusturan: "zeynep",
+      metin: "600 dpi, TIFF. Her albüm ayrı klasör.",
+    },
+  ],
+};
+
+/** Silinmiş proje (yalnızca yöneticiler "Silinmiş projeler" listesinde görür). */
+export const butce2026: OrnekProje = {
+  id: "butce-2026",
+  ad: "Bütçe 2026",
+  renk: "sari",
+  olusturan: "ayse",
+  uyeler: [
+    { kisi: "ayse", rol: "yonetici" },
+    { kisi: "suleyman", rol: "yonetici" },
+    { kisi: "mehmet", rol: "duzenleyici" },
+  ],
+  bekleyenDavetler: [],
+  silindi: { gunOnce: 2, silen: "ayse" },
+  notlar: [
+    {
+      id: "butce-taslagi",
+      tur: "text",
+      baslik: "Bütçe taslağı",
+      renk: "default",
+      olusturan: "ayse",
+      metin: "Kira, faturalar, ulaşım, tatil.",
+    },
+  ],
+};
+
+export const ornekProjeler: readonly OrnekProje[] = [
+  webSitesiYenileme,
+  evTasinma,
+  kitapKulubu,
+  fotografArsivi,
+  butce2026,
+];
 
 // ---------------------------------------------------------------------------
 // Kişisel alanlar (Notlarım)

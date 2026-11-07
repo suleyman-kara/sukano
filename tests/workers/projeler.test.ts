@@ -85,6 +85,28 @@ const expectStatus = async (
   }
 };
 
+describe("tohum verisi", () => {
+  it("silinmiş 'Bütçe 2026' yalnızca yöneticilerinin listesinde, sol menüde değil", async () => {
+    const list = await projectsService(env, ID.suleyman).deleted();
+    expect(list.find((p) => p.id === "butce-2026")).toMatchObject({
+      name: "Bütçe 2026",
+      deletedBy: { id: ID.ayse, name: "Ayşe Demir" },
+      daysLeft: 5,
+    });
+    expect(
+      (await projectsService(env, ID.mehmet).sidebar()).projects.map((p) => p.id),
+    ).not.toContain("butce-2026");
+  });
+
+  it("Süleyman'ın Fotoğraf Arşivi'ne bekleyen daveti var", async () => {
+    const { invitationsService } = await import("~/lib/invitations.server");
+    const list = await invitationsService(env, ID.suleyman).list();
+    expect(list.pending.map((p) => [p.project.name, p.role, p.invitedBy?.name])).toEqual([
+      ["Fotoğraf Arşivi", "duzenleyici", "Ayşe Demir"],
+    ]);
+  });
+});
+
 describe("proje oluşturma ve sıra", () => {
   it("projeyi açan yönetici olur ve proje kişisel sıranın sonuna eklenir", async () => {
     const { id } = await svc(ID.mehmet).create({
@@ -385,9 +407,8 @@ describe("proje silme ve geri getirme", () => {
     await expect(svc().restore(id)).rejects.toThrow(ProjectNotFoundError);
     expect((await svc().deleted()).map((p) => p.id)).not.toContain(id);
 
-    expect(
-      await purgeDeletedProjectsOlderThanRetention(env, new Date("2026-11-14T09:59:59Z")),
-    ).toBe(0);
+    await purgeDeletedProjectsOlderThanRetention(env, new Date("2026-11-14T09:59:59Z"));
+    expect(await db().select().from(projects).where(eq(projects.id, id))).toHaveLength(1);
     await purgeDeletedProjects(env, clockNow);
     expect(await db().select().from(projects).where(eq(projects.id, id))).toEqual([]);
     expect(await db().select().from(notes).where(eq(notes.id, noteId))).toEqual([]);
