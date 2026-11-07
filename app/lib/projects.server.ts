@@ -43,7 +43,7 @@ import {
 import type { ProjectFields, ProjectIntent, ProjectsIntent } from "~/domain/projects/validation";
 import { sendInvitationEmail } from "./email.server";
 import { runBatch, type Batch } from "./note-store.server";
-import { deleteNotes, scopedNotes } from "./notes.server";
+import { deleteNotes, scopedNotes, type PurgeHooks } from "./notes.server";
 import {
   assertCan,
   ForbiddenError,
@@ -783,6 +783,7 @@ export type ProjectsService = ReturnType<typeof projectsService>;
 export async function purgeDeletedProjectsOlderThanRetention(
   env: { DB: D1Database; FILES?: R2Bucket },
   now: Date,
+  { onDeleted }: PurgeHooks = {},
 ): Promise<number> {
   const db = createDb(env.DB);
   const cutoff = new Date(now.getTime() - PROJECT_RETENTION_MS);
@@ -792,11 +793,9 @@ export async function purgeDeletedProjectsOlderThanRetention(
     .where(lte(projects.deletedAt, cutoff));
   for (const { id } of due) {
     const noteRows = await db.select({ id: notes.id }).from(notes).where(eq(notes.projectId, id));
-    await deleteNotes(
-      db,
-      noteRows.map((n) => n.id),
-      env.FILES,
-    );
+    const noteIds = noteRows.map((n) => n.id);
+    await deleteNotes(db, noteIds, env.FILES);
+    if (noteIds.length) await onDeleted?.(noteIds);
     await db.batch([
       db.delete(invitations).where(eq(invitations.projectId, id)),
       db.delete(projectMembers).where(eq(projectMembers.projectId, id)),

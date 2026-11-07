@@ -98,6 +98,8 @@ export type NoteMetaPatch = {
   pinned?: boolean;
   archived?: boolean;
   trashed?: boolean;
+  /** Not başka bir alana taşındı (kişisel ↔ proje). */
+  moved?: boolean;
 };
 
 export type NoteServerMessage =

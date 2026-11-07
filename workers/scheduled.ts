@@ -5,6 +5,7 @@
 import { purgeExpiredTrash } from "~/lib/notes.server";
 import { expirePendingInvitations } from "~/lib/invitations.server";
 import { purgeDeletedProjectsOlderThanRetention } from "~/lib/projects.server";
+import { purgeNoteRooms } from "~/lib/realtime.server";
 
 type Job = (env: Env, now: Date) => Promise<void>;
 
@@ -15,14 +16,22 @@ export async function sendDueReminders(_env: Env, _now: Date): Promise<void> {
   // sent_at = now.
 }
 
-/** 7 günden uzun süredir çöpte duran notları (kişisel ve proje) kalıcı siler (R2 ekleri dahil). */
+/**
+ * 7 günden uzun süredir çöpte duran notları (kişisel ve proje) kalıcı siler (R2 ekleri dahil);
+ * not odalarının (NoteRoom) deposu da boşaltılır.
+ */
 export async function purgeTrashedNotes(env: Env, now: Date): Promise<void> {
-  await purgeExpiredTrash(env, now);
+  await purgeExpiredTrash(env, now, { onDeleted: (ids) => purgeNoteRooms(env, ids) });
 }
 
-/** 7 günden uzun süredir silinmiş durumdaki projeleri notları, ekleri ve sürümleriyle kalıcı siler. */
+/**
+ * 7 günden uzun süredir silinmiş durumdaki projeleri notları, ekleri ve sürümleriyle kalıcı
+ * siler; notların odaları da boşaltılır.
+ */
 export async function purgeDeletedProjects(env: Env, now: Date): Promise<void> {
-  await purgeDeletedProjectsOlderThanRetention(env, now);
+  await purgeDeletedProjectsOlderThanRetention(env, now, {
+    onDeleted: (ids) => purgeNoteRooms(env, ids),
+  });
 }
 
 /** Süresi dolan bekleyen davetleri `suresi_doldu` olarak işaretler. */

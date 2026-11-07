@@ -32,7 +32,9 @@ import {
   field,
   redirectWithCookies,
 } from "~/lib/auth-api.server";
+import { getCloudflare } from "~/lib/context";
 import { ProjectRuleError } from "~/lib/project-access.server";
+import { applyAccountDeletionEffects } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
 import { avatarColorFor } from "~/lib/shell.server";
 import { useShellData } from "~/lib/shell";
@@ -222,7 +224,9 @@ export async function action({ request, context }: Route.ActionArgs) {
         throw error;
       }
       const signOut = await callAuth(() => auth.api.signOut({ headers, returnHeaders: true }));
-      await deleteAccount(env, user.id, field(form, "email"));
+      const deleted = await deleteAccount(env, user.id, field(form, "email"));
+      // Diğer üyelerin ızgarası ve üye listesi canlı yenilensin; kişisel not odaları boşalır.
+      if (deleted) getCloudflare(context).ctx.waitUntil(applyAccountDeletionEffects(env, deleted));
       return redirectWithCookies(
         "/giris?durum=hesap-silindi",
         signOut.ok ? signOut.headers : undefined,

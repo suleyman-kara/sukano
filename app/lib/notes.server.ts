@@ -988,14 +988,19 @@ export async function deleteNotes(db: Database, ids: string[], files?: R2Bucket)
  * Cron: 7 günden uzun süredir çöpte duran notları — kişisel ve proje notları — ekleri,
  * görevleri ve sürümleriyle kalıcı siler. Silinen not sayısını döner.
  */
-export async function purgeExpiredTrash(env: { DB: D1Database; FILES?: R2Bucket }, now: Date) {
+export async function purgeExpiredTrash(
+  env: { DB: D1Database; FILES?: R2Bucket },
+  now: Date,
+  { onDeleted }: PurgeHooks = {},
+) {
   const db = createDb(env.DB);
   const cutoff = new Date(now.getTime() - TRASH_RETENTION_MS);
   const rows = await db.select({ id: notes.id }).from(notes).where(lte(notes.trashedAt, cutoff));
-  await deleteNotes(
-    db,
-    rows.map((r) => r.id),
-    env.FILES,
-  );
+  const ids = rows.map((r) => r.id);
+  await deleteNotes(db, ids, env.FILES);
+  if (ids.length) await onDeleted?.(ids);
   return rows.length;
 }
+
+/** Kalıcı silme sonrası (ör. not odalarının deposunu boşaltmak için). */
+export type PurgeHooks = { onDeleted?: (noteIds: string[]) => Promise<void> };

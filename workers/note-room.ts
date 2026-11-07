@@ -99,6 +99,14 @@ export class NoteRoom extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
+    this.createTables();
+    // Canlılık yoklaması uyandırmadan yanıtlanır.
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"ping"}', '{"t":"pong"}'));
+  }
+
+  /* ---------------------------- depolama ---------------------------- */
+
+  private createTables() {
     this.sql.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     this.sql.exec(
       `CREATE TABLE IF NOT EXISTS updates (id INTEGER PRIMARY KEY AUTOINCREMENT, data BLOB NOT NULL)`,
@@ -106,11 +114,7 @@ export class NoteRoom extends DurableObject<Env> {
     this.sql.exec(
       `CREATE TABLE IF NOT EXISTS editors (user_id TEXT PRIMARY KEY, at INTEGER NOT NULL)`,
     );
-    // Canlılık yoklaması uyandırmadan yanıtlanır.
-    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('{"t":"ping"}', '{"t":"pong"}'));
   }
-
-  /* ---------------------------- depolama ---------------------------- */
 
   private meta(key: string): string | null {
     const row = this.sql
@@ -488,10 +492,7 @@ export class NoteRoom extends DurableObject<Env> {
    */
   async noteChanged(change: NoteRoomChange): Promise<void> {
     if (change.deleted) {
-      await this.queue(async () => {
-        await this.reset(CLOSE_CODES.erisimYok);
-        this.sql.exec(`DELETE FROM meta`);
-      });
+      await this.purge();
       return;
     }
     if (change.reset) {
@@ -537,6 +538,19 @@ export class NoteRoom extends DurableObject<Env> {
         if (!failure) throw error;
         return { ok: false as const, ...failure };
       }
+    });
+  }
+
+  /**
+   * Not kalıcı silindi (eylem, cron temizliği, hesap silme): bağlantılar 4404 ile kapanır,
+   * alarm silinir ve DO deposu tamamen boşaltılır (Yjs güncellemeleri, meta, düzenleyenler).
+   * Aynı kimlikle sonradan bağlanılırsa oda boş tablolarla yeniden başlar.
+   */
+  async purge(): Promise<void> {
+    await this.queue(async () => {
+      await this.reset(CLOSE_CODES.erisimYok);
+      await this.ctx.storage.deleteAll();
+      this.createTables();
     });
   }
 

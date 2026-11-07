@@ -154,6 +154,22 @@ export async function notifyNoteRoom(
   }
 }
 
+/**
+ * Kalıcı silinen notların odalarını boşaltır (cron temizliği, hesap silme): açık
+ * bağlantılar 4404 ile kapanır, DO deposu silinir. Hata günlüğe yazılır, fırlatılmaz.
+ */
+export async function purgeNoteRooms(env: Pick<Env, "NOTE_ROOM">, noteIds: readonly string[]) {
+  await Promise.all(
+    noteIds.map(async (id) => {
+      try {
+        await env.NOTE_ROOM.getByName(id).purge();
+      } catch (error) {
+        console.error("[canlı] not odası boşaltılamadı:", error);
+      }
+    }),
+  );
+}
+
 /** Kişi projeden çıkarılınca proje kanalındaki bağlantıları kapanır. */
 export async function disconnectFromChannel(env: RoomsEnv, key: ChannelKey, userId: string) {
   try {
@@ -305,6 +321,7 @@ export function noteIntentEffects(
           ...on(here, { type: "tasindi", noteId: intent.id }),
           ...on(project(intent.projectId), { type: "olusturuldu", noteId: intent.id }),
         ],
+        room: { noteId: intent.id, change: { meta: { moved: true } } },
       };
     case "undo-move":
       return {
@@ -312,6 +329,7 @@ export function noteIntentEffects(
           ...on(here, { type: "tasindi", noteId: intent.id }),
           ...on(personal, { type: "olusturuldu", noteId: intent.id }),
         ],
+        room: { noteId: intent.id, change: { meta: { moved: true } } },
       };
     case "copy-to":
       return {
@@ -363,4 +381,45 @@ export async function applyProjectIntentEffects(
     default:
       return publishChannel(env, key, [{ type: "proje" }], userId);
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Hesap silme                                                          */
+/* ------------------------------------------------------------------ */
+
+/** `deleteAccount`'un sildikleri (yayın için). */
+export type AccountDeletion = {
+  userId: string;
+  /** Üyesi olunan projeler (üyelikler zincirleme silindi). */
+  projectIds: string[];
+  /** Kalıcı silinen kişisel notlar. */
+  personalNoteIds: string[];
+};
+
+/**
+ * Hesap silindikten sonra: üyesi olduğu her projenin kanalına `uyelik` (diğer üyelerin
+ * ızgarası ve üye listesi yenilenir; "Silinmiş kullanıcı"), kişinin bağlantıları kapanır;
+ * kişisel kanala `silindi` ve kişisel notların odaları boşaltılır.
+ */
+export async function applyAccountDeletionEffects(env: RoomsEnv, deletion: AccountDeletion) {
+  const { userId, projectIds, personalNoteIds } = deletion;
+  const personal: ChannelKey = { kind: "personal", userId };
+  await Promise.all([
+    ...projectIds.map(async (projectId) => {
+      const key: ChannelKey = { kind: "project", projectId };
+      await publishChannel(env, key, [{ type: "uyelik", userId }], userId);
+      await disconnectFromChannel(env, key, userId);
+    }),
+    (async () => {
+      if (personalNoteIds.length)
+        await publishChannel(
+          env,
+          personal,
+          [{ type: "silindi", noteIds: personalNoteIds }],
+          userId,
+        );
+      await disconnectFromChannel(env, personal, userId);
+    })(),
+    purgeNoteRooms(env, personalNoteIds),
+  ]);
 }

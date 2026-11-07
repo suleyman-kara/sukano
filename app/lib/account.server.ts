@@ -7,6 +7,7 @@
  * - Proje notları kalır; oluşturan/son düzenleyen `null` olur → "Silinmiş kullanıcı".
  * - Üyelikler, görev atamaları, oturumlar, bildirimler zincirleme silinir; adrese
  *   bekleyen davetler geri çekilir.
+ * - Dönen `AccountDeletion` ile kanallara yayın yapılır (`applyAccountDeletionEffects`).
  */
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { createDb } from "~/db/client";
@@ -18,6 +19,7 @@ import {
 } from "~/domain/projects/permissions";
 import { deleteNotes } from "./notes.server";
 import { ProjectRuleError } from "./project-access.server";
+import type { AccountDeletion } from "./realtime.server";
 
 type Env = { DB: D1Database; FILES?: R2Bucket };
 
@@ -55,7 +57,7 @@ export async function deleteAccount(
   userId: string,
   typedEmail: string,
   { dryRun = false } = {},
-) {
+): Promise<AccountDeletion | undefined> {
   const db = createDb(env.DB);
   const me = await db.select({ email: user.email }).from(user).where(eq(user.id, userId)).get();
   if (!me) return;
@@ -70,6 +72,10 @@ export async function deleteAccount(
     .select({ id: notes.id })
     .from(notes)
     .where(eq(notes.ownerUserId, userId));
+  const memberships = await db
+    .select({ projectId: projectMembers.projectId })
+    .from(projectMembers)
+    .where(eq(projectMembers.userId, userId));
   await deleteNotes(
     db,
     personal.map((n) => n.id),
@@ -85,4 +91,9 @@ export async function deleteAccount(
       ),
     db.delete(user).where(eq(user.id, userId)),
   ]);
+  return {
+    userId,
+    projectIds: memberships.map((m) => m.projectId),
+    personalNoteIds: personal.map((n) => n.id),
+  };
 }
