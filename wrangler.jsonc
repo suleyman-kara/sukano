@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sukano",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./build/client",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  // Binding'ler veri katmanı aşamasında eklenecek:
+  // "compatibility_flags": ["nodejs_compat"],
+  // "vars": { ... },
+  // "d1_databases": [{ "binding": "DB", ... }],
+  // "r2_buckets": [{ "binding": "FILES", ... }],
+  // "durable_objects": { "bindings": [...] },
+  // "migrations": [...],
+  // "triggers": { "crons": [...] },
+}
