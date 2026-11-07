@@ -28,16 +28,16 @@ Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içi
 
 ## Betikler
 
-| Komut               | İş                                                                             |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `npm run dev`       | Geliştirme sunucusu                                                            |
-| `npm run build`     | Üretim derlemesi (`build/client`, `build/server`)                              |
-| `npm run preview`   | Derleyip üretim çıktısını yerelde önizler                                      |
-| `npm run typecheck` | `wrangler types` + `react-router typegen` + `tsc -b`                           |
-| `npm run lint`      | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier denetimi          |
-| `npm run format`    | Prettier ile biçimlendirir                                                     |
-| `npm run db:*`      | Veritabanı betikleri; bkz. [Veritabanı ve migration](#veritabanı-ve-migration) |
-| `npm run test*`     | _Test altyapısıyla eklenecek (Vitest, Workers havuzu, Playwright)._            |
+| Komut                           | İş                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`                   | Geliştirme sunucusu                                                            |
+| `npm run build`                 | Üretim derlemesi (`build/client`, `build/server`)                              |
+| `npm run preview`               | Derleyip üretim çıktısını yerelde önizler                                      |
+| `npm run typecheck`             | `wrangler types` + `react-router typegen` + `tsc -b`                           |
+| `npm run lint`                  | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier denetimi          |
+| `npm run format`                | Prettier ile biçimlendirir                                                     |
+| `npm run db:*`                  | Veritabanı betikleri; bkz. [Veritabanı ve migration](#veritabanı-ve-migration) |
+| `npm run test*`, `npm run e2e*` | Testler; bkz. [Testler](#testler)                                              |
 
 ## Yapı
 
@@ -85,6 +85,13 @@ public/
   fonts/                  Onest (self-host, latin + latin-ext)
   icons/                  PWA simgeleri (SVG kaynakları + PNG)
   favicon.svg, apple-touch-icon.png, manifest.webmanifest
+tests/
+  unit/                   Birim + bileşen testleri (Vitest, jsdom)
+  workers/                Worker / API testleri (Vitest, workerd)
+  e2e/                    Uçtan uca testler (Playwright)
+  fixtures/               Test hesapları ve örnek veri (tohum betiği de kullanır)
+  helpers/                Test yardımcıları (matchMedia sahtesi …)
+.github/workflows/        CI ve dağıtım
 docs/                     Plan ve tasarım
 wrangler.jsonc            Worker yapılandırması
 ```
@@ -198,6 +205,86 @@ npx wrangler deploy
    `vars.EMAIL_FROM`.
 9. **Plan:** yayına alırken Workers Paid (şifre hash'leme CPU süresi, D1/R2 kotaları).
 
-## Testler ve CI
+## Testler
 
-_Veri ve CI ajanı tamamlayacak._
+Dört katman (ayrıntı: [`docs/PLAN.md` §11](docs/PLAN.md)). Test adları Türkçe davranış
+cümlesidir: `it("sistem tercihi koyuysa ve tercih 'system' ise koyu çözümlenir")`.
+
+| Katman       | Araç                                                       | Yer                                           | Yapılandırma               |
+| ------------ | ---------------------------------------------------------- | --------------------------------------------- | -------------------------- |
+| Birim        | Vitest (jsdom)                                             | `tests/unit/**/*.test.ts`, `app/**/*.test.ts` | `vitest.config.ts`         |
+| Bileşen      | Vitest + Testing Library                                   | `tests/unit/**/*.test.tsx`                    | `vitest.config.ts`         |
+| Worker / API | Vitest + `@cloudflare/vitest-plugin` (Miniflare, yerel D1) | `tests/workers/**/*.test.ts`                  | `vitest.workers.config.ts` |
+| Uçtan uca    | Playwright + axe-core, Chromium                            | `tests/e2e/**/*.spec.ts`                      | `playwright.config.ts`     |
+
+| Komut                  | İş                                                                         |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `npm test`             | Birim + bileşen testleri                                                   |
+| `npm run test:watch`   | Aynısı, izleme kipinde                                                     |
+| `npm run coverage`     | Birim + bileşen + kapsam raporu (`coverage/`, eşik altında başarısız olur) |
+| `npm run test:workers` | Worker testleri: `wrangler.jsonc` binding'leriyle workerd içinde           |
+| `npm run e2e`          | Tüm uçtan uca testler, üç görünümde                                        |
+| `npm run e2e:duman`    | Yalnızca duman seti (`@duman` etiketli testler)                            |
+| `npm run e2e:ui`       | Playwright arayüzü (hata ayıklama)                                         |
+| `npm run test:all`     | Kapsam + Worker + tam uçtan uca                                            |
+
+**Birim ve bileşen.** `tests/setup.ts` jest-dom eşleştiricilerini yükler, her testten önce
+`localStorage`'ı ve `<html>` özniteliklerini sıfırlar. jsdom'da olmayan `matchMedia` için
+`tests/helpers/media.ts` sahte uygulaması vardır: `setMedia({ width: 390, dark: true })` görünüm
+genişliğini ve sistem renk şemasını değiştirir, dinleyicilere `change` gönderir.
+
+**Kapsam.** v8; eşik yalnızca saf mantık modüllerinde (`app/lib/**`, `app/domain/**`):
+statements ve branches **%85**. G/Ç ağırlıklı `app/lib/auth*`, `session*`, `email*` ve
+`*.server.ts` modülleri kapsam dışıdır; bunlar Worker katmanında test edilir. Rapor:
+`coverage/index.html`.
+
+**Worker / API.** Testler gerçek workerd içinde, `wrangler.jsonc`'deki binding'lerle (D1, R2,
+Durable Object) koşar; her test dosyası yalıtılmış depolamayla başlar. `migrations/` klasörü
+varsa `tests/workers/apply-migrations.ts` her dosyadan önce `applyD1Migrations` ile şemayı kurar.
+Uygulamanın tamamına istek atmak için:
+
+```ts
+import { exports } from "cloudflare:workers";
+const res = await exports.default.fetch("http://sukano.test/health");
+```
+
+**Uçtan uca.** Playwright, üretim derlemesini `vite preview` ile ayağa kaldırır (port 4173;
+yerelde çalışan bir sunucu varsa onu kullanır) ve üç projede koşar:
+
+| Proje      | Görünüm              |
+| ---------- | -------------------- |
+| `masaustu` | 1440×900             |
+| `tablet`   | 834×1194, dokunmatik |
+| `mobil`    | 390×844, dokunmatik  |
+
+Tek proje: `npm run e2e -- --project=mobil`. Uzak bir önizlemeye karşı:
+`E2E_BASE_URL=https://… npm run e2e:duman` (yerel sunucu başlatılmaz). İz kaydı kapalıdır
+(`trace: "off"`); hata durumunda ekran görüntüsü `test-results/`, HTML rapor `playwright-report/`
+altına yazılır. `erisilebilirlik.spec.ts` her sayfada axe çalıştırır; kritik ya da ciddi ihlal
+testi düşürür.
+
+**Duman seti.** Her PR'da koşan hızlı alt küme: test seçeneklerine `{ tag: "@duman" }` eklenir.
+Ölçüt: kritik akışın "açılıyor ve temel etkileşim çalışıyor" kontrolü; ayrıntılı senaryolar
+etiketsiz kalır ve `main`'de tam sette koşar.
+
+**Test hesapları ve örnek veri.** `tests/fixtures/hesaplar.ts`: `suleyman`, `ayse`, `mehmet`,
+`zeynep`, `can` (`<ad>@test.sukano`, şifre `Test1234!`, örnek projedeki rolleriyle).
+`tests/fixtures/ornek-veri.ts`: tasarımdaki projeler, notlar ve görevler (Web Sitesi Yenileme,
+Lansman hazırlığı …). İkisi de bağımlılıksız TypeScript'tir; tohum betiği de bunları kullanır.
+Playwright'ın `tests/e2e/global-setup.ts` dosyası tohumlamanın bağlanacağı yerdir.
+
+## CI
+
+GitHub Actions, `.github/workflows/`:
+
+| İş akışı     | Tetikleyici                          | İşler                                                                                       |
+| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `ci.yml`     | her push ve PR                       | `npm ci` → `typecheck` → `lint` → `coverage` (eşikli) → `build`                             |
+|              | yalnızca PR                          | `test:workers`; `e2e:duman` (Chromium `npx playwright install --with-deps chromium`)        |
+|              | yalnızca `main`'e push               | tam `e2e`                                                                                   |
+| `deploy.yml` | CI başarıyla bitince (push kaynaklı) | `main`: `wrangler d1 migrations apply sukano --remote` + `wrangler deploy`                  |
+|              |                                      | diğer dallar: `wrangler versions upload --preview-alias <dal>`; önizleme adresi iş özetinde |
+
+Dağıtım CI geçmeden koşmaz (`workflow_run`, yalnızca `conclusion == success`). Gerekli depo gizli
+değişkenleri: `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, D1: Edit), `CLOUDFLARE_ACCOUNT_ID`.
+Hata durumunda kapsam ve Playwright raporları iş akışı eki olarak indirilebilir.
