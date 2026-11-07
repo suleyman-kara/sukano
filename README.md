@@ -23,6 +23,8 @@ Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içi
 | `/`                 | Uygulama kabuğu + Notlarım (oturum ister)                                 |
 | `/giris`, `/kayit`  | Giriş ve kayıt; bkz. [Kimlik doğrulama](#kimlik-doğrulama)                |
 | `/ayarlar`          | Ayarlar: profil, görünüm, hesap ve güvenlik                               |
+| `/proje/:projeId`   | Proje sayfası; bkz. [Proje arayüzü](#proje-arayüzü)                       |
+| `/davetler`         | Gelen davetler                                                            |
 | `/health`           | Sağlık denetimi, `{ "ok": true }`                                         |
 | `/api/auth/*`       | Better Auth uçları (`/api/auth/ok`, `/api/auth/get-session` …)            |
 | `/api/notes/:id/ws` | Not odası WebSocket'i (NoteRoom; oturum gerekli; Aşama 4'e kadar iskelet) |
@@ -419,6 +421,44 @@ düzenleyici / görüntüleyici / üye olmayan matrisi, taşıma + geri alma, ko
 **Tohum verisi.** Web Sitesi Yenileme (5 üye, üç rol), Ev Taşınma ve Kitap Kulübü (Süleyman
 tek yönetici; Ayşe'nin Kitap Kulübü'ne bekleyen daveti), Fotoğraf Arşivi (Ayşe ve Zeynep
 yönetici; Süleyman'ın bekleyen daveti), silinmiş Bütçe 2026 (Ayşe 2 gün önce sildi).
+
+## Proje arayüzü
+
+Aşama 3b-1: proje düzeyindeki ekranlar (tasarım: `Project`, `ProjectSettings`, `Dialogs`,
+`Dialogs2`, `Invites`, `States2`, `Forms`, `Settings` ve `T*` / `M*` karşılıkları).
+
+| Yol                               | Açıklama                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `/proje/:projeId`                 | Proje sayfası: başlık, üyeler, "Projeye not ekle…", sabitlenmiş + diğer     |
+| `/proje/:projeId/arsiv`, `/…/cop` | Projenin arşivi ve çöpü (7 gün; Çöpü boşalt yalnızca bu projeyi boşaltır)   |
+| `/proje/:projeId(/arsiv)/not/:id` | Açık proje notu (alt rota, `routes/not.tsx`; bkz. Proje notları arayüzü)    |
+| `/proje/:projeId/ayarlar`         | Genel (ad, simge, renk, açıklama), üyeler ve roller, davet, tehlikeli bölge |
+| `/davetler`                       | Bekleyen davetler (Kabul et / Reddet; kabulde proje açılır) ve geçmiş       |
+| `/silinmis-projeler`              | Yönetici olunan silinmiş projeler, kalan gün, "Projeyi geri getir"          |
+
+- **Bileşenler:** `app/components/projects/` (başlık, yeni proje diyaloğu, renk ve rol seçici,
+  davet formu, üye listesi, bekleyen davetler, ayrılma / silme / davet diyalogları, silinmiş proje
+  satırı), `app/components/invites/invite-card.tsx`, `app/components/settings/delete-account-dialog.tsx`.
+  Eylemler `/api/projeler*` ve `/api/davetler`'e gider; sayfada kalınan eylemler fetcher ile
+  (`useProjectAction`), sayfayı terk ettirenler (ayrıl, sil, geri getir, davet yanıtı) doğrudan
+  istekle, sonra gezinme ve kabuğun yeniden yüklenmesiyle (`useProjectRequest`).
+- **Görüntüleyici:** not ekleme alanı, kart eylemleri, sürükleme ve Çöp sekmesi yok; kartlarda
+  görevler madde işaretli (`NoteCard readOnly`); başlıkta kilitli "Görüntüleyici" çipi ve
+  "Okur ve arar; not ekleyemez, görev işaretleyemez." satırı.
+- **Davet formu:** hata metni sunucudan (`MESSAGES`) aynen; `hesap_yok` ve `gecersiz_eposta`
+  alanın altında kırmızı, `dogrulanmamis` sarı uyarı, `zaten_uye` ve `bekleyen_davet` gri bilgi.
+- **Son yönetici:** ayrılma diyaloğunda uyarı, "Proje ayarlarına git" ve devre dışı onay; rol
+  indirme reddi toast olur, seçici eski role döner.
+- **Sol menü:** proje simgesi (emoji) ya da renkli nokta (rayda baş harf), görüntüleyicide kilit;
+  sıra fareyle sürükleyerek, dokunmatikte basılı tutarak ya da Alt+↑/↓ ile değişir (`reorder`,
+  iyimser); "Yeni proje" diyaloğu; yönetici olunan silinmiş proje varsa "Silinmiş projeler (n)".
+- **Hesap silme** (Ayarlar → Hesabı sil): e-posta adresi yazılınca etkinleşen onay; tek yönetici
+  olunan projeler bağlantılarıyla listelenir ve silme kapalıdır.
+- **Testler:** bileşen `tests/unit/projects/arayuz.test.tsx` (rol seçici, çıkarma onayı, davet
+  formu hataları, yeni proje, hesap silme, ayrılma, sol menü sırası); uçtan uca
+  `tests/e2e/projeler.spec.ts` (iki hesap: oluştur → davet et → kabul → görüntüleyici yap →
+  kısıtlar → ayrıl → sil → geri getir) ve `erisilebilirlik.spec.ts`'de proje sayfası, ayarlar,
+  davetler, silinmiş projeler (açık ve koyu).
 
 ## Cloudflare tarafında yapılacaklar
 
