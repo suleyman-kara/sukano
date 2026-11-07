@@ -35,6 +35,7 @@ export default defineConfig(async () => {
     test: {
       name: "workers",
       testTimeout: 60_000,
+      hookTimeout: 60_000,
       include: ["tests/workers/**/*.test.ts"],
       setupFiles: ["./tests/workers/apply-migrations.ts"],
     },
