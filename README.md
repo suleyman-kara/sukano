@@ -295,8 +295,15 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
 - **Kayıt:** açık notta 800 ms debounce'lu otomatik kayıt; not al alanı kapatınca kaydeder,
   boşsa kaydetmez. Arşivle, çöpe at ve kopyasını oluştur "Geri al" toast'ı gösterir (6 sn).
 - **Cron:** `purgeTrashedNotes` 7 günden eski kişisel çöp notlarını sürüm ve ekleriyle siler.
-- **Devre dışı yer tutucular:** yapılacaklar notu oluşturma ve dönüştürme (Aşama 2), taşı veya
-  kopyala (Aşama 3), not hatırlatıcısı ve dosya ekleme (Aşama 5).
+- **Yapılacaklar (Aşama 2, arayüz):** `app/components/tasks/` — `TodoEditor` (satırlar
+  `visibleRows`'tan; klavye akışı yalnızca editör içinde, katmanlı Esc, Ctrl+Z, Ctrl+/ kısayol
+  kartı), `TaskRow`, `TaskDetail` akordeonu, `DatePicker`, not içi toast yığını, dokunmatik araç
+  çubuğu ve mobil alttan açılan sayfalar, `@dnd-kit` sürükle-bırak (`drag.ts`). Görev işlemleri
+  `task-sync.ts` kuyruğuyla sırayla gönderilir (aynı anda tek istek, ardışık güncellemeler
+  birleşir, 409'da liste yeniden yüklenir); aç/kapa durumu `localStorage`'da
+  (`sukano:gorevler:<notId>`). Karttan işaretleme `use-card-task-toggle.ts`.
+- **Devre dışı yer tutucular:** taşı veya kopyala, kişi seçici (Aşama 3), not ve görev
+  hatırlatıcısı, dosya ekleme (Aşama 5).
 
 ## Cloudflare tarafında yapılacaklar
 
