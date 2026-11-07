@@ -6,6 +6,8 @@ import { NOTE_COLORS, NOTE_KINDS, type NoteColor, type NoteKind } from "~/db/sch
 
 export const MAX_TITLE_LENGTH = 1000;
 export const MAX_BODY_LENGTH = 200_000;
+/** Yeni yapılacaklar notuyla birlikte gönderilebilecek en çok görev. */
+export const MAX_INITIAL_TASKS = 500;
 
 export function isNoteColor(value: unknown): value is NoteColor {
   return typeof value === "string" && (NOTE_COLORS as readonly string[]).includes(value);
@@ -32,7 +34,17 @@ export type NoteIntent =
       color: NoteColor;
       pinned: boolean;
     }
+  | {
+      intent: "create-todo";
+      id: string;
+      title: string;
+      color: NoteColor;
+      pinned: boolean;
+      /** Üst seviye görev başlıkları (sırayla). */
+      tasks: string[];
+    }
   | { intent: "update"; id: string; title?: string; bodyHtml?: string }
+  | { intent: "convert"; id: string; to: NoteKind }
   | { intent: "color"; id: string; color: NoteColor }
   | { intent: "pin"; id: string; pinned: boolean }
   | { intent: "archive" | "unarchive" | "trash" | "restore" | "delete" | "discard"; id: string }
@@ -62,6 +74,27 @@ function bool(v: unknown): boolean | null {
   return null;
 }
 
+/** `tasks` alanı: başlıklardan oluşan JSON dizisi (form verisinde metin). */
+function taskTitles(v: unknown): string[] | null {
+  if (v === undefined || v === null || v === "") return [];
+  let parsed: unknown = v;
+  if (typeof v === "string") {
+    try {
+      parsed = JSON.parse(v);
+    } catch {
+      return null;
+    }
+  }
+  if (
+    !Array.isArray(parsed) ||
+    parsed.length > MAX_INITIAL_TASKS ||
+    !parsed.every((t) => typeof t === "string" && t.length <= MAX_TITLE_LENGTH)
+  ) {
+    return null;
+  }
+  return parsed as string[];
+}
+
 /** Form verisini (`Object.fromEntries(formData)`) doğrular. */
 export function parseNoteIntent(input: Input): ParseResult {
   const intent = input.intent;
@@ -84,6 +117,25 @@ export function parseNoteIntent(input: Input): ParseResult {
         ok: true,
         value: { intent, id, title: title ?? "", bodyHtml: bodyHtml ?? "", color, pinned },
       };
+    }
+    case "create-todo": {
+      if (!isUuid(id)) return fail("Geçersiz not kimliği");
+      const title = text(input, "title", MAX_TITLE_LENGTH);
+      if (title === null) return fail("Not çok uzun");
+      const color = input.color ?? "default";
+      if (!isNoteColor(color)) return fail("Geçersiz renk");
+      const pinned = bool(input.pinned ?? "false");
+      if (pinned === null) return fail("Geçersiz sabitleme");
+      const tasks = taskTitles(input.tasks);
+      if (tasks === null) return fail("Geçersiz görevler");
+      return {
+        ok: true,
+        value: { intent, id, title: title ?? "", color, pinned, tasks },
+      };
+    }
+    case "convert": {
+      if (!isNoteKind(input.to)) return fail("Geçersiz dönüşüm");
+      return { ok: true, value: { intent, id, to: input.to } };
     }
     case "update": {
       const title = text(input, "title", MAX_TITLE_LENGTH);
@@ -133,7 +185,7 @@ export function parseNoteIntent(input: Input): ParseResult {
 export function intentToForm(intent: NoteIntent): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(intent)) {
-    if (v !== undefined) out[k] = String(v);
+    if (v !== undefined) out[k] = Array.isArray(v) ? JSON.stringify(v) : String(v);
   }
   return out;
 }

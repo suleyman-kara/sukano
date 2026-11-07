@@ -125,3 +125,56 @@ describe("iyimser arayüz", () => {
     expect(out.find((n) => n.id === "c")!.position).toBe(2);
   });
 });
+
+describe("iyimser arayüz: yapılacaklar", () => {
+  it("yeni yapılacaklar notu en üste, ilk 5 görevle eklenir", () => {
+    const out = applyPendingIntents(
+      base,
+      [
+        {
+          intent: "create-todo",
+          id: NEW,
+          title: "Liste",
+          color: "sari",
+          pinned: false,
+          tasks: ["1", "2", " ", "3", "4", "5", "6", "7"],
+        },
+      ],
+      "notlar",
+      now,
+    );
+    const c = out.find((n) => n.id === NEW)!;
+    expect(c).toMatchObject({ kind: "todo", position: -1, moreTasks: 2, preview: "" });
+    expect(c.tasks.map((t) => t.title)).toEqual(["1", "2", "3", "4", "5"]);
+    const archive = applyPendingIntents(
+      base,
+      [{ intent: "create-todo", id: NEW, title: "", color: "default", pinned: false, tasks: [] }],
+      "arsiv",
+      now,
+    );
+    expect(archive.some((n) => n.id === NEW)).toBe(false);
+  });
+
+  it("dönüştürme kartın türünü ve önizlemesini değiştirir", () => {
+    const text = card("m", 0, { preview: "Süt\nEkmek" });
+    const todo = applyPendingIntents(
+      [text],
+      [{ intent: "convert", id: "m", to: "todo" }],
+      "notlar",
+    )[0]!;
+    expect(todo).toMatchObject({ kind: "todo", preview: "", moreTasks: 0 });
+    expect(todo.tasks).toEqual([
+      { title: "Süt", done: false },
+      { title: "Ekmek", done: false },
+    ]);
+    const back = applyPendingIntents(
+      [todo],
+      [{ intent: "convert", id: "m", to: "text" }],
+      "notlar",
+    )[0]!;
+    expect(back).toMatchObject({ kind: "text", preview: "Süt\nEkmek", tasks: [] });
+    expect(
+      applyPendingIntents([text], [{ intent: "convert", id: "m", to: "text" }], "notlar")[0],
+    ).toBe(text);
+  });
+});

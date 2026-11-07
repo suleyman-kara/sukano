@@ -9,6 +9,9 @@ import type { NoteIntent } from "./validation";
 
 export type NoteView = "notlar" | "arsiv" | "cop";
 
+/** Kartta görünen en çok üst seviye görev sayısı. */
+export const CARD_TASK_LIMIT = 5;
+
 export type CardTask = { title: string; done: boolean };
 
 /** Izgaradaki kartın verisi (loader'dan gelir). */
@@ -73,6 +76,28 @@ export function applyPendingIntents(
           });
         }
         break;
+      case "create-todo":
+        if (view === "notlar" && !list.some((n) => n.id === p.id)) {
+          const titles = p.tasks.filter((t) => t.trim());
+          list.unshift({
+            id: p.id,
+            kind: "todo",
+            title: p.title,
+            color: p.color,
+            pinned: p.pinned,
+            position: topPosition(list.map((n) => n.position)),
+            preview: "",
+            tasks: titles.slice(0, CARD_TASK_LIMIT).map((title) => ({ title, done: false })),
+            moreTasks: Math.max(0, titles.length - CARD_TASK_LIMIT),
+            updatedAt: now.toISOString(),
+            archivedAt: null,
+            trashedAt: null,
+          });
+        }
+        break;
+      case "convert":
+        list = list.map((n) => (n.id === p.id ? convertCard(n, p.to) : n));
+        break;
       case "update":
         list = list.map((n) =>
           n.id === p.id
@@ -113,4 +138,26 @@ export function applyPendingIntents(
     }
   }
   return list;
+}
+
+/** Dönüşümün karttaki yaklaşık hali (sunucu yanıtı gelene kadar). */
+function convertCard(n: NoteCardData, to: NoteKind): NoteCardData {
+  if (n.kind === to) return n;
+  if (to === "todo") {
+    const lines = n.preview.split("\n").filter((l) => l.trim());
+    return {
+      ...n,
+      kind: "todo",
+      preview: "",
+      tasks: lines.slice(0, CARD_TASK_LIMIT).map((title) => ({ title, done: false })),
+      moreTasks: Math.max(0, lines.length - CARD_TASK_LIMIT),
+    };
+  }
+  return {
+    ...n,
+    kind: "text",
+    preview: n.tasks.map((t) => t.title).join("\n"),
+    tasks: [],
+    moreTasks: 0,
+  };
 }

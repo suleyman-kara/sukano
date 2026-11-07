@@ -114,14 +114,16 @@ export function toggleComplete(
   if (!target) return null;
   const completing = !isDone(target);
   const before = new Map(tasks.map((t) => [t.id, t]));
-  const result = completing ? completeTask(tasks, id, now, userId) : uncompleteTask(tasks, id);
+  const result: CompletionChange & { top?: Task | null } = completing
+    ? completeTask(tasks, id, now, userId)
+    : uncompleteTask(tasks, id);
   const after = new Map(result.tasks.map((t) => [t.id, t]));
   const pick = (t: Task): CompletionPatch => ({
     id: t.id,
     completedAt: t.completedAt,
     completedBy: t.completedBy,
   });
-  const top = "top" in result ? result.top : null;
+  const top = result.top ?? null;
   return {
     tasks: result.tasks,
     changed: result.changed,

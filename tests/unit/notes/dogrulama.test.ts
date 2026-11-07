@@ -138,3 +138,71 @@ describe("not eylemi ayrıştırma", () => {
     });
   });
 });
+
+describe("yapılacaklar notu eylemleri", () => {
+  it("yapılacaklar notu oluşturma: görev başlıkları JSON dizisi olarak gelir", () => {
+    expect(
+      parseNoteIntent({
+        intent: "create-todo",
+        id: UUID,
+        title: "Liste",
+        tasks: '["Süt","Ekmek"]',
+      }),
+    ).toEqual({
+      ok: true,
+      value: {
+        intent: "create-todo",
+        id: UUID,
+        title: "Liste",
+        color: "default",
+        pinned: false,
+        tasks: ["Süt", "Ekmek"],
+      },
+    });
+    const empty = parseNoteIntent({ intent: "create-todo", id: UUID });
+    expect(empty.ok && empty.value).toMatchObject({ title: "", tasks: [] });
+  });
+
+  it("yapılacaklar notu oluşturma: kimlik, renk, sabitleme ve görevler doğrulanır", () => {
+    const bad = (extra: Record<string, unknown>) =>
+      parseNoteIntent({ intent: "create-todo", id: UUID, ...extra });
+    expect(parseNoteIntent({ intent: "create-todo", id: "market" })).toEqual({
+      ok: false,
+      error: "Geçersiz not kimliği",
+    });
+    expect(bad({ title: "x".repeat(MAX_TITLE_LENGTH + 1) })).toEqual({
+      ok: false,
+      error: "Not çok uzun",
+    });
+    expect(bad({ color: "neon" })).toEqual({ ok: false, error: "Geçersiz renk" });
+    expect(bad({ pinned: "belki" })).toEqual({ ok: false, error: "Geçersiz sabitleme" });
+    for (const tasks of ["{", '"x"', "[1]", JSON.stringify(Array(501).fill("a"))]) {
+      expect(bad({ tasks })).toEqual({ ok: false, error: "Geçersiz görevler" });
+    }
+    expect(bad({ tasks: ["dizi", "olarak"] })).toMatchObject({ ok: true });
+  });
+
+  it("dönüştürme: hedef tür metin ya da yapılacaklar", () => {
+    expect(parseNoteIntent({ intent: "convert", id: "market", to: "text" })).toEqual({
+      ok: true,
+      value: { intent: "convert", id: "market", to: "text" },
+    });
+    expect(parseNoteIntent({ intent: "convert", id: "market", to: "resim" })).toEqual({
+      ok: false,
+      error: "Geçersiz dönüşüm",
+    });
+  });
+
+  it("görev dizisi form alanına JSON olarak yazılır", () => {
+    expect(
+      intentToForm({
+        intent: "create-todo",
+        id: UUID,
+        title: "",
+        color: "default",
+        pinned: false,
+        tasks: ["a"],
+      }),
+    ).toMatchObject({ tasks: '["a"]', pinned: "false" });
+  });
+});

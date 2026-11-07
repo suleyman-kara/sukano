@@ -27,7 +27,7 @@ import { fromSpec, initial, outline } from "./ornek";
 const N = "33333333-3333-4333-8333-333333333333";
 
 /** Ağaç işleminin ürettiği işlemler sunucuda aynı sonucu vermeli. */
-function replay(before: Task[], edit: TreeEdit) {
+function replay<E extends TreeEdit>(before: Task[], edit: E): E {
   const server = applyTaskOps(before, edit.ops, { now: 1, userId: "ben" });
   expect(outline(server)).toEqual(outline(edit.tasks));
   return edit;
