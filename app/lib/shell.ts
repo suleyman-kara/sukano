@@ -1,7 +1,10 @@
 import { useRouteLoaderData } from "react-router";
 import type { ShellData } from "~/components/shell/types";
 
-/** Oturum yokken kabuğun gösterdiği boş veri (Aşama 1'de `/giris` yönlendirmesi gelecek). */
+/**
+ * Kabuk verisi yokken (kabuksuz sayfalar, testler) kullanılan boş veri. Uygulama
+ * rotaları oturum ister; bkz. `app/root.tsx` middleware.
+ */
 export const emptyShell: ShellData = {
   user: { name: "Misafir", email: "", avatarColor: "#5F5D57", avatarUrl: null },
   projects: [],

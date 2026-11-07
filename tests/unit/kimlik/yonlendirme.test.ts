@@ -44,7 +44,7 @@ describe("next güvenli yönlendirme", () => {
     expect(safeNext("/dogrula/abc")).toBe("/");
   });
 
-  it("API ve test uçlarına yönlendirmez", () => {
+  it("Better Auth ve test uçlarına yönlendirmez", () => {
     expect(safeNext("/api/auth/sign-out")).toBe("/");
     expect(safeNext("/__test/outbox")).toBe("/");
   });
@@ -58,7 +58,7 @@ describe("next güvenli yönlendirme", () => {
 });
 
 describe("herkese açık yollar", () => {
-  it("kimlik sayfaları, sağlık ve API açıktır", () => {
+  it("kimlik sayfaları, sağlık ve Better Auth uçları açıktır", () => {
     for (const path of [
       "/giris",
       "/kayit",
@@ -83,6 +83,7 @@ describe("herkese açık yollar", () => {
       "/p/abc",
       "/giris-yap",
       "/apix",
+      "/api/notlar",
       "/bilinmeyen",
     ]) {
       expect(isPublicPath(path), path).toBe(false);

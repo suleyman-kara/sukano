@@ -1,4 +1,5 @@
 import { LogOut, Palette, Settings } from "lucide-react";
+import { useRef } from "react";
 import { Link } from "react-router";
 import { Avatar } from "~/components/avatar";
 import { ThemeRadioItems } from "~/components/theme-toggle";
@@ -16,8 +17,11 @@ import type { ShellUser } from "./types";
 
 /** Avatar menüsü: ad, e-posta, Tema, Ayarlar, Çıkış yap. */
 export function AccountMenu({ user }: { user: ShellUser }) {
+  // Çıkış tam sayfa POST ile yapılır: istemcideki tüm durum da temizlenir.
+  const signOutForm = useRef<HTMLFormElement>(null);
   return (
     <DropdownMenu>
+      <form ref={signOutForm} method="post" action="/cikis" hidden />
       <DropdownMenuTrigger
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:size-9"
         aria-label="Hesap menüsü"
@@ -49,12 +53,12 @@ export function AccountMenu({ user }: { user: ShellUser }) {
             Ayarlar
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="gap-3 px-2.5 py-2 font-medium">
-          {/* Aşama 1: Better Auth oturumunu kapatan POST eylemine bağlanacak. */}
-          <Link to="/giris">
-            <LogOut className="size-[18px] text-muted-foreground" aria-hidden="true" />
-            Çıkış yap
-          </Link>
+        <DropdownMenuItem
+          className="gap-3 px-2.5 py-2 font-medium"
+          onSelect={() => signOutForm.current?.requestSubmit()}
+        >
+          <LogOut className="size-[18px] text-muted-foreground" aria-hidden="true" />
+          Çıkış yap
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

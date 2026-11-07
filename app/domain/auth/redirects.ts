@@ -7,7 +7,7 @@
 const AUTH_PAGES = ["/giris", "/kayit", "/dogrula", "/sifremi-unuttum", "/sifre-sifirla"];
 
 /** Oturum istemeyen diğer yollar (önek eşleşmesi: kendisi ve alt yolları). */
-const OTHER_PUBLIC = ["/cikis", "/health", "/api", "/__test"];
+const OTHER_PUBLIC = ["/cikis", "/health", "/api/auth", "/__test"];
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);

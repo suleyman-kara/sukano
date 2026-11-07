@@ -1,4 +1,5 @@
 import { redirect, type RouterContextProvider } from "react-router";
+import { isPublicPath, loginPathFor, safeNext, stripDataSuffix } from "~/domain/auth/redirects";
 import { getAuth, type AuthSession } from "./auth.server";
 import { getCloudflare } from "./context";
 
@@ -18,18 +19,42 @@ export function getSession(request: Request, context: Ctx): Promise<AuthSession 
   return pending;
 }
 
+/** İsteğin belge yolu ve sorgusu (`.data` eki atılmış). */
+function documentPath(request: Request): string {
+  const url = new URL(request.url);
+  const params = new URLSearchParams(url.search);
+  params.delete("_routes"); // tek veri isteklerinin iç parametresi
+  const search = params.toString();
+  return stripDataSuffix(url.pathname) + (search ? `?${search}` : "");
+}
+
 /**
  * Oturum zorunlu loader/action'lar için. Oturum yoksa `/giris?next=…` adresine
- * yönlendirir (fırlatır).
+ * yönlendirir (fırlatır). Kök middleware zaten tüm uygulama yollarını korur; bu
+ * yardımcı loader içinde kullanıcıya tipli erişim içindir.
  */
 export async function requireUser(request: Request, context: Ctx) {
   const session = await getSession(request, context);
-  if (!session) {
-    const url = new URL(request.url);
-    const next = url.pathname + url.search;
-    throw redirect(next && next !== "/" ? `/giris?next=${encodeURIComponent(next)}` : "/giris");
-  }
+  if (!session) throw redirect(loginPathFor(documentPath(request)));
   return session;
+}
+
+/** Kimlik sayfaları: oturum varsa `next`'e (yoksa `/`) yönlendirir. */
+export async function redirectIfSignedIn(request: Request, context: Ctx) {
+  const session = await getSession(request, context);
+  if (session) {
+    throw redirect(safeNext(new URL(request.url).searchParams.get("next")));
+  }
+}
+
+/**
+ * Kök middleware'in koruması: herkese açık olmayan her yol oturum ister
+ * (varsayılan kapalı). Yeni uygulama rotaları ek bir şey yapmadan korunur.
+ */
+export async function protectRoute(request: Request, context: Ctx) {
+  const pathname = stripDataSuffix(new URL(request.url).pathname);
+  if (isPublicPath(pathname)) return;
+  await requireUser(request, context);
 }
 
 export type SessionUser = AuthSession["user"];

@@ -12,6 +12,8 @@ import "./app.css";
 import { NotFoundView } from "~/components/not-found";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { isPublicPath, stripDataSuffix } from "~/domain/auth/redirects";
+import { protectRoute } from "~/lib/session.server";
 import { loadShellData } from "~/lib/shell.server";
 import { themeInitScript } from "~/lib/theme";
 
@@ -35,8 +37,24 @@ export const links: Route.LinksFunction = () => [
   { rel: "manifest", href: "/manifest.webmanifest" },
 ];
 
-/** Kabuk verisi (kullanıcı, projeler, sayaçlar); oturum yoksa boş kabuk. */
+/**
+ * Oturum koruması (varsayılan kapalı): kimlik sayfaları, `/health`, `/api/auth/*`
+ * dışındaki her yol oturum ister; yoksa `/giris?next=…`. Middleware loader'lardan
+ * önce çalıştığı için korumalı rotaların loader'ları oturumsuz hiç çalışmaz.
+ */
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }) => {
+    await protectRoute(request, context);
+  },
+];
+
+/**
+ * Kabuk verisi (kullanıcı, projeler, sayaçlar). Kabuksuz kimlik sayfalarında
+ * `null`: oturumsuz ziyaretçiye boş kabuk verisi gönderilmez.
+ */
 export async function loader({ request, context }: Route.LoaderArgs) {
+  const pathname = stripDataSuffix(new URL(request.url).pathname);
+  if (isPublicPath(pathname)) return { shell: null };
   return { shell: await loadShellData(request, context) };
 }
 
