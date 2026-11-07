@@ -502,7 +502,8 @@ Aşama 3b-2: notun içindeki proje arayüzü (proje sayfası, ayarlar ve davetle
 
 ## Gerçek zamanlı
 
-Aşama 4a: sunucu katmanı, protokol ve istemci eşitleme kitaplığı (görsel cilası Aşama 4b).
+Aşama 4a: sunucu katmanı, protokol ve istemci eşitleme kitaplığı; Aşama 4b: canlı arayüz
+(varlık, imleç, çevrimdışı, uzaktan yıkıcı olaylar, ızgara hareketi) ve iki tarayıcı matrisi.
 PLAN §5 ve §6: not başına bir Durable Object, proje başına bir yayın kanalı.
 
 ### Durable Object'ler
@@ -603,7 +604,7 @@ kurallar: renk, sabit, sıra, görünümden çıkma, silme); kurulamayanlarda (y
 görünüme giren not, proje / üyelik) loader'lar 250 ms birikmeyle yeniden doğrulanır.
 Notlarım, Arşiv, Çöp kişisel kanala; proje sayfası (üç görünüm) proje kanalına bağlıdır.
 
-### İstemci kancaları (Aşama 4b için)
+### İstemci kancaları
 
 Canlı katman `app/root.tsx`'te `LiveConfigProvider` ile oturum varsa açılır; sağlayıcı yoksa
 (bileşen testleri) kancalar `null` döner ve not eski HTTP davranışıyla çalışır.
@@ -663,22 +664,40 @@ diyalogda `data-canli` (durum) ve `data-canli-kisi` (diğer kişi sayısı) özn
 - Varlık bilgisi odanın belleğindedir; uykudan sonra istemcilerden yeniden istenir (kısa
   süre boş görünebilir).
 - Rol düşürme / çıkarma açık not odasına en geç 30 sn'de (düzenleme gelince) yansır; proje
-  kanalı hemen kapanır. Hesap silme kanal olayı yayınlamaz.
-- Cron'un (çöp, silinmiş proje) kalıcı sildiği notların oda deposu temizlenmez (yazım `gone`
-  döner; veri sızmaz ama DO deposunda kalır).
+  kanalı hemen kapanır ve proje sayfası `uyelik` olayıyla rolü yeniden yükler (açık not
+  arayüzde hemen salt okunur olur).
 - Kanal olayları en iyi çabadır (yayın hatası günlüğe yazılır); kaçan olay yeniden
   bağlanınca sıra numarası farkıyla yakalanır, bağlıyken kaçan olay bir sonraki yeniden
   doğrulamaya kadar görünmez.
 - Başlık ortak düzenlenmez (HTTP, son yazan kazanır); gövde Yjs'tir.
 
-### Aşama 4b'ye kalanlar
+### Canlı arayüz (Aşama 4b)
 
-Varlık avatarları (not köşesi, `live.peers`; görev satırında `peersOnTask`), imleç ve seçim
-stilleri (renk, etiket, hareket), çevrimdışı bandı ve "Yeniden dene" (`live.reconnect`),
-"Son eşitleme …" metni (`lastSyncedAt` / `lastSavedAt`), salt okunur reddi toast'ı
-(`onError`), başkası çöpe atınca / proje silinince / çıkarılınca yönlendirme ve toast
-(`uyelik`, `proje-silindi` olayları), canlı ızgara animasyonları (PLAN §10 Motion `layout`),
-iki tarayıcı uçtan uca matrisi (üç görünüm, görüntüleyici, görevler, çevrimdışı).
+Tasarımda ayrı bir varlık çizimi yok; proje üye yığınının dili (2 px zemin halkası, -8 px
+bindirme) kullanıldı. Çevrimdışı durumları `States`, `TStates`, `MOffline` çizimlerinden.
+
+| Parça                                                                                    | Yer                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PresenceAvatars` (`components/realtime/presence-avatars.tsx`)                           | Not başlığının yanında (masaüstü/tablet), mobilde üst çubukta; en çok 3, fazlası `+n`; ipucunda "Şu an bu notta" ve adlar; kendin (tüm sekmelerin) yok                                                                                                                     |
+| Görev odağı (`TaskRow` `focusPeers`, `peersOnTask`)                                      | Satırda kişinin renginde halkalı 18 px avatar + sol çizgi; "X bu görevde"                                                                                                                                                                                                  |
+| İmleç ve seçim (`collab.ts` `renderCaret`, `selectionRender`; `app.css` `.collab-caret`) | Kişi renginde 2 px çizgi + ad etiketi (beyaz metin), seçimde yalnızca zemin (%24 / koyu %45); koyu temada çizgi açılır                                                                                                                                                     |
+| `OfflineBanner`, `SyncStatus`, `useOfflineShown` (`live-status.tsx`)                     | Not içinde bant + "Yeniden dene" (`live.reconnect`), içerik soluk, altbilgide "Son eşitleme: …"; alan sayfalarında üstte bant, başlık altında son eşitleme, "Not al" etkileşimsiz. Tarayıcı çevrimdışıysa hemen, başka kopmada 1,2 sn sonra; yeniden bağlanana kadar kalır |
+| Uzaktan yıkıcı olaylar (`remoteNoteOutcome`, `live-ui.ts`)                               | Başkası çöpe atınca / arşivleyince / taşıyınca (`not.moved`) ya da erişim kalkınca (4404) bekleyen başlık ve görevler gönderilir, not kapanır, toast kimin yaptığını söyler ("Geri yükle" / "Arşivden çıkar")                                                              |
+| Salt okunur reddi, rol düşürme                                                           | `onError` → tek toast; `rol` → "Rolün değişti", düzenleme kapanır, rota yeniden yüklenir                                                                                                                                                                                   |
+| `useProjectChannelGuard` (`use-project-guard.ts`)                                        | `proje-silindi` (başkası) → Notlarım + toast; `uyelik` (ben) → `GET /api/projeler/:id`: 404 ise "Projeden çıkarıldın" + Notlarım, değilse "Rolün değişti"                                                                                                                  |
+| Izgara hareketi (`note-grid.tsx`)                                                        | Motion (`motion/react`, `LazyMotion` + `domMax`): kart `layout="position"` ile kayar, giren belirir, çıkan `AnimatePresence` ile solar; sürüklenen kartta kapalı; hareketi azaltta (sistem ya da `data-motion="reduced"`, `useReducedMotion`) hiçbiri                      |
+| Başlık yarışı                                                                            | Yazarken gelen uzak başlık bekletilir, alandan çıkınca (yeniden yazılmadıysa) uygulanır: iki taraf sunucudaki son yazımda buluşur                                                                                                                                          |
+
+Sunucu boşlukları kapandı: `NoteRoom.purge()` (bağlantılar 4404, DO deposu `deleteAll`);
+cron çöp ve silinmiş proje temizliği `purgeNoteRooms` çağırır; hesap silme
+(`applyAccountDeletionEffects`) üyesi olunan proje kanallarına `uyelik`, kişisel kanala
+`silindi` yayınlar ve kişisel not odalarını boşaltır.
+
+Testler: birim `tests/unit/realtime/canli-arayuz.test.ts` (saf metin ve kararlar),
+`canli-bilesenler.test.tsx` (avatar yığını, bant, son eşitleme, açık notta sahte soketle
+olaylar, proje yönlendirmesi); Worker `tests/workers/canli-temizlik.test.ts`; uçtan uca
+`tests/e2e/canli-ortak.spec.ts` (iki / üç tarayıcı bağlamı, üç görünüm; Mehmet, Can ve
+Zeynep oturumları `global-setup.ts`'te kaydedilir: `tests/e2e/.auth/*.json`).
 
 ## Cloudflare tarafında yapılacaklar
 

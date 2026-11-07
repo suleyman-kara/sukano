@@ -6,7 +6,8 @@ import { ac, gorunum } from "./yardimcilar";
 /**
  * Gerçek zamanlı duman testi (Aşama 4a): iki tarayıcı bağlamı, aynı proje notu.
  * Ayşe (varsayılan oturum) ve Mehmet (Web Sitesi Yenileme düzenleyicisi).
- * Tam iki tarayıcı matrisi (varlık avatarları, imleçler, çevrimdışı bandı) Aşama 4b'de.
+ * Tam iki tarayıcı matrisi (üç görünüm, varlık, imleç, görevler, çevrimdışı, görüntüleyici):
+ * `canli-ortak.spec.ts`.
  */
 const WEB = "web-sitesi-yenileme";
 
@@ -29,7 +30,7 @@ test.describe("gerçek zamanlı", () => {
     page,
     browser,
   }) => {
-    test.skip(gorunum(test.info()) !== "masaustu", "İki tarayıcı matrisi Aşama 4b'de");
+    test.skip(gorunum(test.info()) !== "masaustu", "Üç görünüm matrisi canli-ortak.spec.ts'te");
     const mehmet = await oturumAc(browser, "mehmet");
     await ac(mehmet, `/proje/${WEB}`);
     await ac(page, `/proje/${WEB}`);

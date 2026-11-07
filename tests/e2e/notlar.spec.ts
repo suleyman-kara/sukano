@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { PERSIST_DIR } from "./ortam";
-import { ac, gorunum } from "./yardimcilar";
+import { ac, gorunum, kararliKutu } from "./yardimcilar";
 
 /**
  * Kişisel notlar (Aşama 1) uçtan uca. Oturum: global kurulumun ürettiği
@@ -270,8 +270,9 @@ test.describe("kişisel notlar", () => {
 
     const kaynak = kart(page, a);
     const hedef = kart(page, b);
-    const kb = (await kaynak.boundingBox())!;
-    const hb = (await hedef.boundingBox())!;
+    // Yeni kartlar ızgarada kayarken (Motion layout) ölçülmesin.
+    const kb = await kararliKutu(kaynak);
+    const hb = await kararliKutu(hedef);
     await page.mouse.move(kb.x + kb.width / 2, kb.y + 20);
     await page.mouse.down();
     await page.mouse.move(kb.x + kb.width / 2 + 10, kb.y + 30, { steps: 5 });

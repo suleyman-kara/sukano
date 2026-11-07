@@ -1,4 +1,5 @@
-import { expect, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Browser, type Locator, type Page, type TestInfo } from "@playwright/test";
+import { AUTH_STATES } from "./ortam";
 
 export type Gorunum = "masaustu" | "tablet" | "mobil";
 
@@ -62,4 +63,40 @@ export async function epostaBaglantisi(page: Page, eposta: string, tur: string):
 /** Testler arasında çakışmayan e-posta adresi. */
 export function yeniEposta(onEk: string, testInfo: TestInfo): string {
   return `${onEk}-${testInfo.project.name}-${Date.now().toString(36)}@ornek.test`;
+}
+
+/**
+ * İki tarayıcılı testler: başka bir kişinin oturumuyla, aynı görünüm ayarlarında
+ * (viewport, dokunmatik, dil) ayrı bir tarayıcı bağlamı açar. Bağlamı test kapatır.
+ */
+export async function kisiSayfasi(
+  browser: Browser,
+  testInfo: TestInfo,
+  kisi: keyof typeof AUTH_STATES,
+): Promise<Page> {
+  const context = await browser.newContext({
+    ...testInfo.project.use,
+    storageState: AUTH_STATES[kisi],
+  });
+  return context.newPage();
+}
+
+/**
+ * Öğenin kutusu iki ardışık okumada aynı olana kadar bekler (ızgara kartları Motion
+ * `layout` ile yeni yerlerine kayarken ölçülmesin; sürüklemeden önce).
+ */
+export async function kararliKutu(locator: Locator) {
+  let onceki = "";
+  await expect
+    .poll(
+      async () => {
+        const kutu = JSON.stringify(await locator.boundingBox());
+        const ayni = kutu === onceki;
+        onceki = kutu;
+        return ayni;
+      },
+      { intervals: [100] },
+    )
+    .toBe(true);
+  return (await locator.boundingBox())!;
 }

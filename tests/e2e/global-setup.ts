@@ -3,7 +3,7 @@ import { mkdirSync, rmSync } from "node:fs";
 import { dirname } from "node:path";
 import { chromium, type FullConfig } from "@playwright/test";
 import { hesaplar } from "../fixtures/hesaplar";
-import { AUTH_STATE, BASE_URL, PERSIST_DIR, PORT } from "./ortam";
+import { AUTH_STATES, BASE_URL, PERSIST_DIR, PORT } from "./ortam";
 
 /**
  * Uçtan uca testlerden önce bir kez çalışır.
@@ -15,7 +15,8 @@ import { AUTH_STATE, BASE_URL, PERSIST_DIR, PORT } from "./ortam";
  *    migration + tohum yeniden uygulanır.
  * 2. `ayse@test.sukano` ile arayüzden giriş yapıp oturumu `storageState` olarak
  *    kaydeder (`tests/e2e/.auth/ayse.json`); testler varsayılan olarak bu
- *    oturumla koşar.
+ *    oturumla koşar. İki tarayıcılı testler için Mehmet ve Can'ın oturumları da
+ *    kaydedilir (`AUTH_STATES`).
  *
  * `E2E_BASE_URL` ile uzak bir önizlemeye karşı koşulurken tohumlama ve sunucu
  * başlatma atlanır (önizleme veritabanının tohumlanmış olduğu varsayılır).
@@ -93,18 +94,22 @@ async function waitUntilUp(base: string, timeout: number, child: ChildProcess) {
 }
 
 async function saveSession() {
-  const { eposta, sifre } = hesaplar.ayse;
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage({ baseURL: BASE_URL, locale: "tr-TR" });
-    await page.goto("/giris");
-    await page.waitForLoadState("networkidle");
-    await page.locator("#eposta").fill(eposta);
-    await page.locator("#sifre").fill(sifre);
-    await page.getByRole("button", { name: "Giriş yap" }).click();
-    await page.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
-    mkdirSync(dirname(AUTH_STATE), { recursive: true });
-    await page.context().storageState({ path: AUTH_STATE });
+    for (const kisi of Object.keys(AUTH_STATES) as (keyof typeof AUTH_STATES)[]) {
+      const { eposta, sifre } = hesaplar[kisi];
+      const context = await browser.newContext({ baseURL: BASE_URL, locale: "tr-TR" });
+      const page = await context.newPage();
+      await page.goto("/giris");
+      await page.waitForLoadState("networkidle");
+      await page.locator("#eposta").fill(eposta);
+      await page.locator("#sifre").fill(sifre);
+      await page.getByRole("button", { name: "Giriş yap" }).click();
+      await page.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
+      mkdirSync(dirname(AUTH_STATES[kisi]), { recursive: true });
+      await context.storageState({ path: AUTH_STATES[kisi] });
+      await context.close();
+    }
   } finally {
     await browser.close();
   }
