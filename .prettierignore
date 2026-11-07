@@ -8,3 +8,4 @@ docs/
 coverage/
 playwright-report/
 test-results/
+migrations/
