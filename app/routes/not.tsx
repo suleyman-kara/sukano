@@ -5,6 +5,8 @@ import { closeHref } from "~/components/notes/note-links";
 import { isNoteId } from "~/domain/notes/validation";
 import { getCloudflare } from "~/lib/context";
 import { noteAccess } from "~/lib/note-access.server";
+import { userSettings } from "~/lib/notifications.server";
+import { noteReminders } from "~/lib/reminders.server";
 import { NoteNotFoundError } from "~/lib/notes.server";
 import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
@@ -57,7 +59,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
         })),
       };
     }
-    return { note, access, targets };
+    const [reminders, { timeZone }] = await Promise.all([
+      noteReminders(env, params.id),
+      userSettings(env, user.id),
+    ]);
+    return { note, access, targets, reminders, timeZone };
   } catch (error) {
     if (error instanceof NoteNotFoundError) throw data(null, { status: 404 });
     throw error;
@@ -82,6 +88,9 @@ export default function NoteRoute({ loaderData }: Route.ComponentProps) {
       closeTo={closeTo}
       initialVersionsOpen={versions}
       initialMoveOpen={params.has("tasi")}
+      reminders={loaderData.reminders}
+      timeZone={loaderData.timeZone}
+      initialReminderOpen={params.has("hatirlatici")}
     />
   );
 }

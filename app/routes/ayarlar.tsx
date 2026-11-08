@@ -11,9 +11,9 @@ import {
   type SettingsActionData,
 } from "~/components/settings/account-dialogs";
 import { BlockerLinks, DeleteAccountDialog } from "~/components/settings/delete-account-dialog";
+import { NotificationSettings } from "~/components/settings/notification-settings";
 import { AppShell } from "~/components/shell/app-shell";
 import { Button } from "~/components/ui/button";
-import { Switch } from "~/components/ui/switch";
 import { createDb } from "~/db/client";
 import { account, THEMES, userPreferences, type Theme } from "~/db/schema";
 import { relativeAgo, sessionSummary } from "~/domain/auth/format";
@@ -33,6 +33,7 @@ import {
   redirectWithCookies,
 } from "~/lib/auth-api.server";
 import { getCloudflare } from "~/lib/context";
+import { userSettings } from "~/lib/notifications.server";
 import { ProjectRuleError } from "~/lib/project-access.server";
 import { applyAccountDeletionEffects } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
@@ -62,6 +63,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .get(),
     accountDeletionBlockers(env, user.id),
   ]);
+  const { prefs: notificationPrefs } = await userSettings(env, user.id);
   const url = new URL(request.url);
   return {
     user: {
@@ -79,6 +81,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     emailChanged: url.searchParams.get("durum") === "eposta-degisti",
     /** Tek yönetici olunan projeler: doluysa hesap silinemez (önce devir ya da silme). */
     deletionBlockers,
+    /** Ayarlar → Bildirimler anahtarları. */
+    notificationPrefs,
   };
 }
 
@@ -476,30 +480,10 @@ export default function Ayarlar({ loaderData }: Route.ComponentProps) {
             </section>
 
             <section id="bildirim" className={PANEL} aria-labelledby="bildirim-baslik">
-              <h2
-                id="bildirim-baslik"
-                className="m-0 flex items-center gap-2 text-base font-semibold"
-              >
+              <h2 id="bildirim-baslik" className="m-0 text-base font-semibold">
                 Bildirimler
-                <span className="rounded-full bg-hover px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  Yakında
-                </span>
               </h2>
-              <p className="m-0 text-muted-foreground">
-                Tarayıcı ve e-posta bildirimleri hatırlatıcılarla birlikte gelecek.
-              </p>
-              <div>
-                {[
-                  ["Hatırlatıcılar", "Not ve görev hatırlatıcıları zamanı gelince"],
-                  ["Göreve atanma", "Biri seni bir göreve atadığında"],
-                  ["Davetler", "Bir projeye davet edildiğinde"],
-                  ["Davet e-postası", "Davetleri ayrıca e-posta ile al"],
-                ].map(([title, detail]) => (
-                  <Row key={title} title={title!} detail={detail}>
-                    <Switch disabled defaultChecked aria-label={`${title} bildirimleri`} />
-                  </Row>
-                ))}
-              </div>
+              <NotificationSettings prefs={loaderData.notificationPrefs} />
             </section>
 
             <section id="hesap" className={PANEL} aria-labelledby="hesap-baslik">

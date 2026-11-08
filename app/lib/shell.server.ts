@@ -2,7 +2,8 @@ import { and, count, eq, gt, isNull } from "drizzle-orm";
 import type { RouterContextProvider } from "react-router";
 import type { ShellData } from "~/components/shell/types";
 import { createDb } from "~/db/client";
-import { invitations, notifications } from "~/db/schema";
+import { invitations, notifications, userPreferences } from "~/db/schema";
+import { resolveTimeZone } from "~/domain/reminders/time";
 import { getCloudflare } from "./context";
 import { getSession } from "./session.server";
 import { projectsService } from "./projects.server";
@@ -29,7 +30,7 @@ export async function loadShellData(
   const db = createDb(env.DB);
   const now = new Date();
 
-  const [sidebar, [invites], [unread]] = await Promise.all([
+  const [sidebar, [invites], [unread], prefs] = await Promise.all([
     projectsService(env, user.id).sidebar(),
     db
       .select({ n: count() })
@@ -45,6 +46,11 @@ export async function loadShellData(
       .select({ n: count() })
       .from(notifications)
       .where(and(eq(notifications.userId, user.id), isNull(notifications.readAt))),
+    db
+      .select({ timeZone: userPreferences.timeZone })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, user.id))
+      .get(),
   ]);
 
   return {
@@ -65,5 +71,6 @@ export async function loadShellData(
     deletedProjectCount: sidebar.deletedCount,
     pendingInviteCount: invites?.n ?? 0,
     unreadNotificationCount: unread?.n ?? 0,
+    timeZone: resolveTimeZone(prefs?.timeZone),
   };
 }

@@ -167,6 +167,8 @@ type NoteSheetProps = NoteMenuHandlers & {
   /** Açık yapılacaklar notunda en üstteki komutlar (MTodoMenu). */
   todo?: TodoMenuHandlers;
   footer?: React.ReactNode;
+  /** "Not hatırlatıcısı" (yoksa devre dışı). */
+  onReminder?: () => void;
 };
 
 const ROW =
@@ -192,6 +194,7 @@ export function NoteSheet({
   moveCopy,
   todo,
   footer,
+  onReminder,
 }: NoteSheetProps) {
   const act = (fn: () => void) => () => {
     onOpenChange(false);
@@ -283,7 +286,13 @@ export function NoteSheet({
               {pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
             </button>
           )}
-          <button type="button" role="menuitem" className={ROW} disabled>
+          <button
+            type="button"
+            role="menuitem"
+            className={ROW}
+            disabled={!onReminder}
+            onClick={onReminder ? act(onReminder) : undefined}
+          >
             <Bell aria-hidden="true" />
             Not hatırlatıcısı
           </button>

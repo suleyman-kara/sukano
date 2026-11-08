@@ -64,6 +64,7 @@ import { TodoToasts } from "./todo-toasts";
 import { TodoToolbar, useKeyboardInset } from "./todo-toolbar";
 import { useTaskViewState } from "./use-task-view-state";
 import { useTodoTasks, type LiveTaskSource } from "./use-todo-tasks";
+import type { TaskReminderControl } from "~/components/reminders/use-reminders";
 import { useTodoUndo } from "./use-todo-undo";
 
 export const COARSE_QUERY = "(pointer: coarse)";
@@ -141,6 +142,8 @@ export type TodoEditorProps = {
   onActiveTaskChange?: (taskId: string | null) => void;
   /** Notu açık tutan diğer kişiler (görev satırında odak göstergesi). */
   peers?: readonly Peer[];
+  /** Görevlerin "Hatırlat" anahtarı (tarih seçicide); yoksa anahtar devre dışı. */
+  taskReminders?: TaskReminderControl;
 };
 
 /**
@@ -163,6 +166,7 @@ export function TodoEditor({
   live,
   onActiveTaskChange,
   peers,
+  taskReminders,
 }: TodoEditorProps) {
   const { tasks, apply, current, whenIdle, assignees, assign } = useTodoTasks(
     noteId,
@@ -891,6 +895,17 @@ export function TodoEditor({
       onClear={clearDates}
       textId={`tarih-yaz-${noteId}`}
       variant={mobile ? "sheet" : "popover"}
+      remind={taskReminders?.has(pickerTask.id) ?? false}
+      remindTo={(assignees[pickerTask.id]?.length ?? 0) > 0 ? "Atananlara gider" : "Sana gider"}
+      onRemind={
+        taskReminders
+          ? (on) => {
+              // Bekleyen tarih yazımı sunucuya ulaşsın; hatırlatıcı bitiş tarihinden hesaplanır.
+              const id = pickerTask.id;
+              void whenIdle().then(() => taskReminders.toggle(id, on));
+            }
+          : undefined
+      }
     />
   );
 

@@ -36,6 +36,14 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/compone
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { useLiveConfig } from "~/components/realtime/live-context";
+import { ReminderChip } from "~/components/reminders/reminder-chip";
+import { ReminderControl } from "~/components/reminders/reminder-picker";
+import {
+  browserTimeZone,
+  useNoteReminder,
+  useTaskReminders,
+  type TaskReminderControl,
+} from "~/components/reminders/use-reminders";
 import { OfflineBanner, SyncStatus, useOfflineShown } from "~/components/realtime/live-status";
 import { PresenceAvatars } from "~/components/realtime/presence-avatars";
 import { useLiveNote, type LiveNote } from "~/components/realtime/use-live-note";
@@ -53,6 +61,8 @@ import { remoteNoteOutcome, type RemoteNoteOutcome } from "~/domain/realtime/liv
 import type { NoteMetaPatch } from "~/domain/realtime/protocol";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import type { NoteDetail } from "~/lib/notes.server";
+import type { NoteReminders } from "~/lib/reminders.server";
+import { DEFAULT_TIME_ZONE } from "~/domain/reminders/time";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
 import { useConvertNote } from "./convert-note";
@@ -83,7 +93,15 @@ type NoteDialogProps = {
   access?: NoteAccessInfo;
   /** "Taşı veya kopyala…" / "Kopyala…" hedefleri (üyesi olunan projeler). */
   targets?: readonly MoveTarget[];
+  /** Gönderilmemiş not ve görev hatırlatıcıları (Aşama 5b). */
+  reminders?: NoteReminders;
+  /** Kişinin saat dilimi (hatırlatıcı saatleri). */
+  timeZone?: string;
+  /** Hatırlatıcı seçici açık başlasın (karttan, `?hatirlatici`). */
+  initialReminderOpen?: boolean;
 };
+
+const NO_REMINDERS: NoteReminders = { note: null, tasks: {} };
 
 const NO_TARGETS: readonly MoveTarget[] = [];
 const NO_FILES: NonNullable<NoteDetail["attachments"]> = [];
@@ -103,6 +121,9 @@ export function NoteDialog({
   initialMoveOpen = false,
   access = PERSONAL_ACCESS,
   targets = NO_TARGETS,
+  reminders = NO_REMINDERS,
+  timeZone = DEFAULT_TIME_ZONE,
+  initialReminderOpen = false,
 }: NoteDialogProps) {
   const navigate = useNavigate();
   const actions = useNoteActions();
@@ -160,6 +181,43 @@ export function NoteDialog({
     canAdd: editable && !isTodo,
   });
   const [moveOpen, setMoveOpen] = useState(initialMoveOpen);
+  // Hatırlatıcılar: not düzeyi (seçici + çip) ve görevlerin "Hatırlat" anahtarı.
+  const noteReminder = useNoteReminder(note.id, reminders.note);
+  const taskReminders = useTaskReminders(note.id, reminders.tasks);
+  const [reminderOpen, setReminderOpen] = useState(initialReminderOpen && editable);
+  const reminderProps = {
+    open: reminderOpen,
+    onOpenChange: setReminderOpen,
+    noteTitle: note.title,
+    value: noteReminder.at,
+    // Seçici yalnızca açıkken (istemcide) çizilir: tarayıcının saat dilimi kullanılır,
+    // kaydederken sunucuya da o gider.
+    timeZone: reminderOpen ? (browserTimeZone() ?? timeZone) : timeZone,
+    audience: project
+      ? {
+          kind: "project" as const,
+          members: project.members.map((m) => ({ id: m.id, name: m.name, color: m.color })),
+        }
+      : { kind: "personal" as const },
+    onSave: async (date: string, time: string) => {
+      const ok = await noteReminder.save(date, time);
+      if (ok) setReminderOpen(false);
+      return ok;
+    },
+    onClear: async () => {
+      const ok = await noteReminder.clear();
+      if (ok) setReminderOpen(false);
+      return ok;
+    },
+  };
+  const reminderChip =
+    noteReminder.at !== null ? (
+      <ReminderChip
+        at={noteReminder.at}
+        timeZone={noteReminder.zone ?? timeZone}
+        onClick={editable ? () => setReminderOpen(true) : undefined}
+      />
+    ) : null;
   const people = useMemo(
     () => (project ? { members: project.members, canAssign: canWrite } : undefined),
     [project, canWrite],
@@ -428,9 +486,21 @@ export function NoteDialog({
                 ) : (
                   <>
                     <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
-                    <button type="button" className={IB} disabled aria-label="Not hatırlatıcısı">
-                      <Bell aria-hidden="true" />
-                    </button>
+                    <ReminderControl
+                      {...reminderProps}
+                      trigger={
+                        <button
+                          type="button"
+                          className={cn(IB, noteReminder.at !== null && "text-primary")}
+                          disabled={!editable}
+                          aria-label="Not hatırlatıcısı"
+                          aria-haspopup="dialog"
+                          onClick={() => setReminderOpen(true)}
+                        >
+                          <Bell aria-hidden="true" />
+                        </button>
+                      }
+                    />
                     <button
                       type="button"
                       className={IB}
@@ -465,15 +535,21 @@ export function NoteDialog({
             ) : tabletUp ? (
               <div className="relative flex shrink-0 flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]">
                 <ColorButton color={color} onChange={changeColor} />
-                <button
-                  type="button"
-                  className={IB}
-                  disabled
-                  aria-label="Not hatırlatıcısı"
-                  title="Not hatırlatıcısı (yakında)"
-                >
-                  <Bell aria-hidden="true" />
-                </button>
+                <ReminderControl
+                  {...reminderProps}
+                  trigger={
+                    <button
+                      type="button"
+                      className={cn(IB, noteReminder.at !== null && "text-primary")}
+                      disabled={!editable}
+                      aria-label="Not hatırlatıcısı"
+                      title="Not hatırlatıcısı"
+                      aria-haspopup="dialog"
+                    >
+                      <Bell aria-hidden="true" />
+                    </button>
+                  }
+                />
                 {!isTodo && (
                   <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
                 )}
@@ -620,6 +696,8 @@ export function NoteDialog({
             ) : null
           }
           people={people}
+          reminderChip={reminderChip}
+          taskReminders={editable ? taskReminders : undefined}
           colorButton={<ColorButton color={color} onChange={changeColor} />}
           attachments={
             isTodo ? null : (
@@ -651,6 +729,7 @@ export function NoteDialog({
             onConvert={onConvert}
             todo={todoMenu}
             moveCopy={moveCopy}
+            onReminder={editable ? () => setReminderOpen(true) : undefined}
             footer={
               <p className="m-0 px-1.5 pt-1 text-xs text-muted-foreground">
                 {project ? meta : edited}
@@ -864,6 +943,10 @@ type NoteBodyProps = {
   /** Görüntüleyici: salt okunur açıklaması. */
   lockbar?: React.ReactNode;
   people?: TodoPeople;
+  /** Kurulu not hatırlatıcısı çipi. */
+  reminderChip?: React.ReactNode;
+  /** Görevlerin "Hatırlat" anahtarı (düzenlenebilir yapılacaklar notunda). */
+  taskReminders?: TaskReminderControl;
 };
 
 function NoteBody({
@@ -884,6 +967,8 @@ function NoteBody({
   meta,
   lockbar,
   people,
+  reminderChip,
+  taskReminders,
 }: NoteBodyProps) {
   const [title, setTitle] = useState(note.title);
   const [titleFocused, setTitleFocused] = useState(false);
@@ -984,9 +1069,10 @@ function NoteBody({
     ) : null;
 
   const top =
-    meta || lockbar ? (
+    meta || lockbar || reminderChip ? (
       <div className={cn("flex flex-col gap-2", tabletUp ? "px-7 pb-2" : "pt-1 pb-2")}>
         {meta}
+        {reminderChip}
         {lockbar}
       </div>
     ) : null;
@@ -1003,6 +1089,7 @@ function NoteBody({
         peers={live?.peers}
         people={people}
         editable={editable}
+        taskReminders={taskReminders}
         onHelpChange={onHelpChange}
         header={
           tabletUp ? undefined : (

@@ -12,17 +12,20 @@ import {
   X,
 } from "lucide-react";
 import { forwardRef, useId, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { cn } from "cn";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { AssigneeAvatars } from "~/components/tasks/person-picker";
 import { checkboxLabel } from "~/components/tasks/task-row";
 import { useCardTaskToggle } from "~/components/tasks/use-card-task-toggle";
+import { ReminderChip } from "~/components/reminders/reminder-chip";
 import { attachmentUrl } from "~/domain/attachments/rules";
 import { trashDaysLeft, trashLeftLabel } from "~/domain/notes/dates";
 import type { CardTask, NoteCardData, NoteView } from "~/domain/notes/optimistic";
 import { useMediaQuery } from "~/hooks/use-media-query";
+import { DEFAULT_TIME_ZONE } from "~/domain/reminders/time";
+import { useShellData } from "~/lib/shell";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
 import { useConvertNote } from "./convert-note";
@@ -91,6 +94,10 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
   const [menuOpen, setMenuOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const label = note.title || note.preview.split("\n")[0] || "Başlıksız not";
+  const navigate = useNavigate();
+  const timeZone = useShellData().timeZone ?? DEFAULT_TIME_ZONE;
+  // Hatırlatıcı açık notta kurulur (kime gideceği ve proje üyeleri orada): `?hatirlatici`.
+  const reminderHref = href && view !== "cop" ? `${href}?hatirlatici` : undefined;
   const versionsDisabled = false;
   const keepBar = paletteOpen || menuOpen;
   const convert = useConvertNote();
@@ -174,6 +181,14 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           </h3>
         )}
         <CardBody note={note} view={view} readOnly={readOnly} />
+        {note.reminderAt != null && view !== "cop" && (
+          <ReminderChip
+            at={note.reminderAt}
+            timeZone={timeZone}
+            now={now?.getTime()}
+            className="mt-0.5"
+          />
+        )}
         {view === "cop" && note.trashedAt && (
           <p className="m-0 text-xs text-muted-foreground">
             {trashLeftLabel(trashDaysLeft(new Date(note.trashedAt), now))}
@@ -198,6 +213,9 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           onConvert={onConvert}
           onRequestDelete={onRequestDelete}
           keepBar={keepBar}
+          onReminder={
+            reminderHref ? () => navigate(reminderHref, { preventScrollReset: true }) : undefined
+          }
         />
       )}
       {!overlay && convert.dialog}
@@ -226,6 +244,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
               ? { label: "Taşı veya kopyala…", onSelect: () => onMoveCopy(note.id) }
               : undefined
           }
+          onReminder={reminderHref ? () => navigate(reminderHref) : undefined}
         />
       )}
     </article>
@@ -358,6 +377,7 @@ type CardActionsProps = {
   onConvert?: () => void;
   onRequestDelete?: (note: NoteCardData) => void;
   keepBar: boolean;
+  onReminder?: () => void;
 };
 
 const BAR =
@@ -379,6 +399,7 @@ function CardActions({
   onConvert,
   onRequestDelete,
   keepBar,
+  onReminder,
 }: CardActionsProps) {
   if (view === "cop") {
     return (
@@ -438,9 +459,11 @@ function CardActions({
           <button
             type="button"
             className={IB}
-            disabled
+            disabled={!onReminder}
             aria-label="Not hatırlatıcısı"
-            title="Not hatırlatıcısı (yakında)"
+            title="Not hatırlatıcısı"
+            aria-haspopup="dialog"
+            onClick={onReminder}
           >
             <Bell aria-hidden="true" />
           </button>

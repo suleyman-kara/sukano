@@ -31,6 +31,10 @@ export default [
   route("api/projeler/:id", "routes/api.projeler.proje.ts"),
   route("api/projeler/:id/uyeler", "routes/api.projeler.uyeler.ts"),
   route("api/davetler", "routes/api.davetler.ts"),
+  route("bildirimler", "routes/bildirimler.tsx"),
+  route("api/bildirimler", "routes/api.bildirimler.ts"),
+  route("api/push/abonelik", "routes/api.push.abonelik.ts"),
+  route("api/hatirlaticilar", "routes/api.hatirlaticilar.ts"),
   route("ayarlar", "routes/ayarlar.tsx"),
   // Kimlik sayfaları: kabuksuz düzen, oturum varsa `/`'a yönlendirir.
   layout("routes/_kimlik.tsx", [
@@ -43,6 +47,7 @@ export default [
   route("dogrula/:token", "routes/dogrula.$token.tsx"),
   route("cikis", "routes/cikis.ts"),
   route("__test/outbox", "routes/__test.outbox.ts"),
+  route("__test/cron", "routes/__test.cron.ts"),
   route("health", "routes/health.ts"),
   // API rotaları "*" rotasından önce gelmeli.
   route("api/auth/*", "routes/api.auth.$.ts"),

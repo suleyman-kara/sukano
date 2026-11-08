@@ -67,7 +67,7 @@ describe("NoteCard", () => {
     );
   });
 
-  it("eylem çubuğu: arşivle, çöpe at ve sabitle ilgili eylemi çağırır; hatırlatıcı ve taşı devre dışı", async () => {
+  it("eylem çubuğu: arşivle, çöpe at ve sabitle ilgili eylemi çağırır; hatırlatıcı açık, taşı devre dışı", async () => {
     const actions = fakeActions();
     const user = userEvent.setup();
     inRouter(
@@ -85,7 +85,7 @@ describe("NoteCard", () => {
     expect(actions.trash).toHaveBeenCalledWith("n1");
     await user.click(screen.getByRole("button", { name: "Sabitle" }));
     expect(actions.setPinned).toHaveBeenCalledWith("n1", true);
-    expect(screen.getByRole("button", { name: "Not hatırlatıcısı" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Not hatırlatıcısı" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Taşı veya kopyala…" })).toBeDisabled();
   });
 

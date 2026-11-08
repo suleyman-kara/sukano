@@ -55,12 +55,19 @@ export type DatePickerProps = DatePickerValue & {
   /** Doğal yazım alanının kimliği (Ctrl+D odağı). */
   textId?: string;
   variant?: "popover" | "sheet";
+  /** "Hatırlat" açık mı (görevin hatırlatıcısı var). */
+  remind?: boolean;
+  /** Kime gider: "Atananlara gider" ya da "Sana gider". */
+  remindTo?: string;
+  /** Anahtar değişince; yoksa anahtar devre dışı (görüntüleyici). */
+  onRemind?: (on: boolean) => void;
 };
 
 /**
  * Görev tarih seçicisi (PLAN §10, prototip TodoNote / MTodoDate): iki yuva ve ok
  * (başlangıç → bitiş, varsayılan bitiş), saat düğmesi, doğal yazım alanı, hızlı
- * seçenekler, aralık vurgulu takvim (Pazartesi başlangıçlı), Hatırlat (Aşama 5) ve
+ * seçenekler, aralık vurgulu takvim (Pazartesi başlangıçlı), Hatırlat (bitiş tarihi varken; saat
+ * yoksa 09:00) ve
  * "Tarihleri temizle". Kontrollüdür; değerler görevden gelir.
  */
 export function DatePicker(props: DatePickerProps) {
@@ -83,7 +90,11 @@ export function DatePicker(props: DatePickerProps) {
     onClear,
     textId,
     variant = "popover",
+    remind = false,
+    remindTo = "Sana gider",
+    onRemind,
   } = props;
+  const remindDisabled = !onRemind || !dueDate;
   const sheet = variant === "sheet";
   const focus = (slot === "start" ? startDate : dueDate) ?? dueDate ?? startDate ?? today;
   const [month, setMonth] = useState(() => focus.slice(0, 7));
@@ -223,14 +234,23 @@ export function DatePicker(props: DatePickerProps) {
         )}
       >
         <div
-          className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium"
-          title="Görev hatırlatıcıları yakında"
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium",
+            remindDisabled && "opacity-60",
+          )}
+          title={onRemind && !dueDate ? "Hatırlatmak için önce bitiş tarihi ver" : undefined}
         >
-          <Switch disabled aria-label="Hatırlat" aria-describedby="hatirlat-kime" />
+          <Switch
+            checked={remind && Boolean(dueDate)}
+            disabled={remindDisabled}
+            onCheckedChange={(on) => onRemind?.(on)}
+            aria-label="Hatırlat"
+            aria-describedby="hatirlat-kime"
+          />
           <span className="flex flex-col leading-tight" aria-hidden="true">
             Hatırlat
             <small id="hatirlat-kime" className="text-xs font-normal text-muted-foreground">
-              Sana gider
+              {remindTo}
             </small>
           </span>
         </div>

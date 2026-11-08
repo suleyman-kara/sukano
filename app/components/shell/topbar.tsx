@@ -1,6 +1,7 @@
-import { Bell, Menu, Search } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Menu, Search } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import { cn } from "cn";
+import { NotificationBell } from "~/components/notifications/notification-bell";
 import { AccountMenu } from "./account-menu";
 import type { ShellUser } from "./types";
 import { ViewSwitch, type ViewSwitchTarget } from "./view-switch";
@@ -82,23 +83,7 @@ export function Topbar({
 
       <div className="hidden flex-1 lg:block" />
 
-      <Link
-        to="/bildirimler"
-        aria-label={
-          unreadNotificationCount > 0
-            ? `Bildirimler, ${unreadNotificationCount} yeni`
-            : "Bildirimler"
-        }
-        className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 lg:size-9"
-      >
-        <Bell className="size-5" strokeWidth={1.75} aria-hidden="true" />
-        {unreadNotificationCount > 0 && (
-          <span
-            className="absolute top-2.5 right-[11px] box-content size-2 rounded-full border-2 border-bg bg-danger lg:top-[7px] lg:right-2"
-            aria-hidden="true"
-          />
-        )}
-      </Link>
+      <NotificationBell initialUnread={unreadNotificationCount} />
 
       <AccountMenu user={user} />
     </header>

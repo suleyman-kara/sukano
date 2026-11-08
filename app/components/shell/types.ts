@@ -30,4 +30,6 @@ export type ShellData = {
   deletedProjectCount: number;
   pendingInviteCount: number;
   unreadNotificationCount: number;
+  /** Kişinin saat dilimi (hatırlatıcı çipleri); yoksa İstanbul. */
+  timeZone?: string;
 };
