@@ -82,6 +82,7 @@ describe("useLiveGrid", () => {
   it("kişisel kanala bağlanır; olayları ızgaraya uygular, gerekince yeniden doğrular", async () => {
     const { loader } = renderGrid(true);
     await screen.findByTestId("durum");
+    await vi.waitFor(() => expect(FakeSocket.last).toBeDefined());
     const ws = FakeSocket.last;
     expect(ws.url).toMatch(/\/api\/kanal\/kisisel$/);
     act(() => ws.open());
@@ -104,10 +105,13 @@ describe("useLiveGrid", () => {
   it("yeniden bağlanınca sıra numarası atladıysa yeniden doğrular", async () => {
     const { loader } = renderGrid(true);
     await screen.findByTestId("durum");
-    act(() => FakeSocket.last.open());
-    act(() => FakeSocket.last.receive(JSON.stringify({ t: "hosgeldin", seq: 4 })));
+    await vi.waitFor(() => expect(FakeSocket.last).toBeDefined());
+    const first = FakeSocket.last;
+    act(() => first.open());
+    act(() => first.receive(JSON.stringify({ t: "hosgeldin", seq: 4 })));
     const calls = loader.mock.calls.length;
-    act(() => FakeSocket.last.serverClose(4000));
+    act(() => first.serverClose(4000));
+    await vi.waitFor(() => expect(FakeSocket.last).not.toBe(first), { timeout: 5000 });
     act(() => FakeSocket.last.open());
     act(() => FakeSocket.last.receive(JSON.stringify({ t: "hosgeldin", seq: 6 })));
     await vi.waitFor(() => expect(loader.mock.calls.length).toBeGreaterThan(calls), {
@@ -147,22 +151,33 @@ describe("useLiveNote", () => {
     // Sağlayıcı (Yjs) tembel yüklenir.
     await vi.waitFor(() => expect(FakeSocket.all).toHaveLength(2), { timeout: 5000 });
     expect(FakeSocket.all[0]!.url).toMatch(/\/api\/notlar\/n1\/canli$/);
-    act(() => FakeSocket.all.forEach((s) => s.open()));
-    act(() =>
-      FakeSocket.all.forEach((s) =>
-        s.receive(
-          JSON.stringify({
-            t: "hosgeldin",
-            docId: "d",
-            kind: "todo",
-            readOnly: false,
-            user: me,
-            seq: 0,
-          }),
-        ),
-      ),
+    // Tembel yüklemeden sonra yeni soket açılabilir; selamlanmamış her soketi aç ve selamla.
+    const greeted = new Set<unknown>();
+    const greetAll = () =>
+      act(() =>
+        FakeSocket.all.forEach((s) => {
+          if (greeted.has(s)) return;
+          greeted.add(s);
+          s.open();
+          s.receive(
+            JSON.stringify({
+              t: "hosgeldin",
+              docId: "d",
+              kind: "todo",
+              readOnly: false,
+              user: me,
+              seq: 0,
+            }),
+          );
+        }),
+      );
+    await vi.waitFor(
+      () => {
+        greetAll();
+        expect(screen.getByTestId("not")).toHaveTextContent("bagli:true:true:0");
+      },
+      { timeout: 5000 },
     );
-    expect(screen.getByTestId("not")).toHaveTextContent("bagli:true:true:0");
     act(() =>
       FakeSocket.all.forEach((s) =>
         s.receive(JSON.stringify({ t: "gorevler", seq: 1, tasks: [], assignees: {}, by: "u2" })),
