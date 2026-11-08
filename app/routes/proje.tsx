@@ -4,7 +4,8 @@ import { data, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { ConfirmDialog } from "~/components/notes/confirm-dialog";
 import { noteBg } from "~/components/notes/colors";
-import { Composer, type ComposerDraft, type ComposerMode } from "~/components/notes/composer";
+import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
+import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, SectionHeading } from "~/components/notes/notes-page";
@@ -32,6 +33,7 @@ import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
 import { useShellData } from "~/lib/shell";
 import type { Route } from "./+types/proje";
+import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
 
 /** `/proje/:projeId[/arsiv|/cop][/not/:id]` → görünüm. */
 export function projectViewOf(pathname: string): NoteView {
@@ -46,6 +48,9 @@ export const meta: Route.MetaFunction = ({ data: d, location }) => {
   const name = d?.page.project.name ?? "Proje";
   return [{ title: [VIEW_TITLES[view], name, "Sukano"].filter(Boolean).join(" · ") }];
 };
+
+/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateUnlessOffline;
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

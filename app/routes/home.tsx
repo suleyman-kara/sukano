@@ -1,7 +1,8 @@
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
-import { Composer, type ComposerDraft, type ComposerMode } from "~/components/notes/composer";
+import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
+import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
@@ -15,11 +16,15 @@ import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/home";
+import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Notlarım · Sukano" },
   { name: "description", content: "Kişisel notların ve ekip projelerin, tek yerde." },
 ];
+
+/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateUnlessOffline;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

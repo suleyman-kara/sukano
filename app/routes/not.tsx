@@ -11,10 +11,14 @@ import { NoteNotFoundError } from "~/lib/notes.server";
 import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/not";
+import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = ({ data: d }) => [
   { title: `${d?.note.title || "Not"} · Sukano` },
 ];
+
+/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateUnlessOffline;
 
 /**
  * Açık not: kişisel not ya da üyesi olunan projenin notu (`noteAccess.forNote`).

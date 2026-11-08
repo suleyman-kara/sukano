@@ -106,6 +106,9 @@ async function saveSession() {
       await page.locator("#sifre").fill(sifre);
       await page.getByRole("button", { name: "Giriş yap" }).click();
       await page.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
+      // PWA kurulum ipucu kapalı sayılır (diğer testlerin altını örtmesin); ipucu testleri
+      // (`pwa.spec.ts`) bu kaydı kendisi siler.
+      await page.evaluate(() => localStorage.setItem("sukano:kurulum-ipucu", String(Date.now())));
       mkdirSync(dirname(AUTH_STATES[kisi]), { recursive: true });
       await context.storageState({ path: AUTH_STATES[kisi] });
       await context.close();

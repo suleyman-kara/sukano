@@ -13,8 +13,12 @@ import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/cop";
+import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = () => [{ title: "Çöp · Notlarım · Sukano" }];
+
+/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateUnlessOffline;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

@@ -42,7 +42,7 @@ const nextLineKey = () => ++lineSeq;
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-type ComposerProps = {
+export type ComposerProps = {
   /** Kapanınca, not boş değilse çağrılır. */
   onSave: (draft: ComposerDraft) => void;
   /** Başlangıçta açık (mobil tam ekran "Not al"). */

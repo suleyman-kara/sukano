@@ -12,6 +12,7 @@ import { searchAccessible, type SearchResult, type SearchSource } from "~/lib/no
 import { requireUser } from "~/lib/session.server";
 import { useShellData } from "~/lib/shell";
 import type { Route } from "./+types/ara";
+import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = ({ data: d }) => [
   { title: d?.q ? `"${d.q}" araması · Sukano` : "Ara · Sukano" },
@@ -19,6 +20,9 @@ export const meta: Route.MetaFunction = ({ data: d }) => [
 
 /** Kaynak süzgeci: `?kaynak=notlarim` ya da proje kimliği; yoksa tümü. */
 const PERSONAL_SOURCE = "notlarim";
+
+/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateUnlessOffline;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

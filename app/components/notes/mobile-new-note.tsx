@@ -7,7 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Composer, type ComposerDraft, type ComposerMode } from "./composer";
+import type { ComposerDraft, ComposerMode } from "./composer";
+import { LazyComposer as Composer } from "./lazy-composer";
 
 /**
  * Mobil (< 768 px) alt çubuk: "Not al…" alanı ve yeni not FAB'ı (MHome).
