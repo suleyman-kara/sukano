@@ -234,10 +234,7 @@ export function DatePicker(props: DatePickerProps) {
         )}
       >
         <div
-          className={cn(
-            "flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium",
-            remindDisabled && "opacity-60",
-          )}
+          className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium"
           title={onRemind && !dueDate ? "Hatırlatmak için önce bitiş tarihi ver" : undefined}
         >
           <Switch
