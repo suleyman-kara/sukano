@@ -16,11 +16,9 @@ import type { NoteAttachments } from "./use-note-attachments";
 const TONES: Record<BadgeTone, string> = {
   pdf: "bg-danger-soft text-danger",
   image: "bg-primary-soft text-primary",
-  doc: "bg-[color-mix(in_srgb,var(--p-mavi)_16%,transparent)] text-[var(--p-mavi)] dark:text-fg",
-  sheet:
-    "bg-[color-mix(in_srgb,var(--p-yesil)_16%,transparent)] text-[var(--p-yesil)] dark:text-fg",
-  slide:
-    "bg-[color-mix(in_srgb,var(--p-turuncu)_16%,transparent)] text-[var(--p-turuncu)] dark:text-fg",
+  doc: "bg-[color-mix(in_srgb,var(--p-mavi)_20%,var(--surface))] text-fg",
+  sheet: "bg-[color-mix(in_srgb,var(--p-yesil)_20%,var(--surface))] text-fg",
+  slide: "bg-[color-mix(in_srgb,var(--p-turuncu)_20%,var(--surface))] text-fg",
   neutral: "bg-hover text-muted-foreground",
 };
 
@@ -201,7 +199,6 @@ function FileTile({
         <span className="flex min-w-0 flex-1 flex-col leading-[1.3]">
           <span className="truncate font-medium">
             <span className="sr-only">İndir:</span> {item.name}
-            <span className="sr-only">,</span>
           </span>{" "}
           <span className="text-xs text-muted-foreground">{formatSize(item.size)}</span>
         </span>

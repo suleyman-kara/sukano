@@ -131,7 +131,7 @@ describe("ek listesi", () => {
     const dialog = open();
     const list = within(dialog).getByRole("region", { name: "Ekler" });
     expect(within(list).getByRole("button", { name: "Görseli aç: salon.jpg" })).toBeVisible();
-    const link = within(list).getByRole("link", { name: "İndir: usta-teklifi-kasim.pdf, 1,8 MB" });
+    const link = within(list).getByRole("link", { name: "İndir: usta-teklifi-kasim.pdf 1,8 MB" });
     expect(link).toHaveAttribute("href", "/api/ekler/ek-pdf?indir=1");
     expect(link).toHaveAttribute("download", "usta-teklifi-kasim.pdf");
     expect(list).toHaveTextContent("PDF");
@@ -215,7 +215,7 @@ describe("yükleme durumları", () => {
       attachment: { ...PDF, id: "yeni", name: "tablo.pdf", size: 3.1 * MB },
     });
     expect(within(dialog).queryByRole("progressbar")).not.toBeInTheDocument();
-    expect(within(dialog).getByRole("link", { name: "İndir: tablo.pdf, 3,1 MB" })).toBeVisible();
+    expect(within(dialog).getByRole("link", { name: "İndir: tablo.pdf 3,1 MB" })).toBeVisible();
   });
 
   it("10 MB'yi aşan dosya gönderilmez; tasarımdaki metin ve Kaldır görünür", async () => {
