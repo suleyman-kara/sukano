@@ -25,6 +25,7 @@ Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içi
 | `/ayarlar`              | Ayarlar: profil, görünüm, hesap ve güvenlik                    |
 | `/proje/:projeId`       | Proje sayfası; bkz. [Proje arayüzü](#proje-arayüzü)            |
 | `/davetler`             | Gelen davetler                                                 |
+| `/bildirimler`          | Bildirim listesi (mobilde zil buraya açılır)                   |
 | `/health`               | Sağlık denetimi, `{ "ok": true }`                              |
 | `/api/auth/*`           | Better Auth uçları (`/api/auth/ok`, `/api/auth/get-session` …) |
 | `/api/notlar/:id/canli` | Not odası WebSocket'i; bkz. [Gerçek zamanlı](#gerçek-zamanlı)  |
@@ -84,7 +85,7 @@ workers/
   live-routes.ts          Canlı WebSocket yollarının yetki denetimi ve odaya yönlendirme
   note-room.ts            NoteRoom Durable Object (Yjs, varlık, görev sırası, D1 kopyası)
   project-room.ts         ProjectRoom Durable Object (proje / kişisel alan yayın kanalı)
-  scheduled.ts            Dakikalık cron işleri (gövdeler TODO)
+  scheduled.ts            Dakikalık cron işleri (hatırlatıcı + bildirim dağıtımı, temizlik)
 migrations/               drizzle-kit ile üretilen D1 SQL migration'ları
 scripts/
   seed.ts                 Yerel D1 tohumlama (npm run db:seed)
@@ -176,9 +177,12 @@ listelidir; `Env` tipi (`npm run cf-typegen` → `worker-configuration.d.ts`) bu
 | `RESEND_API_KEY`       | E-posta gönderimi (Resend); boşsa e-postalar konsola yazılır        |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile gizli anahtarı (yerelde test anahtarı)         |
 | `VAPID_PUBLIC_KEY`     | Web Push genel anahtarı (`npx web-push generate-vapid-keys`)        |
-| `VAPID_PRIVATE_KEY`    | Web Push özel anahtarı                                              |
+| `VAPID_PRIVATE_KEY`    | Web Push özel anahtarı; ikisi boşsa push kapalı                     |
 
-Gizli olmayan değerler `wrangler.jsonc` → `vars`: `APP_NAME`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`.
+Gizli olmayan değerler `wrangler.jsonc` → `vars`: `APP_NAME`, `EMAIL_FROM`, `TURNSTILE_SITE_KEY`,
+`VAPID_SUBJECT` (Web Push iletişim adresi, varsayılan `mailto:bildirim@sukano.app`).
+`.dev.vars.example`'daki VAPID çifti yalnızca yerel geliştirme ve testler içindir (herkese açık);
+üretimde yeni çift üretilmelidir.
 
 Binding'ler: `DB` (D1 `sukano`), `FILES` (R2 `sukano-files`), `NOTE_ROOM` (Durable Object
 `NoteRoom`), `PROJECT_ROOM` (Durable Object `ProjectRoom`), cron `* * * * *`
@@ -313,7 +317,8 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   birleşir, 409'da liste yeniden yüklenir); aç/kapa durumu `localStorage`'da
   (`sukano:gorevler:<notId>`). Karttan işaretleme `use-card-task-toggle.ts`.
 - **Devre dışı yer tutucular:** taşı veya kopyala, kişi seçici (sunucusu Aşama 3a'da hazır, bkz.
-  [Projeler](#projeler-roller-davetler)), not ve görev hatırlatıcısı (Aşama 5). Dosya ekleri: bkz. [Dosya ekleri](#dosya-ekleri).
+  [Projeler](#projeler-roller-davetler)). Hatırlatıcılar: bkz.
+  [Hatırlatıcılar ve bildirimler](#hatırlatıcılar-ve-bildirimler). Dosya ekleri: bkz. [Dosya ekleri](#dosya-ekleri).
 
 ## Projeler, roller, davetler
 
@@ -753,6 +758,81 @@ Aşama 5a (PLAN §3): yalnızca **metin notunda** görsel ve genel dosya, R2 (`F
   bildirimi); uçtan uca `tests/e2e/ekler.spec.ts` (üç görünüm: görsel ekle ve aç, dosya ekle ve
   indir, 10 MB hatası, kaldır, görüntüleyici, axe açık/koyu).
 
+## Hatırlatıcılar ve bildirimler
+
+Aşama 5b (PLAN §3, §5; tasarım: `Notifications`, `TNotifications`, `MNotifications`, `Forms`,
+`MReminder`, `States2`, `Settings` / `TSettings` / `MSettings`, `TodoNote` / `MTodoDate`).
+
+| Uç                                   | İş                                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `GET /api/bildirimler`               | `{ items, unread, hasMore, cursor }` (20'şer, en yeni önce); `?once=<ms>`, `?sayi=1`     |
+| `POST /api/bildirimler`              | `read` (`id` / `ids`), `read-all`, `pref` (`key`, `value` 1/0), `time-zone`              |
+| `GET /api/push/abonelik`             | `{ publicKey }` (push kapalıysa null); `?endpoint=` → `subscribed`                       |
+| `POST` / `DELETE /api/push/abonelik` | JSON `PushSubscription.toJSON()` kaydeder / `{ endpoint }` siler (yalnızca kendininkini) |
+| `POST /api/hatirlaticilar`           | `note` (`noteId`, `date`, `time`, `timeZone?`), `note-clear`, `task` (`taskId`, `on`)    |
+| `/bildirimler`                       | Bildirim sayfası (mobil zil); masaüstü ve tablette zil paneli                            |
+| `POST /__test/cron?now=<ISO\|ms>`    | Yalnızca yerel/test (`/__test/outbox` ile aynı koruma): hatırlatıcı işini sahte saatle   |
+
+**Hatırlatıcı.** Not hatırlatıcısı tarih + saat; kişisel notta sahibine, proje notunda o anki tüm
+üyelere gider. Görev "Hatırlat" anahtarı (tarih seçicide, bitiş tarihi varken) bitiş tarihi +
+saati kullanır (saat yoksa 09:00); atananlara, atanan yoksa kurana gider (yalnızca o anki
+üyeler). Kurmak / kaldırmak notu düzenleme yetkisi ister (görüntüleyici 403). Saat kişinin
+saat diliminde yorumlanır: tarayıcıdan gelir (istekte `timeZone`, ayrıca kabuk açılışında
+oturum başına bir kez `time-zone`), `user_preferences.time_zone`'da saklanır, varsayılan
+`Europe/Istanbul`. `reminders.at` UTC ms. Görevin bitiş tarihi / saati değişince hatırlatıcı
+kuranın saat diliminde yeniden hesaplanıp yeniden kurulur, tarih kalkarsa ya da görev silinirse
+silinir (`taskReminderSyncOps`, görev yazımıyla aynı batch). Bir kez çalar; çöpteki not, silinmiş
+proje, tamamlanmış ya da silinmiş görevin hatırlatıcısı gönderilmeden kapanır.
+
+**Cron (dakikada bir, `sendDueReminders`).** `UPDATE reminders SET sent_at = now WHERE sent_at
+IS NULL AND id IN (zamanı gelenler) RETURNING *` ile hatırlatıcılar **tam bir kez** alınır (iki
+cron aynı anda koşsa da), alıcılara `hatirlatici` bildirimi yazılır. Ardından
+`deliverPendingNotifications` aynı yöntemle `notifications.delivered_at IS NULL` satırlarını alır
+(migration `0003`): sahibinin kişisel kanalına (`kisi:<userId>`) `bildirim` olayı yayınlar ve
+tercihe göre Web Push gönderir. Davet, rol, çıkarma, proje silme ve göreve atanma bildirimleri
+istek sonunda (`ctx.waitUntil`) dağıtılır; cron kaçanları yakalar. Çöp, silinmiş proje ve davet
+işleri değişmedi.
+
+**Web Push.** `app/domain/notifications/web-push.ts` yalnızca WebCrypto: VAPID ES256 JWT (`aud`
+uç noktanın kökeni, 12 sa) ve RFC 8291 `aes128gcm` şifreleme (RFC test vektörüyle birim testli);
+bağımlılık yok. Abonelik cihaz başına (`push_subscriptions`, uç nokta tekil); push hizmeti
+404 / 410 dönerse silinir. Yük `{ title, body, url, tag, action? }` (States2 metinleri);
+hatırlatıcıda aciliyet `high`. VAPID anahtarı yoksa push sessizce atlanır. Push yalnızca
+hatırlatıcı, göreve atanma ve davette gider; her biri Ayarlar'dan kapatılır, uygulama içi
+bildirim her zaman yazılır. `public/sw.js` yalnızca `push` ve `notificationclick` dinler (açık
+sekmeye odaklanıp adrese gider); önbellek / çevrimdışı Aşama 6'da aynı dosyaya eklenecek.
+İzin sayfa açılışında sorulmaz: Ayarlar → Bildirimler'de "Bu cihazda aç" ya da ilk hatırlatıcı
+kurulduktan sonra bir kez gösterilen toast ("Bildirimleri aç").
+
+**Uygulama içi.** Zil (`components/notifications/notification-bell.tsx`): okunmamışta kırmızı
+nokta ve "Bildirimler, n yeni"; masaüstü / tablette panel (Tümünü okundu say, ayarlar,
+"Daha eski bildirimler"), mobilde `/bildirimler`. Sayı kişisel kanaldan canlı yenilenir, başka
+sekmede okundu sayılınca da düşer. Metinler `app/domain/notifications/copy.ts` (Phase 3 türleri
+`davet`, `rol_degisti`, `projeden_cikarildi`, `proje_silindi`, `goreve_atandi` ve `hatirlatici`);
+sunucu biçimlendirir (göreli zaman kişinin saat diliminde), istemci aynen çizer.
+
+**E-posta.** Davet e-postası `email.davet` tercihine uyar (uygulama içi davet ve push yine
+gider). Doğrulama, şifre sıfırlama ve e-posta değişikliği (Ayarlar → E-posta → Değiştir:
+şifreyle onay, yeni adrese doğrulama bağlantısı, Better Auth `changeEmail`) her zaman gider.
+
+**Arayüz.** Not hatırlatıcısı: açık notun alt çubuğunda (mobilde üst çubukta ve ⋯ sayfasında)
+zil; masaüstü / tablette açılır pencere, mobilde alttan sayfa (Vazgeç + Kaydet, Kaldır). Kurulu
+hatırlatıcı notta ve kartta "Yarın, 09:00" çipi; karttaki zil notu `?hatirlatici` ile açar.
+
+**Testler.** Birim `tests/unit/reminders/` (saat dilimi: İstanbul ve yaz saatli Berlin /
+New York, hızlı seçenekler, alıcı kuralı, istek doğrulama), `tests/unit/notifications/` (metinler,
+push yükü, tercihler, RFC 8291 vektörü, VAPID JWT, bileşenler: seçici, zil paneli, Hatırlat
+anahtarı, ayarlar); Worker `tests/workers/bildirimler.test.ts` (cron iki kez → tek bildirim,
+eşzamanlı cron, alıcılar, tarih değişince yeniden hesap, push kaydı / silme, 410 / 404 temizliği,
+tercihler, davet e-postası, liste / okundu yetkisi); uçtan uca `tests/e2e/bildirimler.spec.ts`
+(üç görünüm, görünüm başına ayrı kişi: hatırlatıcı → `/__test/cron` → canlı zil → tümü okundu,
+atama bildirimi, görev Hatırlat, axe açık / koyu).
+
+**Bilinen sınırlar.** Push yalnızca HTTPS kökende ve izin verilmiş tarayıcıda; iOS'ta ana
+ekrana eklenmiş PWA gerekir (Aşama 6). E-posta değişikliğinde "Doğrulama bekleniyor · Tekrar
+gönder · İptal et" satırı yok (Better Auth bekleyen değişikliği saklamıyor). Not oluşturma
+alanındaki (composer) zil devre dışı: hatırlatıcı not kaydedildikten sonra açık notta kurulur.
+
 ## Cloudflare tarafında yapılacaklar
 
 İlk dağıtımdan önce bir kez (`wrangler login` ya da `CLOUDFLARE_API_TOKEN` ile):
@@ -770,7 +850,11 @@ Aşama 5a (PLAN §3): yalnızca **metin notunda** görsel ve genel dosya, R2 (`F
    anahtarı `TURNSTILE_SECRET_KEY` gizli değişkenine yaz.
 8. **E-posta:** Resend hesabı ve gönderici alan adı doğrulaması; `RESEND_API_KEY`,
    `vars.EMAIL_FROM`.
-9. **Plan:** yayına alırken Workers Paid (şifre hash'leme CPU süresi, D1/R2 kotaları).
+9. **Web Push:** `npx web-push generate-vapid-keys` (ya da herhangi bir P-256 çifti) →
+   `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` gizli değişkenleri; `vars.VAPID_SUBJECT`'i gerçek
+   iletişim adresiyle değiştir. Anahtar değişirse mevcut abonelikler geçersizleşir (cihazlar
+   Ayarlar'dan yeniden açar).
+10. **Plan:** yayına alırken Workers Paid (şifre hash'leme CPU süresi, D1/R2 kotaları).
 
 ## Testler
 

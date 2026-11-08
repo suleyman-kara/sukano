@@ -122,7 +122,7 @@ export function ReminderPicker({
 
       <div className="h-px bg-line" aria-hidden="true" />
 
-      <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-2.5">
+      <div className="grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] gap-2.5">
         <label className="flex min-w-0 flex-col gap-1.5">
           <span className="text-[13px] font-medium">Tarih</span>
           <span className="relative block">
@@ -251,7 +251,7 @@ export function ReminderControl({ open, onOpenChange, trigger, ...props }: Remin
           data-todo-esc=""
           aria-labelledby="hatirlatici-baslik"
           role="dialog"
-          className="w-[360px] gap-0 rounded-[14px] border border-line bg-surface p-4 text-fg shadow-elevated ring-0"
+          className="w-[min(380px,calc(100vw-32px))] gap-0 rounded-[14px] border border-line bg-surface p-4 text-fg shadow-elevated ring-0"
         >
           {open && <ReminderPicker {...props} onCancel={close} />}
         </PopoverContent>

@@ -93,6 +93,13 @@ describe("hızlı hatırlatıcı seçenekleri", () => {
     expect(quickReminderOptions(evening, IST).map((o) => o.key)).toEqual(["yarin", "hafta"]);
   });
 
+  it("pazar günü Gelecek hafta yarınki değil bir sonraki pazartesidir", () => {
+    const sunday = Date.UTC(2026, 10, 8, 7, 0);
+    const [, yarin, hafta] = quickReminderOptions(sunday, IST);
+    expect(yarin).toMatchObject({ date: "2026-11-09", hint: "Pzt, 09:00" });
+    expect(hafta).toMatchObject({ date: "2026-11-16", hint: "Pzt, 16 Kas, 09:00" });
+  });
+
   it("seçenekler kişinin saat diliminin gününe göre hesaplanır", () => {
     // 07:00Z: İstanbul'da Cuma 10:00, New York'ta Cuma 02:00.
     const [first] = quickReminderOptions(FRI_10, NY);

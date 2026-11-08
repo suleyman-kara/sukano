@@ -129,6 +129,8 @@ export function quickReminderOptions(now: number, timeZone: string): QuickRemind
   const tz = resolveTimeZone(timeZone);
   const { date: today, time: nowTime } = zonedParts(now, tz);
   const q = quickDates(today);
+  // Pazar günü "Yarın" ile "Gelecek hafta" aynı pazartesi olmasın: bir sonraki pazartesi.
+  const nextWeek = q.nextWeek === q.tomorrow ? addDays(q.nextWeek, 7) : q.nextWeek;
   const out: QuickReminderOption[] = [];
   if (nowTime < EVENING_TIME) {
     out.push({ key: "bugun", label: "Bugün", hint: EVENING_TIME, date: today, time: EVENING_TIME });
@@ -144,8 +146,8 @@ export function quickReminderOptions(now: number, timeZone: string): QuickRemind
     {
       key: "hafta",
       label: "Gelecek hafta",
-      hint: `${weekdayOf(q.nextWeek)}, ${formatDay(q.nextWeek, today)}, ${DEFAULT_REMINDER_TIME}`,
-      date: q.nextWeek,
+      hint: `${weekdayOf(nextWeek)}, ${formatDay(nextWeek, today)}, ${DEFAULT_REMINDER_TIME}`,
+      date: nextWeek,
       time: DEFAULT_REMINDER_TIME,
     },
   );
