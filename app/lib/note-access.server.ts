@@ -169,7 +169,7 @@ export function noteAccess(env: Env, userId: string, clock: () => Date = () => n
       const row = await db.select().from(notes).where(eq(notes.id, noteId)).get();
       /* v8 ignore next */
       if (!row) throw new NoteNotFoundError();
-      await copyNote(db, row, newId, target, userId, clock());
+      await copyNote(db, row, newId, target, userId, clock(), env.FILES);
     },
 
     /** `/api/notlar` form eylemi: alanı çözer, yetkiyi denetler, çalıştırır. */

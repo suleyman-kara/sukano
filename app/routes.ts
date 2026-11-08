@@ -25,6 +25,8 @@ export default [
   route("api/notlar", "routes/api.notlar.ts"),
   route("api/notlar/:id/surumler", "routes/api.notlar.surumler.ts"),
   route("api/notlar/:id/gorevler", "routes/api.notlar.gorevler.ts"),
+  route("api/notlar/:id/ekler", "routes/api.notlar.ekler.ts"),
+  route("api/ekler/:id", "routes/api.ekler.ts"),
   route("api/projeler", "routes/api.projeler.ts"),
   route("api/projeler/:id", "routes/api.projeler.proje.ts"),
   route("api/projeler/:id/uyeler", "routes/api.projeler.uyeler.ts"),

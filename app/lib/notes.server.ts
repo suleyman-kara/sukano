@@ -57,6 +57,12 @@ import {
   versionWriteOps,
   type Batch,
 } from "./note-store.server";
+import {
+  copyAttachments,
+  noteAttachments,
+  toInfo,
+  type AttachmentInfo,
+} from "./attachment-store.server";
 import { avatarColorFor } from "./avatar";
 import { ForbiddenError } from "./project-access.server";
 
@@ -119,6 +125,8 @@ export type NoteDetail = {
   todoTasks: Task[];
   /** Ek sayısı (eki olan metin notu yapılacaklara dönüştürülemez). */
   attachmentCount: number;
+  /** Metin notunun ekleri, eklenme sırasıyla (yapılacaklarda boş). */
+  attachments?: AttachmentInfo[];
   /** Proje kimliği (kişisel notta null). */
   projectId: string | null;
   /** Oluşturan ve son düzenleyen; kişi silinmişse null → "Silinmiş kullanıcı". */
@@ -317,6 +325,30 @@ export function scopedNotes(
     }
   }
 
+  /** Kart ekleri: not başına ilk görsel (kapak) ve ek sayısı. */
+  async function cardAttachments(ids: string[]) {
+    const out = new Map<string, { cover: { id: string; name: string } | null; count: number }>();
+    for (let i = 0; i < ids.length; i += 50) {
+      const rows = await db
+        .select({
+          id: attachments.id,
+          noteId: attachments.noteId,
+          name: attachments.name,
+          contentType: attachments.contentType,
+        })
+        .from(attachments)
+        .where(inArray(attachments.noteId, ids.slice(i, i + 50)))
+        .orderBy(asc(attachments.createdAt), asc(attachments.id));
+      for (const r of rows) {
+        const e = out.get(r.noteId) ?? { cover: null, count: 0 };
+        e.count++;
+        if (!e.cover && r.contentType.startsWith("image/")) e.cover = { id: r.id, name: r.name };
+        out.set(r.noteId, e);
+      }
+    }
+    return out;
+  }
+
   return {
     /** Görünümdeki notlar (Notlar: konuma göre; Arşiv: konuma göre; Çöp: en son atılan önce). */
     async list(view: NoteView): Promise<NoteCardData[]> {
@@ -342,8 +374,10 @@ export function scopedNotes(
           asc(notes.createdAt),
         );
       const taskMap = await cardTasks(rows.filter((r) => r.kind === "todo").map((r) => r.id));
+      const fileMap = await cardAttachments(rows.filter((r) => r.kind === "text").map((r) => r.id));
       return rows.map((r) => {
         const t = taskMap.get(r.id);
+        const f = fileMap.get(r.id);
         return {
           id: r.id,
           kind: r.kind,
@@ -354,6 +388,7 @@ export function scopedNotes(
           preview: htmlToText(r.bodyHtml),
           tasks: t?.tasks ?? [],
           moreTasks: t ? t.total - t.tasks.length : 0,
+          ...(f ? { cover: f.cover, attachmentCount: f.count } : {}),
           updatedAt: r.updatedAt.toISOString(),
           archivedAt: iso(r.archivedAt),
           trashedAt: iso(r.trashedAt),
@@ -366,6 +401,7 @@ export function scopedNotes(
       const row = await owned(id);
       const todoTasks = row.kind === "todo" ? treeOrder(await loadTasks(db, id)) : [];
       const assignees = row.projectId && row.kind === "todo" ? await loadAssignees(db, id) : {};
+      const files = row.kind === "text" ? (await noteAttachments(db, id)).map(toInfo) : [];
       // Aşama 1: yapılacaklar notunun üst seviye görevleri salt okunur gösterilir.
       const detailTasks: DetailTask[] = todoTasks
         .filter((t) => t.parentId === null)
@@ -379,7 +415,8 @@ export function scopedNotes(
         bodyHtml: row.bodyHtml ?? "",
         tasks: detailTasks,
         todoTasks,
-        attachmentCount: row.kind === "text" ? await attachmentCount(id) : 0,
+        attachmentCount: files.length,
+        attachments: files,
         projectId: row.projectId,
         createdBy: await person(row.createdBy),
         updatedBy: await person(row.updatedBy),
@@ -553,7 +590,7 @@ export function scopedNotes(
     async duplicate(id: string, newId: string) {
       need("note.organize");
       const row = await owned(id);
-      await copyNote(db, row, newId, scope, userId, clock());
+      await copyNote(db, row, newId, scope, userId, clock(), env.FILES);
     },
 
     /** Notu kendi bölümünde (sabitlenmiş / diğerleri) `toIndex` sırasına taşır. */
@@ -757,7 +794,8 @@ type NoteRow = typeof notes.$inferSelect;
  * Notu `target` alanına yeni not olarak kopyalar: en üste, sabitlenmemiş; görev ağacı
  * kopyalanır, sürüm geçmişi kopyalanmaz (metin notunda ilk sürüm yazılır). Atamalar
  * yalnızca hedef proje alanındaysa ve atanan hedef projenin üyesiyse taşınır
- * (kişisel alanda atama yoktur).
+ * (kişisel alanda atama yoktur). Metin notunun ekleri R2'de yeni anahtarlara kopyalanır
+ * (`files` verilirse).
  */
 export async function copyNote(
   db: Database,
@@ -766,6 +804,7 @@ export async function copyNote(
   target: NoteScope,
   userId: string,
   now: Date,
+  files?: R2Bucket,
 ) {
   const exists = await db.select({ id: notes.id }).from(notes).where(eq(notes.id, newId)).get();
   if (exists) throw new NoteNotFoundError();
@@ -851,6 +890,7 @@ export async function copyNote(
     );
   }
   await runBatch(db, ops);
+  if (files && row.kind === "text") await copyAttachments(db, files, row.id, newId, userId, now);
 }
 
 /**

@@ -100,6 +100,8 @@ export type NoteMetaPatch = {
   trashed?: boolean;
   /** Not başka bir alana taşındı (kişisel ↔ proje). */
   moved?: boolean;
+  /** Ekler değişti (eklendi / kaldırıldı): istemci ek listesini yeniden yükler. */
+  attachments?: boolean;
 };
 
 export type NoteServerMessage =

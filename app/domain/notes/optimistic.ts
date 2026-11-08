@@ -38,6 +38,10 @@ export type NoteCardData = {
   tasks: CardTask[];
   /** Kartta görünmeyen tamamlanmamış üst seviye görev sayısı. */
   moreTasks: number;
+  /** Metin notunun ilk görsel eki (kart kapağı). */
+  cover?: { id: string; name: string } | null;
+  /** Metin notunun ek sayısı (kapak yoksa ataç ipucu). */
+  attachmentCount?: number;
   /** ISO zaman damgaları. */
   updatedAt: string;
   archivedAt: string | null;
