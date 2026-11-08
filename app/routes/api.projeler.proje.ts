@@ -2,6 +2,7 @@ import { data } from "react-router";
 import { isProjectId, parseProjectIntent } from "~/domain/projects/validation";
 import { apiError, loaderError } from "~/lib/api-errors.server";
 import { getCloudflare } from "~/lib/context";
+import { deliverPendingNotifications } from "~/lib/notifications.server";
 import { projectsService } from "~/lib/projects.server";
 import { applyProjectIntentEffects } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
@@ -43,6 +44,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     const result = await projectsService(env, user.id).run(params.id, parsed.value);
     // Proje kanalına olay (proje, üyelik, silindi); yanıt beklemez.
     ctx.waitUntil(applyProjectIntentEffects(env, user.id, params.id, parsed.value));
+    // Davet, rol, çıkarma, silme bildirimleri: canlı zil + push.
+    ctx.waitUntil(deliverPendingNotifications(env));
     return { ok: true as const, ...(result ?? {}) };
   } catch (error) {
     return apiError(error);

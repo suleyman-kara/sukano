@@ -177,10 +177,13 @@ export const verification = sqliteTable(
 export type NotificationPrefs = {
   /** Tarayıcı push kanalları; her biri ayrı kapatılabilir. */
   push: { hatirlatici: boolean; goreveAtandi: boolean; davet: boolean };
+  /** E-posta: yalnızca davet kapatılabilir (doğrulama, sıfırlama, değişiklik her zaman). */
+  email?: { davet: boolean };
 };
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   push: { hatirlatici: true, goreveAtandi: true, davet: true },
+  email: { davet: true },
 };
 
 export const userPreferences = sqliteTable(
@@ -471,10 +474,16 @@ export const notifications = sqliteTable(
     noteId: text("note_id").references(() => notes.id, { onDelete: "set null" }),
     actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
     readAt: integer("read_at", { mode: "timestamp_ms" }),
+    /**
+     * Dağıtıldı mı (kişisel kanala canlı bildirim + tercihe göre Web Push). Boşsa
+     * `deliverPendingNotifications` tam bir kez alır (cron ve istek sonrası).
+     */
+    deliveredAt: integer("delivered_at", { mode: "timestamp_ms" }),
     ...timestamps(),
   },
   (t) => [
     index("notifications_user_read_idx").on(t.userId, t.readAt),
+    index("notifications_delivered_idx").on(t.deliveredAt),
     index("notifications_user_created_idx").on(t.userId, t.createdAt),
     check("notifications_type_check", inList(t.type, NOTIFICATION_TYPES)),
   ],

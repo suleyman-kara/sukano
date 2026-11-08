@@ -17,6 +17,9 @@
     "APP_NAME": "Sukano",
     "EMAIL_FROM": "Sukano <bildirim@sukano.app>",
     "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    // Web Push VAPID iletişim adresi (`mailto:` ya da `https:`); push hizmetleri sorun
+    // olursa buraya ulaşır.
+    "VAPID_SUBJECT": "mailto:bildirim@sukano.app",
   },
   // Gizli değişken adları: `Env` tipi bunlardan üretilir (CI'da `.dev.vars` olmasa da)
   // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. README.

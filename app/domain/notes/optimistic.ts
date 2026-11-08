@@ -46,6 +46,8 @@ export type NoteCardData = {
   updatedAt: string;
   archivedAt: string | null;
   trashedAt: string | null;
+  /** Gönderilmemiş not hatırlatıcısının anı (ms); kartta çip. */
+  reminderAt?: number | null;
 };
 
 /** Bu görünümden çıkaran eylemler. */

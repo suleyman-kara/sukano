@@ -41,7 +41,9 @@ import {
   type RuleResult,
 } from "~/domain/projects/permissions";
 import type { ProjectFields, ProjectIntent, ProjectsIntent } from "~/domain/projects/validation";
+import { inviteEmailEnabled } from "~/domain/notifications/prefs";
 import { sendInvitationEmail } from "./email.server";
+import { userSettings } from "./notifications.server";
 import { runBatch, type Batch } from "./note-store.server";
 import { deleteNotes, scopedNotes, type PurgeHooks } from "./notes.server";
 import {
@@ -539,14 +541,17 @@ export function projectsService(env: Env, userId: string, clock: () => Date = ()
         .where(eq(user.id, userId))
         .get();
       try {
-        await sendInvitationEmail(env, {
-          to: check.email,
-          name: account!.name,
-          inviterName: inviter?.name ?? "Bir proje yöneticisi",
-          projectName: project.name,
-          roleLabel: roleLabel(inviteRole).toLocaleLowerCase("tr"),
-          url: new URL("/davetler", env.BETTER_AUTH_URL || "http://localhost:5173").toString(),
-        });
+        // Davet e-postası Ayarlar → Bildirimler'den kapatılabilir; uygulama içi davet kalır.
+        const { prefs } = await userSettings(env, account!.id);
+        if (inviteEmailEnabled(prefs))
+          await sendInvitationEmail(env, {
+            to: check.email,
+            name: account!.name,
+            inviterName: inviter?.name ?? "Bir proje yöneticisi",
+            projectName: project.name,
+            roleLabel: roleLabel(inviteRole).toLocaleLowerCase("tr"),
+            url: new URL("/davetler", env.BETTER_AUTH_URL || "http://localhost:5173").toString(),
+          });
       } catch (error) {
         // Davet uygulama içinde geçerlidir; e-posta hatası daveti geri almaz.
         console.error("[davet] e-posta gönderilemedi:", error);

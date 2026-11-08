@@ -19,6 +19,10 @@ RESEND_API_KEY=
 # Cloudflare Turnstile gizli anahtarı. Aşağıdaki değer her zaman geçen test anahtarıdır.
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 
-# Web Push (VAPID). Üretmek için: npx web-push generate-vapid-keys
-VAPID_PUBLIC_KEY=
-VAPID_PRIVATE_KEY=
+# Web Push (VAPID). Aşağıdaki çift YALNIZCA yerel geliştirme ve testler içindir (herkese
+# açık); üretimde kendi çiftini üret ve `wrangler secret put` ile yaz:
+#   npx web-push generate-vapid-keys
+# Boş bırakılırsa push kapalıdır (uygulama içi bildirimler yine çalışır).
+# İletişim adresi gizli değildir: wrangler.jsonc → vars.VAPID_SUBJECT.
+VAPID_PUBLIC_KEY=BHzRFatmnMCE8yZma0Hqe2pnc5YSVYYkt117QNbqC2AL0xeaz7vHyTDr7XX_X05VCSQB8lE9ao3YhoiMc6WkIlg
+VAPID_PRIVATE_KEY=sus2EkCSy8NOF2bejjs49IAU4O5UVQiWmsKT3Zcs-Kc

@@ -6,14 +6,17 @@ import { purgeExpiredTrash } from "~/lib/notes.server";
 import { expirePendingInvitations } from "~/lib/invitations.server";
 import { purgeDeletedProjectsOlderThanRetention } from "~/lib/projects.server";
 import { purgeNoteRooms } from "~/lib/realtime.server";
+import { runReminderJob } from "~/lib/reminders.server";
 
 type Job = (env: Env, now: Date) => Promise<void>;
 
-/** Zamanı gelmiş, gönderilmemiş hatırlatıcıları gönderir (uygulama içi + push). */
-export async function sendDueReminders(_env: Env, _now: Date): Promise<void> {
-  // TODO(Aşama 5): reminders.sent_at IS NULL AND at <= now; alıcı kuralı
-  // (not → proje üyeleri / sahibi, görev → atananlar ya da kuran), bildirim + Web Push,
-  // sent_at = now.
+/**
+ * Zamanı gelmiş, gönderilmemiş hatırlatıcıları tam bir kez alır, alıcılara bildirim yazar
+ * (not → sahibi ya da proje üyeleri, görev → atananlar ya da kuran); ardından dağıtılmamış
+ * tüm bildirimleri (canlı zil + Web Push) dağıtır.
+ */
+export async function sendDueReminders(env: Env, now: Date): Promise<void> {
+  await runReminderJob(env, now);
 }
 
 /**

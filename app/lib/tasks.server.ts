@@ -47,6 +47,7 @@ import {
   versionWriteOps,
   type Batch,
 } from "./note-store.server";
+import { taskReminderSyncOps } from "./reminders.server";
 import {
   assertScope,
   bodyTextOf,
@@ -214,6 +215,7 @@ export function scopedTasks(
       const notify = assigned.added.filter((a) => a.userId !== userId);
       await runBatch(db, [
         ...writes,
+        ...(await taskReminderSyncOps(db, noteId, before, after, now)),
         db.update(notes).set({ updatedBy: userId, updatedAt: now }).where(mine(noteId)),
         ...(await versionWriteOps(db, userId, noteId, "todo", row.title, todoSnapshot(after), now)),
         ...notify.map((a) =>

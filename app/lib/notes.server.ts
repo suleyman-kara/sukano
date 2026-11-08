@@ -57,6 +57,7 @@ import {
   versionWriteOps,
   type Batch,
 } from "./note-store.server";
+import { noteReminderMap } from "./reminders.server";
 import {
   copyAttachments,
   noteAttachments,
@@ -375,6 +376,13 @@ export function scopedNotes(
         );
       const taskMap = await cardTasks(rows.filter((r) => r.kind === "todo").map((r) => r.id));
       const fileMap = await cardAttachments(rows.filter((r) => r.kind === "text").map((r) => r.id));
+      const reminderMap =
+        view === "cop"
+          ? new Map<string, number>()
+          : await noteReminderMap(
+              db,
+              rows.map((r) => r.id),
+            );
       return rows.map((r) => {
         const t = taskMap.get(r.id);
         const f = fileMap.get(r.id);
@@ -392,6 +400,7 @@ export function scopedNotes(
           updatedAt: r.updatedAt.toISOString(),
           archivedAt: iso(r.archivedAt),
           trashedAt: iso(r.trashedAt),
+          ...(reminderMap.has(r.id) ? { reminderAt: reminderMap.get(r.id)! } : {}),
         };
       });
     },

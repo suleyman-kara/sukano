@@ -25,6 +25,11 @@ export default defineConfig(async () => {
             RESEND_API_KEY: "",
             GOOGLE_CLIENT_ID: "",
             GOOGLE_CLIENT_SECRET: "",
+            // Yalnızca testler için VAPID çifti (.dev.vars.example ile aynı); push isteği
+            // testlerde sahte fetch'e gider.
+            VAPID_PUBLIC_KEY:
+              "BHzRFatmnMCE8yZma0Hqe2pnc5YSVYYkt117QNbqC2AL0xeaz7vHyTDr7XX_X05VCSQB8lE9ao3YhoiMc6WkIlg",
+            VAPID_PRIVATE_KEY: "sus2EkCSy8NOF2bejjs49IAU4O5UVQiWmsKT3Zcs-Kc",
           },
         },
       }),

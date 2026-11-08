@@ -31,7 +31,9 @@ export type ChannelEventBody =
   | { type: "proje" }
   /** Bir üyenin rolü değişti ya da projeden çıkarıldı / ayrıldı. */
   | { type: "uyelik"; userId: string }
-  | { type: "proje-silindi" };
+  | { type: "proje-silindi" }
+  /** Kişisel kanal: yeni bildirim ya da okundu durumu değişti (zil yeniden sayar). */
+  | { type: "bildirim" };
 
 /** Olayı yapan kişi (`by`) ve sunucu zamanı (`at`, ms) her olayda bulunur. */
 export type ChannelEvent = ChannelEventBody & { by: string; at: number };
@@ -93,6 +95,7 @@ export function parseChannelEvent(raw: unknown): ChannelEvent | null {
         : null;
     case "proje":
     case "proje-silindi":
+    case "bildirim":
       return { ...base, type: raw.type };
     default:
       return null;
@@ -168,6 +171,7 @@ export function applyChannelEvent(
     case "icerik":
       return same(has(event.noteId));
     case "olusturuldu":
+    case "bildirim":
       return same(false);
     case "proje":
     case "uyelik":

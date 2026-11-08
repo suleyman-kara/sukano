@@ -4,6 +4,7 @@ import { parseTaskOps } from "~/domain/tasks/ops";
 import { fail, loaderError } from "~/lib/api-errors.server";
 import { getCloudflare } from "~/lib/context";
 import { noteAccess } from "~/lib/note-access.server";
+import { deliverPendingNotifications } from "~/lib/notifications.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/api.notlar.gorevler";
 
@@ -56,5 +57,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     parsed.value,
   );
   if (!result.ok) return fail(result.error, result.status, result.code);
+  // Göreve atanma bildirimi: canlı zil + push.
+  if (parsed.value.some((op) => op.op === "assign"))
+    getCloudflare(context).ctx.waitUntil(deliverPendingNotifications(env));
   return result;
 }
