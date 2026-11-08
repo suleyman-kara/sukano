@@ -14,8 +14,21 @@ function read(): NavMode {
   return document.documentElement.getAttribute("data-nav") === "rail" ? "rail" : "open";
 }
 
+/** Ray → açık geçişinde etiketlerin belirme süresi (60 ms gecikme + 240 ms) ve pay. */
+export const NAV_LABEL_MS = 400;
+let labelTimer: ReturnType<typeof setTimeout> | null = null;
+
 export function setNavMode(mode: NavMode) {
-  document.documentElement.setAttribute("data-nav", mode);
+  const root = document.documentElement;
+  // Açılışta etiketler gecikmeli belirir (MicroMotion 4); öznitelik yalnızca geçiş süresince.
+  if (labelTimer) clearTimeout(labelTimer);
+  if (mode === "open" && root.getAttribute("data-nav") === "rail") {
+    root.setAttribute("data-nav-gecis", "acilis");
+    labelTimer = setTimeout(() => root.removeAttribute("data-nav-gecis"), NAV_LABEL_MS);
+  } else {
+    root.removeAttribute("data-nav-gecis");
+  }
+  root.setAttribute("data-nav", mode);
   try {
     window.localStorage.setItem(NAV_STORAGE_KEY, mode);
   } catch {

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { setNavMode, useNavMode } from "~/lib/nav-state";
+import { NAV_LABEL_MS, setNavMode, useNavMode } from "~/lib/nav-state";
 import { NAV_STORAGE_KEY } from "~/lib/theme";
 
 const root = () => document.documentElement;
@@ -52,5 +52,25 @@ describe("sol panel durumu (nav-state)", () => {
     const { unmount } = renderHook(() => useNavMode());
     unmount();
     expect(remove).toHaveBeenCalled();
+  });
+
+  it("ray → açık geçişinde etiketler için geçiş özniteliği kısa süre yazılır", () => {
+    vi.useFakeTimers();
+    try {
+      root().setAttribute("data-nav", "rail");
+      setNavMode("open");
+      expect(root()).toHaveAttribute("data-nav-gecis", "acilis");
+      vi.advanceTimersByTime(NAV_LABEL_MS);
+      expect(root()).not.toHaveAttribute("data-nav-gecis");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("açık → ray geçişinde etiket hareketi yok", () => {
+    root().setAttribute("data-nav", "open");
+    root().setAttribute("data-nav-gecis", "acilis");
+    setNavMode("rail");
+    expect(root()).not.toHaveAttribute("data-nav-gecis");
   });
 });

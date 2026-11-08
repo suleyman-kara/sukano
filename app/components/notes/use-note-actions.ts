@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useFetchers, useSubmit } from "react-router";
 import { toast } from "sonner";
+import { withDurationBar } from "~/components/ui/sonner";
 import { intentToForm, parseNoteIntent, type NoteIntent } from "~/domain/notes/validation";
 
 export const NOTES_ACTION = "/api/notlar";
@@ -30,7 +31,7 @@ export function useNoteActions() {
   return useMemo(() => {
     const undoToast = (message: string, undo: () => void) =>
       toast(message, {
-        duration: UNDO_TOAST_MS,
+        ...withDurationBar(UNDO_TOAST_MS),
         action: { label: "Geri al", onClick: undo },
       });
 

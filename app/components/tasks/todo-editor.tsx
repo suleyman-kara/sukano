@@ -24,6 +24,7 @@ import {
 import { cn } from "cn";
 import { Popover, PopoverAnchor, PopoverContent } from "~/components/ui/popover";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
+import { useReducedMotion } from "~/hooks/use-reduced-motion";
 import type { Peer } from "~/domain/realtime/presence";
 import { clearCompleted as clearCompletedTasks } from "~/domain/tasks/completion";
 import { fixRange, parseNaturalDate, pickDate, todayIn, type DateSlot } from "~/domain/tasks/dates";
@@ -62,6 +63,7 @@ import { checkboxLabel, INDENT, MOBILE_INDENT, rowIndent, TaskRow } from "./task
 import { DateSheetHeader, TaskDetailSheet, TodoSheet, WhoSheetHeader } from "./todo-sheets";
 import { TodoToasts } from "./todo-toasts";
 import { TodoToolbar, useKeyboardInset } from "./todo-toolbar";
+import { useRowFlip } from "./use-row-flip";
 import { useTaskViewState } from "./use-task-view-state";
 import { useTodoTasks, type LiveTaskSource } from "./use-todo-tasks";
 import type { TaskReminderControl } from "~/components/reminders/use-reminders";
@@ -70,6 +72,8 @@ import { useTodoUndo } from "./use-todo-undo";
 export const COARSE_QUERY = "(pointer: coarse)";
 /** Satırın gruba inişi (SETTLE_MS'in son anı): large, ease-in-out (MicroMotion 1). */
 const LEAVE_MS = 320;
+/** Klavyeyle (Ctrl+Enter) tamamlamada iniş kısalır: small (MicroMotion ortak kurallar). */
+export const QUICK_LEAVE_MS = 180;
 const BLOCK_MS = 600;
 
 const newId = () => crypto.randomUUID();
@@ -182,7 +186,7 @@ export function TodoEditor({
       for (const id of p.focusTaskIds) map.set(id, [...(map.get(id) ?? []), p]);
     return map;
   }, [peers]);
-  const view = useTaskViewState(noteId);
+  const baseView = useTaskViewState(noteId);
   const coarse = useMediaQuery(COARSE_QUERY, false);
   const mobile = !useMediaQuery(TABLET_UP_QUERY, true);
   const tablet = coarse && !mobile;
@@ -212,6 +216,26 @@ export function TodoEditor({
   const [, setTick] = useState(0);
 
   const rootRef = useRef<HTMLDivElement>(null);
+  // Alt görev aç / kapa: altta kalan satırlar kayarak yer değiştirir (MicroMotion 7).
+  const recordRows = useRowFlip(rootRef, useReducedMotion());
+  const view = useMemo(
+    () => ({
+      ...baseView,
+      setOpen: (id: string, on?: boolean) => {
+        recordRows();
+        baseView.setOpen(id, on);
+      },
+      setGroupOpen: (key: string, on?: boolean) => {
+        recordRows();
+        baseView.setGroupOpen(key, on);
+      },
+      setExpanded: (ids: Iterable<string>) => {
+        recordRows();
+        baseView.setExpanded(ids);
+      },
+    }),
+    [baseView, recordRows],
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   const pending = useRef<Focus | null>(null);
@@ -305,18 +329,28 @@ export function TodoEditor({
     [],
   );
 
-  const settle = useCallback((ids: string[]) => {
+  /** Klavyeyle tamamlama: tik anında, iniş 180 ms (`data-hizli-tamamlama`). */
+  const [quick, setQuick] = useState(false);
+  const settle = useCallback((ids: string[], fromKey = false) => {
     clearSettleTimers();
+    const leaveMs = fromKey ? QUICK_LEAVE_MS : LEAVE_MS;
+    setQuick(fromKey);
     setLeaving(new Set());
     setSettling((s) => new Set([...s, ...ids]));
     settleTimers.current.push(
-      setTimeout(() => setLeaving(new Set(["*"])), SETTLE_MS - LEAVE_MS),
+      setTimeout(() => setLeaving(new Set(["*"])), SETTLE_MS - leaveMs),
       setTimeout(() => {
         setLanded(settlingRef.current);
         setSettling(new Set());
         setLeaving(new Set());
       }, SETTLE_MS),
-      setTimeout(() => setLanded(new Set()), SETTLE_MS + LEAVE_MS + 60),
+      setTimeout(
+        () => {
+          setLanded(new Set());
+          setQuick(false);
+        },
+        SETTLE_MS + leaveMs + 60,
+      ),
     );
   }, []);
 
@@ -357,7 +391,7 @@ export function TodoEditor({
       apply({ tasks: r.result.tasks, ops: r.result.ops });
       undo.afterToggle(r.undo, r.toastKey);
       if (r.result.completed) {
-        settle(r.result.changed);
+        settle(r.result.changed, fromKey);
         if (fromKey) {
           const next = focusAfterComplete(list, visibleRef.current, id, r.result.changed);
           if (next) focusRow(next, "end");
@@ -923,6 +957,7 @@ export function TodoEditor({
     <div
       ref={rootRef}
       data-todo-editor=""
+      data-hizli-tamamlama={quick ? "" : undefined}
       className={cn("relative flex min-h-0 flex-1 flex-col", className)}
       onKeyDown={onRootKey}
     >

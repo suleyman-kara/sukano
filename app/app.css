@@ -533,10 +533,8 @@
     text-decoration-color: currentColor;
   }
 
-  /* Alt görev açılınca alt satırlar 60 ms gecikmeli belirir (MicroMotion 7). */
-  .task-enter {
-    animation: task-enter var(--dur-medium) var(--ease-out) 60ms both;
-  }
+  /* Alt görev açılınca alt satırlar 60 ms gecikmeli belirir (MicroMotion 7; yükseklik
+     aşağıda, `task-open`). */
   /* Tamamlanan satır 1,2 sn bekledikten sonra Tamamlananlar'a iner: large, ease-in-out. */
   .task-leave {
     overflow: hidden;
@@ -741,6 +739,88 @@
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion="full"]) :is(.drag-lift, .empty-in, .empty-in-late),
     :root:not([data-motion="full"]) .skeleton::after {
+      animation: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Toast süre çizgisi (MicroMotion 2): "Geri al" toast'larının altında, */
+/* süre boyunca linear daralır; imleç üstündeyken durur. Sonner kendi    */
+/* stillerini katmansız yazdığı için bu kural da katmansızdır.          */
+/* ------------------------------------------------------------------ */
+:root [data-sonner-toast].toast-sure {
+  background-image: linear-gradient(var(--primary), var(--primary));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 2.5px;
+  animation: toast-sure var(--toast-sure, 6s) linear forwards;
+}
+:root [data-sonner-toaster]:hover [data-sonner-toast].toast-sure,
+:root [data-sonner-toast].toast-sure[data-expanded="true"]:hover {
+  animation-play-state: paused;
+}
+@keyframes toast-sure {
+  to {
+    background-size: 0% 2.5px;
+  }
+}
+/* Azaltılmış hareket: çizgi durağan (tam) kalır. */
+:root[data-motion="reduced"] [data-sonner-toast].toast-sure {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) [data-sonner-toast].toast-sure {
+    animation: none;
+  }
+}
+
+@layer components {
+  /* Sol panel ray → açık (MicroMotion 4): etiketler 60 ms gecikmeli saydamlıkla belirir
+     (6 px soldan). `data-nav-gecis` yalnızca geçiş anında yazılır (app/lib/nav-state.ts);
+     sayfa yüklenince ya da gezinmede etiketler oynamaz. */
+  [data-nav-gecis="acilis"] .nav-label {
+    animation: nav-label-in var(--dur-medium) var(--ease-out) 60ms both;
+  }
+  @keyframes nav-label-in {
+    from {
+      opacity: 0;
+      transform: translateX(-6px);
+    }
+  }
+
+  /* Klavyeyle (Ctrl+Enter) tamamlama: tik anında, satırın inişi 180 ms (MicroMotion ortak
+     kurallar: klavyeyle ve sık tekrarlanan eylemde hareket kısalır). */
+  [data-hizli-tamamlama] :is(.task-cb, .task-cb::after, .task-title) {
+    transition: none;
+  }
+  [data-hizli-tamamlama] :is(.task-leave, .task-landed) {
+    animation-duration: var(--dur-small);
+  }
+
+  /* Alt görev açılınca satır yüksekliği 240 ms'de açılır (MicroMotion 7); içerik 60 ms
+     gecikmeli belirir (`.task-enter`). */
+  .task-enter {
+    animation:
+      task-open var(--dur-medium) var(--ease-out),
+      task-enter var(--dur-medium) var(--ease-out) 60ms both;
+  }
+  @keyframes task-open {
+    from {
+      max-height: 0;
+      overflow: hidden;
+    }
+    99% {
+      max-height: 64px;
+      overflow: hidden;
+    }
+  }
+  /* Azaltılmış hareket: etiketler kaymaz (taban kural süreyi zaten sıfırlar). */
+  [data-motion="reduced"] .nav-label {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .nav-label {
       animation: none;
     }
   }
