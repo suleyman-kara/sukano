@@ -68,8 +68,8 @@ import type { TaskReminderControl } from "~/components/reminders/use-reminders";
 import { useTodoUndo } from "./use-todo-undo";
 
 export const COARSE_QUERY = "(pointer: coarse)";
-/** Satırın gruba süzülme animasyonu (SETTLE_MS'in son anı). */
-const LEAVE_MS = 240;
+/** Satırın gruba inişi (SETTLE_MS'in son anı): large, ease-in-out (MicroMotion 1). */
+const LEAVE_MS = 320;
 const BLOCK_MS = 600;
 
 const newId = () => crypto.randomUUID();
@@ -201,6 +201,12 @@ export function TodoEditor({
   const [help, setHelpState] = useState(false);
   const [settling, setSettling] = useState<ReadonlySet<string>>(() => new Set());
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(() => new Set());
+  /** Tamamlananlar grubuna yeni inen satırlar (iniş animasyonunun ikinci yarısı). */
+  const [landed, setLanded] = useState<ReadonlySet<string>>(() => new Set());
+  const settlingRef = useRef(settling);
+  useEffect(() => {
+    settlingRef.current = settling;
+  }, [settling]);
   const [blocked, setBlocked] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [, setTick] = useState(0);
@@ -306,9 +312,11 @@ export function TodoEditor({
     settleTimers.current.push(
       setTimeout(() => setLeaving(new Set(["*"])), SETTLE_MS - LEAVE_MS),
       setTimeout(() => {
+        setLanded(settlingRef.current);
         setSettling(new Set());
         setLeaving(new Set());
       }, SETTLE_MS),
+      setTimeout(() => setLanded(new Set()), SETTLE_MS + LEAVE_MS + 60),
     );
   }, []);
 
@@ -982,7 +990,15 @@ export function TodoEditor({
                     coarse={coarse}
                     detailOpen={detail?.id === r.id}
                     pickerOpen={picker?.id === r.id}
-                    settle={settling.has(r.id) ? (leaving.size ? "leave" : "stay") : null}
+                    settle={
+                      settling.has(r.id)
+                        ? leaving.size
+                          ? "leave"
+                          : "stay"
+                        : landed.has(r.id)
+                          ? "landed"
+                          : null
+                    }
                     blocked={blocked === r.id}
                     projectedDepth={drag?.id === r.id ? (projection?.depth ?? null) : null}
                     sortable={editable && !isDone(r.task)}
@@ -1311,7 +1327,7 @@ export function TodoEditor({
 function DragGhost({ row }: { row: TaskRowData | undefined }) {
   if (!row) return null;
   return (
-    <div className="flex min-h-[38px] cursor-grabbing items-center gap-2 rounded-lg border border-line bg-surface py-0.5 pr-3 pl-8 shadow-elevated">
+    <div className="drag-lift flex min-h-[38px] cursor-grabbing items-center gap-2 rounded-lg border border-line bg-surface py-0.5 pr-3 pl-8 shadow-elevated">
       <input
         type="checkbox"
         className="task-cb"

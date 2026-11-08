@@ -119,7 +119,7 @@ export function TaskDetail({
       data-todo-esc=""
       role="group"
       aria-label={`${task.title.trim() || "Adsız görev"}: ayrıntılar`}
-      className="mr-2 mb-2.5 ml-9 flex flex-col gap-2.5 border-l-2 border-line pt-2 pr-3 pb-3 pl-3"
+      className="task-enter mr-2 mb-2.5 ml-9 flex flex-col gap-2.5 border-l-2 border-line pt-2 pr-3 pb-3 pl-3"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.preventDefault();
@@ -195,7 +195,7 @@ export function DoneGroupHeader({
     >
       <ChevronRight
         className={cn(
-          "size-4 transition-transform duration-150 reduced-motion:transition-none",
+          "size-4 transition-transform duration-(--dur-small) ease-(--ease-out) reduced-motion:transition-none",
           open && "rotate-90",
         )}
         aria-hidden="true"

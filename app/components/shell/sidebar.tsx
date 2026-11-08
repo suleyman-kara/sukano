@@ -161,7 +161,7 @@ export function SidebarNav({
 /** Kalıcı sol panel: mobilde gizli, tablette ray, masaüstünde 248/72 px. */
 export function Sidebar(props: Omit<SidebarNavProps, "variant" | "onNavigate">) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-line px-3 py-5 whitespace-nowrap transition-[width] duration-[180ms] ease-spring md:flex railed:w-[72px] reduced-motion:transition-none">
+    <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-line px-3 py-5 whitespace-nowrap transition-[width] duration-(--dur-medium) ease-(--ease-out) md:flex railed:w-[72px] railed:duration-(--dur-small) railed:ease-(--ease-in) reduced-motion:transition-none">
       <SidebarNav {...props} variant="responsive" />
     </aside>
   );

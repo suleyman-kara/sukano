@@ -60,12 +60,14 @@ import { formatShortDateTime } from "~/domain/notes/dates";
 import { remoteNoteOutcome, type RemoteNoteOutcome } from "~/domain/realtime/live-ui";
 import type { NoteMetaPatch } from "~/domain/realtime/protocol";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
+import { useReducedMotion } from "~/hooks/use-reduced-motion";
 import type { NoteDetail } from "~/lib/notes.server";
 import type { NoteReminders } from "~/lib/reminders.server";
 import { DEFAULT_TIME_ZONE } from "~/domain/reminders/time";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
 import { useConvertNote } from "./convert-note";
+import { closeToCard, focusCard, useCardToModalEnter } from "./card-to-modal";
 import { MoveCopyDialog } from "./move-copy";
 import { canWriteNote, PERSONAL_ACCESS, type MoveTarget, type NoteAccessInfo } from "./note-access";
 import {
@@ -238,11 +240,27 @@ export function NoteDialog({
     return Promise.all([pending, saved]).then(() => {});
   }, [revalidator, liveFlush, note.kind]);
 
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const reduced = useReducedMotion();
+  const enterFromCard = useCardToModalEnter(note.id, reduced);
+  const setContent = useCallback(
+    (el: HTMLDivElement | null) => {
+      contentRef.current = el;
+      enterFromCard(el);
+    },
+    [enterFromCard],
+  );
+  const closing = useRef(false);
   const close = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
     saver.flush();
     void flushTasks();
-    navigate(closeTo, { preventScrollReset: true });
-  }, [saver, flushTasks, navigate, closeTo]);
+    // Kartın yerine küçülerek kapanır (azaltılmış harekette anında).
+    closeToCard(note.id, contentRef.current, reduced, () =>
+      navigate(closeTo, { preventScrollReset: true }),
+    );
+  }, [saver, flushTasks, navigate, closeTo, note.id, reduced]);
 
   const leave = (fn: () => void) => {
     saver.flush();
@@ -374,6 +392,7 @@ export function NoteDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
+        ref={setContent}
         showCloseButton={false}
         data-canli={live?.status ?? "kapali"}
         data-canli-kisi={live?.peers.length ?? 0}
@@ -393,8 +412,13 @@ export function NoteDialog({
           e.preventDefault();
           (e.currentTarget as HTMLElement | null)?.focus();
         }}
+        onCloseAutoFocus={(e) => {
+          // Odak açılan kartın bağlantısına döner (ızgarada yoksa Radix'in varsayılanı).
+          if (focusCard(note.id)) e.preventDefault();
+        }}
         className={cn(
-          "flex flex-col gap-0 overflow-hidden p-0 text-fg ring-0",
+          // Açılış hareketi `useCardToModalEnter` ile (karttan büyür); CSS girişi kapalı.
+          "flex flex-col gap-0 overflow-hidden p-0 text-fg ring-0 data-open:animate-none",
           tabletUp
             ? cn(
                 "top-[60px] max-h-[calc(100dvh-120px)] w-[calc(100%-2rem)] max-w-[680px] translate-y-0 rounded-2xl shadow-elevated sm:max-w-[680px]",

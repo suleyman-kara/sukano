@@ -1,3 +1,4 @@
+import { Skeleton } from "~/components/ui/skeleton";
 import { Info, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
@@ -109,7 +110,7 @@ export function VersionHistory({
               aria-label="Sürümler"
             >
               {list.state === "loading" && versions.length === 0 && (
-                <p className="m-0 py-6 text-center text-muted-foreground">Yükleniyor…</p>
+                <Skeleton lines={4} className="px-2" />
               )}
               {list.state === "idle" && versions.length === 0 && (
                 <p className="m-0 py-6 text-center text-muted-foreground">
@@ -189,7 +190,7 @@ export function VersionHistory({
                   tasks={shown.tasks}
                 />
               ) : (
-                selectedItem && <p className="m-0 text-muted-foreground">Yükleniyor…</p>
+                selectedItem && <Skeleton lines={5} />
               )}
             </div>
             <div className="flex gap-2 border-t border-line px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] md:hidden">

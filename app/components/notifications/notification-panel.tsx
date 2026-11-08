@@ -1,3 +1,4 @@
+import { Skeleton } from "~/components/ui/skeleton";
 import { Settings } from "lucide-react";
 import { Link } from "react-router";
 import { cn } from "cn";
@@ -73,11 +74,7 @@ export function NotificationList({
             {feed.error ? "Bildirimler yüklenemedi." : "Henüz bildirimin yok."}
           </p>
         )}
-        {feed.loading && feed.items.length === 0 && (
-          <p className="m-0 border-t border-line px-4 py-8 text-center text-muted-foreground">
-            Yükleniyor…
-          </p>
-        )}
+        {feed.loading && feed.items.length === 0 && <Skeleton lines={3} className="px-4 py-5" />}
       </div>
       {feed.hasMore && (
         <div className={cn("text-center", page ? "pt-2" : "border-t border-line px-4 py-2.5")}>

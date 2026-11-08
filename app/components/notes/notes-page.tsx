@@ -60,11 +60,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center md:py-24">
-      <span className="inline-flex size-16 items-center justify-center rounded-[18px] bg-primary-soft text-primary [&_svg]:size-[30px]">
+      <span className="empty-in inline-flex size-16 items-center justify-center rounded-[18px] bg-primary-soft text-primary [&_svg]:size-[30px]">
         {icon}
       </span>
-      <h2 className="m-0 text-lg font-semibold">{title}</h2>
-      {children && <p className="m-0 max-w-[320px] text-muted-foreground">{children}</p>}
+      <h2 className="empty-in-late m-0 text-lg font-semibold">{title}</h2>
+      {children && (
+        <p className="empty-in-late m-0 max-w-[320px] text-muted-foreground">{children}</p>
+      )}
       {actions && <div className="mt-2 flex gap-2">{actions}</div>}
     </div>
   );

@@ -47,10 +47,13 @@
   }
 }
 
-/* Hareketi azalt: sistem tercihi ya da <html data-motion="reduced">. */
+/* Hareketi azalt: sistem tercihi (Ayarlar "Kapalı" — <html data-motion="full"> — değilse)
+   ya da Ayarlar "Açık" (<html data-motion="reduced">). Bkz. app/lib/motion.ts. */
 @custom-variant reduced-motion {
   @media (prefers-reduced-motion: reduce) {
-    @slot;
+    &:where(:root:not([data-motion="full"]) *) {
+      @slot;
+    }
   }
   &:where([data-motion="reduced"] *) {
     @slot;
@@ -104,14 +107,20 @@
   --p-sari: #87691a;
   --p-grimavi: #4f6c7a;
 
-  /* Hareket ölçeği */
-  --dur-micro: 120ms;
-  --dur-small: 180ms;
-  --dur-medium: 240ms;
-  --dur-large: 320ms;
-  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
-  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Hareket ölçeği (MotionSpec; JS karşılığı app/lib/motion.ts) */
+  --dur-micro: 120ms; /* basma, hover, kutucuk, tik */
+  --dur-small: 180ms; /* popover, menü, tooltip, çıkışlar */
+  --dur-medium: 240ms; /* toast, kart girişi, panel, alt görev */
+  --dur-large: 320ms; /* kart → modal, satırın inişi */
+  --dur-ambient: 11s; /* yalnızca giriş ekranı arka planı (8–14 s) */
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1); /* giriş */
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0); /* çıkış; süre girişin ~%75'i */
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1); /* büyüyen yüzey, bırakma */
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1); /* ekranda kalan öğe kayar */
+  --ease-ambient: cubic-bezier(0.45, 0, 0.55, 1);
+  /* Eski adlar (geriye uyum) */
+  --ease-out-quart: var(--ease-out);
+  --ease-in-quart: var(--ease-in);
 
   --radius: 10px;
 }
@@ -324,7 +333,7 @@
     position: absolute;
     opacity: var(--rg-o0);
     will-change: transform, opacity;
-    animation: rising-grid var(--rg-dur, 11s) cubic-bezier(0.45, 0, 0.55, 1) var(--rg-delay, 0s)
+    animation: rising-grid var(--rg-dur, var(--dur-ambient)) var(--ease-ambient) var(--rg-delay, 0s)
       infinite alternate both;
   }
   [data-theme="dark"] .rising-grid-mark {
@@ -335,7 +344,7 @@
     animation: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    .rising-grid-mark {
+    :root:not([data-motion="full"]) .rising-grid-mark {
       animation: none;
     }
   }
@@ -432,7 +441,7 @@
     animation: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    .note-prose .collab-caret__label {
+    :root:not([data-motion="full"]) .note-prose .collab-caret__label {
       animation: none;
     }
   }
@@ -459,9 +468,14 @@
     border-radius: 5px;
     background: var(--surface);
     cursor: pointer;
+    /* Kutucuk dolar: micro, ease-out (MicroMotion 1). */
     transition:
-      background-color var(--dur-small) var(--ease-out-quart),
-      border-color var(--dur-small) var(--ease-out-quart);
+      background-color var(--dur-micro) var(--ease-out),
+      border-color var(--dur-micro) var(--ease-out),
+      transform var(--dur-micro) var(--ease-out);
+  }
+  .task-cb:active:not(:disabled) {
+    transform: scale(0.92);
   }
   .task-cb::after {
     content: "";
@@ -473,7 +487,12 @@
     border: solid var(--accent-fg);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg) scale(0);
-    transition: transform var(--dur-small) var(--ease-spring);
+    /* Tik dolgudan hemen sonra çizilir: small, ease-out. */
+    transition: transform var(--dur-small) var(--ease-out) 40ms;
+  }
+  .task-cb:not(:checked)::after {
+    transition-duration: 0s;
+    transition-delay: 0s;
   }
   .task-cb:checked {
     background: var(--accent);
@@ -514,13 +533,25 @@
     text-decoration-color: currentColor;
   }
 
+  /* Alt görev açılınca alt satırlar 60 ms gecikmeli belirir (MicroMotion 7). */
   .task-enter {
-    animation: task-enter var(--dur-small) var(--ease-out-quart);
+    animation: task-enter var(--dur-medium) var(--ease-out) 60ms both;
   }
+  /* Tamamlanan satır 1,2 sn bekledikten sonra Tamamlananlar'a iner: large, ease-in-out. */
   .task-leave {
     overflow: hidden;
     pointer-events: none;
-    animation: task-leave var(--dur-medium) var(--ease-in-quart) forwards;
+    animation: task-leave var(--dur-large) var(--ease-inout) forwards;
+  }
+  /* Tamamlananlar grubuna inen satır yukarıdan gelir. */
+  .task-landed {
+    animation: task-landed var(--dur-large) var(--ease-inout) both;
+  }
+  @keyframes task-landed {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
   }
   @keyframes task-enter {
     from {
@@ -535,7 +566,7 @@
     to {
       opacity: 0;
       max-height: 0;
-      transform: translateY(6px);
+      transform: translateY(12px);
     }
   }
   @keyframes task-nodel {
@@ -555,39 +586,36 @@
     background: var(--danger-soft) !important;
   }
 
-  .todo-toast {
-    animation: todo-toast-in var(--dur-medium) var(--ease-out-quart);
-  }
-  @keyframes todo-toast-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-  }
-
-  [data-motion="reduced"] :is(.task-enter, .task-leave, .todo-toast, .task-nodel) {
+  [data-motion="reduced"] :is(.task-enter, .task-leave, .task-landed, .task-nodel) {
     animation: none;
   }
   [data-motion="reduced"] :is(.task-cb, .task-cb::after, .task-title) {
     transition: none;
   }
+  [data-motion="reduced"] .task-cb:active {
+    transform: none;
+  }
   @media (prefers-reduced-motion: reduce) {
-    :is(.task-enter, .task-leave, .todo-toast, .task-nodel) {
+    :root:not([data-motion="full"]) :is(.task-enter, .task-leave, .task-landed, .task-nodel) {
       animation: none;
     }
-    :is(.task-cb, .task-cb::after, .task-title) {
+    :root:not([data-motion="full"]) :is(.task-cb, .task-cb::after, .task-title) {
       transition: none;
+    }
+    :root:not([data-motion="full"]) .task-cb:active {
+      transform: none;
     }
   }
 }
 
-/* Hareketi azalt (sistem tercihi ya da Ayarlar): giriş/çıkış animasyonları ve geçişler
-   anında biter (Radix Presence animationend'i yine alır). */
+/* Hareketi azalt (sistem tercihi ya da Ayarlar "Açık"; Ayarlar "Kapalı" sistemi geçersiz
+   kılar): giriş/çıkış animasyonları ve geçişler anında biter (Radix Presence animationend'i
+   yine alır). Kayma, ölçek, ortam döngüsü ve ışıltı yukarıdaki kurallarla tümden kapanır. */
 @layer base {
   @media (prefers-reduced-motion: reduce) {
-    *,
-    ::before,
-    ::after {
+    :root:not([data-motion="full"]) *,
+    :root:not([data-motion="full"]) ::before,
+    :root:not([data-motion="full"]) ::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -624,5 +652,96 @@
   .card-cb:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mikro etkileşimler (MicroMotion): toast, sürükleme, iskelet, boş     */
+/* durum logosu. Azaltılmış harekette kayma/ölçek/ışıltı kapanır.        */
+/* ------------------------------------------------------------------ */
+@layer components {
+  /* Uygulama toast'ı (sonner): giriş medium ease-out, çıkış small ease-in (MicroMotion 2). */
+  :root [data-sonner-toast] {
+    transition-duration: var(--dur-medium);
+    transition-timing-function: var(--ease-out);
+  }
+  :root [data-sonner-toast][data-removed="true"] {
+    transition-duration: var(--dur-small);
+    transition-timing-function: var(--ease-in);
+  }
+
+  /* Sürükleme: kaldırma micro, 1,03 ölçek + gölge (MicroMotion 9). */
+  .drag-lift {
+    box-shadow: var(--shadow);
+    animation: drag-lift var(--dur-micro) var(--ease-out) forwards;
+  }
+  @keyframes drag-lift {
+    to {
+      transform: rotate(1.5deg) scale(1.03);
+    }
+  }
+
+  /* İskelet: durağan gri yüzey + ışıltı bandı 1,6 sn + 0,8 sn ara (yalnızca transform).
+     `.skeleton-late`: 300 ms'den kısa yüklemede hiç görünmez (MicroMotion 6). */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--hover);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--surface) 55%, transparent),
+      transparent
+    );
+    animation: skeleton-shimmer 2.4s linear infinite;
+  }
+  @keyframes skeleton-shimmer {
+    66.666%,
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .skeleton-late {
+    animation: skeleton-late 0s linear 300ms both;
+  }
+  @keyframes skeleton-late {
+    from {
+      visibility: hidden;
+    }
+    to {
+      visibility: visible;
+    }
+  }
+
+  /* Boş durum simgesi: belirir ve yerine oturur; metin 160 ms sonra (MicroMotion 10). */
+  .empty-in {
+    animation: empty-in var(--dur-medium) var(--ease-out) both;
+  }
+  .empty-in-late {
+    animation: empty-in var(--dur-medium) var(--ease-out) 160ms both;
+  }
+  @keyframes empty-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.96);
+    }
+  }
+
+  [data-motion="reduced"] :is(.drag-lift, .empty-in, .empty-in-late),
+  [data-motion="reduced"] .skeleton::after {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.drag-lift, .empty-in, .empty-in-late),
+    :root:not([data-motion="full"]) .skeleton::after {
+      animation: none;
+    }
   }
 }

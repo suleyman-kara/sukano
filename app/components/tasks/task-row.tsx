@@ -40,8 +40,8 @@ export type TaskRowProps = {
   coarse: boolean;
   detailOpen: boolean;
   pickerOpen: boolean;
-  /** Tamamlandı, 1,2 sn yerinde; "leave" son anda gruba süzülme. */
-  settle: "stay" | "leave" | null;
+  /** Tamamlandı, 1,2 sn yerinde; "leave" son anda gruba iniş; "landed" grupta yerine oturma. */
+  settle: "stay" | "leave" | "landed" | null;
   blocked: boolean;
   /** Sürüklenirken tahmin edilen seviye (yalnızca sürüklenen satır). */
   projectedDepth: number | null;
@@ -125,6 +125,7 @@ export const TaskRow = memo(function TaskRow({
         "relative",
         depth > 0 && settle === null && "task-enter",
         settle === "leave" && "task-leave",
+        settle === "landed" && "task-landed",
         isDragging && "z-[2] opacity-60",
       )}
       style={{
@@ -180,7 +181,7 @@ export const TaskRow = memo(function TaskRow({
         >
           <ChevronRight
             className={cn(
-              "size-4 transition-transform duration-150 reduced-motion:transition-none",
+              "size-4 transition-transform duration-(--dur-small) ease-(--ease-out) reduced-motion:transition-none",
               row.expanded && "rotate-90",
             )}
             aria-hidden="true"

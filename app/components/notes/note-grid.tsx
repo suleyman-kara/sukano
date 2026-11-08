@@ -21,6 +21,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { useReducedMotion } from "~/hooks/use-reduced-motion";
+import { exitTransition, motionTransition } from "~/lib/motion";
 import type { NoteCardData } from "~/domain/notes/optimistic";
 import { NoteCard, type NoteCardProps } from "./note-card";
 
@@ -157,12 +158,15 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
   );
 }
 
-/** Kart giriş / çıkış / kayma: medium 240 ms, ease-out-quart (MotionSpec). */
-const CARD_TRANSITION: Transition = { duration: 0.24, ease: [0.25, 1, 0.5, 1] };
+/**
+ * Izgaraya giriş ve çıkış (MicroMotion 5): yeni kart .92 → 1 ölçek, medium ease-out;
+ * silinen 1 → .92 ve saydam, small ease-in; komşular medium kayar.
+ */
+const CARD_TRANSITION = motionTransition("medium", false) as Transition;
 const CARD_EXIT: TargetAndTransition = {
   opacity: 0,
-  scale: 0.96,
-  transition: { duration: 0.18, ease: [0.5, 0, 0.75, 0] },
+  scale: 0.92,
+  transition: exitTransition("medium", false) as Transition,
 };
 
 function SortableCard({
@@ -184,7 +188,7 @@ function SortableCard({
       data-note-item={note.id}
       className="break-inside-avoid"
       layout={reduced || isDragging ? false : "position"}
-      initial={reduced ? false : { opacity: 0, scale: 0.96 }}
+      initial={reduced ? false : { opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={reduced ? undefined : CARD_EXIT}
       transition={CARD_TRANSITION}

@@ -28,6 +28,7 @@ import { DEFAULT_TIME_ZONE } from "~/domain/reminders/time";
 import { useShellData } from "~/lib/shell";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
+import { rememberCardOrigin } from "./card-to-modal";
 import { useConvertNote } from "./convert-note";
 import { NoteMoreMenuContent, NoteSheet } from "./note-menu";
 import type { NoteActions } from "./use-note-actions";
@@ -124,14 +125,15 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
       data-note-id={note.id}
       data-color={note.color}
       className={cn(
-        "group/card relative mb-2.5 block break-inside-avoid rounded-xl border border-line p-3 text-fg transition-shadow duration-150 md:mb-4 md:rounded-2xl md:px-4 md:pt-4 md:pb-3",
+        "group/card relative mb-2.5 block break-inside-avoid rounded-xl border border-line p-3 text-fg transition-shadow duration-(--dur-micro) ease-(--ease-out) md:mb-4 md:rounded-2xl md:px-4 md:pt-4 md:pb-3",
         "hover:shadow-elevated has-[a[data-open]:focus-visible]:outline-2 has-[a[data-open]:focus-visible]:outline-offset-2 has-[a[data-open]:focus-visible]:outline-primary",
         keepBar && "shadow-elevated",
         dragging && "opacity-0",
         dropTarget &&
           "outline-2 outline-offset-2 outline-[color-mix(in_srgb,var(--muted)_60%,transparent)] outline-dashed",
+        // Sürüklenen kart kalkar: 1,03 ölçek + hafif eğim + gölge (azaltılmış harekette yalnızca gölge).
         overlay &&
-          "rotate-2 cursor-grabbing shadow-[0_2px_4px_rgba(0,0,0,.08),0_16px_36px_rgba(0,0,0,.18)]",
+          "drag-lift cursor-grabbing shadow-[0_2px_4px_rgba(0,0,0,.08),0_16px_36px_rgba(0,0,0,.18)]!",
         className,
       )}
       style={{ background: noteBg(note.color), ...style }}
@@ -144,6 +146,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           aria-label={label}
           className="absolute inset-0 z-0 rounded-[inherit] outline-none"
           onKeyDown={onKeyDown}
+          onClick={(e) => rememberCardOrigin(note.id, e.currentTarget.closest("article"))}
           preventScrollReset
         />
       )}
@@ -381,7 +384,7 @@ type CardActionsProps = {
 };
 
 const BAR =
-  "relative z-[1] -mx-2 mt-1.5 -mb-1.5 flex gap-0.5 opacity-0 transition-opacity duration-150 group-hover/card:opacity-100 group-has-[:focus-visible]/card:opacity-100 focus-within:opacity-100";
+  "relative z-[1] -mx-2 mt-1.5 -mb-1.5 flex gap-0.5 opacity-0 transition-opacity duration-(--dur-micro) ease-(--ease-out) group-hover/card:opacity-100 group-has-[:focus-visible]/card:opacity-100 focus-within:opacity-100";
 
 function CardActions({
   note,

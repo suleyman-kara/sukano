@@ -260,7 +260,7 @@ function PendingTile({
             className="block h-1 overflow-hidden rounded-full bg-line"
           >
             <span
-              className="block h-full rounded-full bg-primary transition-[width] duration-150"
+              className="block h-full rounded-full bg-primary transition-[width] duration-(--dur-small) ease-linear"
               style={{ width: `${percent}%` }}
             />
           </span>
