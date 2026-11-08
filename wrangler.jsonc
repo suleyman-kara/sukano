@@ -41,7 +41,7 @@
     {
       "binding": "DB",
       "database_name": "sukano",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "2c9984fd-0de1-4a5b-bb69-11ad11969ea0",
       "migrations_dir": "migrations",
     },
   ],
