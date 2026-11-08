@@ -12,7 +12,6 @@ import {
   Lock,
   MoreVertical,
   Palette,
-  Paperclip,
   Pin,
   Trash2,
   X,
@@ -21,6 +20,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher, useNavigate, useRevalidator, useSubmit } from "react-router";
 import { toast } from "sonner";
 import { cn } from "cn";
+import {
+  AttachButton,
+  AttachmentStrip,
+  DropOverlay,
+} from "~/components/attachments/attachment-list";
+import {
+  hasFiles,
+  MESSAGES as ATTACHMENT_MESSAGES,
+  pastedFiles,
+  useNoteAttachments,
+} from "~/components/attachments/use-note-attachments";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
@@ -76,6 +86,7 @@ type NoteDialogProps = {
 };
 
 const NO_TARGETS: readonly MoveTarget[] = [];
+const NO_FILES: NonNullable<NoteDetail["attachments"]> = [];
 
 const IB =
   "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] [&_svg]:size-5 pointer-coarse:size-11";
@@ -130,6 +141,8 @@ export function NoteDialog({
       if (m.color !== undefined) setColor(m.color as NoteColor);
       if (m.pinned !== undefined) setPinned(m.pinned);
       if (m.trashed !== undefined) setTrashedLive(m.trashed);
+      // Başka yerden ek eklendi / kaldırıldı: ek listesi loader'dan yeniden gelir.
+      if (m.attachments) void revalidator.revalidate();
       onRemote.current(m);
     },
     // Sunucu düzenlemeyi reddetti (görüntüleyici, rolü düşürülen): tek toast.
@@ -140,6 +153,12 @@ export function NoteDialog({
   // Çevrimdışıyken düzenleme kapalı (PLAN §5); metin gövdesi ayrıca eşitleme bekler.
   const editable =
     note.trashedAt === null && !trashedLive && canWrite && (live ? live.canWrite : true);
+  // Dosya ekleri (yalnızca metin notu): yükleme, iyimser kaldırma, sürükle-bırak, yapıştır.
+  const files = useNoteAttachments({
+    noteId: note.id,
+    server: note.attachments ?? NO_FILES,
+    canAdd: editable && !isTodo,
+  });
   const [moveOpen, setMoveOpen] = useState(initialMoveOpen);
   const people = useMemo(
     () => (project ? { members: project.members, canAssign: canWrite } : undefined),
@@ -327,7 +346,31 @@ export function NoteDialog({
             : "inset-0 top-0 left-0 h-dvh w-full max-w-none translate-x-0 translate-y-0 rounded-none sm:max-w-none",
         )}
         style={{ background: noteBg(color), ["--note-bg" as string]: noteBg(color) }}
+        onDragOver={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = files.canAdd ? "copy" : "none";
+          if (files.canAdd) files.setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) files.setDragging(false);
+        }}
+        onDrop={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          files.setDragging(false);
+          if (files.canAdd) files.addFiles(Array.from(e.dataTransfer.files));
+          else if (editable && isTodo) toast(ATTACHMENT_MESSAGES.textOnly);
+        }}
+        onPasteCapture={(e) => {
+          const list = files.canAdd ? pastedFiles(e) : [];
+          if (list.length === 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          files.addFiles(list);
+        }}
       >
+        <DropOverlay show={files.dragging} />
         <DialogTitle className="sr-only">{note.title || "Başlıksız not"}</DialogTitle>
         <DialogDescription className="sr-only">
           {editable
@@ -432,15 +475,7 @@ export function NoteDialog({
                   <Bell aria-hidden="true" />
                 </button>
                 {!isTodo && (
-                  <button
-                    type="button"
-                    className={IB}
-                    disabled
-                    aria-label="Dosya ekle"
-                    title="Dosya ekle (yakında)"
-                  >
-                    <Paperclip aria-hidden="true" />
-                  </button>
+                  <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
                 )}
                 {moveCopy && (
                   <button
@@ -586,6 +621,16 @@ export function NoteDialog({
           }
           people={people}
           colorButton={<ColorButton color={color} onChange={changeColor} />}
+          attachments={
+            isTodo ? null : (
+              <AttachmentStrip attachments={files} editable={editable} stacked={!tabletUp} />
+            )
+          }
+          attachButton={
+            !tabletUp && !isTodo ? (
+              <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
+            ) : null
+          }
         />
 
         {!tabletUp && !viewer && (
@@ -810,6 +855,10 @@ type NoteBodyProps = {
   footer: React.ReactNode;
   mobileExtras: (toolbar: React.ReactNode) => React.ReactNode;
   colorButton: React.ReactNode;
+  /** Metin notunun ekleri (görseller, dosyalar, yüklemeler). */
+  attachments?: React.ReactNode;
+  /** Mobil biçimlendirme çubuğunda "Dosya ekle". */
+  attachButton?: React.ReactNode;
   /** Proje notu: oluşturan / son düzenleyen satırı. */
   meta?: React.ReactNode;
   /** Görüntüleyici: salt okunur açıklaması. */
@@ -830,6 +879,8 @@ function NoteBody({
   footer,
   mobileExtras,
   colorButton,
+  attachments,
+  attachButton,
   meta,
   lockbar,
   people,
@@ -926,6 +977,7 @@ function NoteBody({
           <>
             <span className="flex-1" />
             {colorButton}
+            {attachButton}
           </>
         )}
       </FormattingToolbar>
@@ -998,7 +1050,10 @@ function NoteBody({
         {header(titleInput)}
         {top}
         {toolbar}
-        <div className="min-h-0 flex-1 overflow-y-auto px-7 pt-1.5 pb-3">{body}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-7 pt-1.5 pb-3">
+          {body}
+          {attachments}
+        </div>
         {footer}
       </>
     );
@@ -1011,6 +1066,7 @@ function NoteBody({
         <div className="pt-1 pb-2">{titleInput}</div>
         {top}
         {body}
+        {attachments}
         {mobileExtras(toolbar)}
       </div>
     </>

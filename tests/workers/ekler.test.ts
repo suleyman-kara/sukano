@@ -39,7 +39,9 @@ function headers(cookie: string, extra: Record<string, string> = {}) {
 async function upload(
   noteId: string,
   cookie: string,
-  file: { name: string; bytes?: Uint8Array; size?: number; type?: string } = { name: "a.png" },
+  file: { name: string; bytes?: Uint8Array<ArrayBuffer>; size?: number; type?: string } = {
+    name: "a.png",
+  },
   extra: Record<string, string> = {},
 ) {
   const body = new FormData();

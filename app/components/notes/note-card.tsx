@@ -5,6 +5,7 @@ import {
   FolderInput,
   MoreVertical,
   Palette,
+  Paperclip,
   Pin,
   RotateCcw,
   Trash2,
@@ -18,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { AssigneeAvatars } from "~/components/tasks/person-picker";
 import { checkboxLabel } from "~/components/tasks/task-row";
 import { useCardTaskToggle } from "~/components/tasks/use-card-task-toggle";
+import { attachmentUrl } from "~/domain/attachments/rules";
 import { trashDaysLeft, trashLeftLabel } from "~/domain/notes/dates";
 import type { CardTask, NoteCardData, NoteView } from "~/domain/notes/optimistic";
 import { useMediaQuery } from "~/hooks/use-media-query";
@@ -158,6 +160,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
       )}
 
       <div className="pointer-events-none relative flex flex-col gap-1.5 md:gap-2">
+        {note.cover && <CardCover cover={note.cover} />}
         {note.title ? (
           <h3
             id={titleId}
@@ -300,11 +303,42 @@ function CardBody({
       </>
     );
   }
-  if (!note.preview) return null;
+  const files = !note.cover && note.attachmentCount ? note.attachmentCount : 0;
+  if (!note.preview && !files) return null;
   return (
-    <p className="m-0 line-clamp-4 text-[13px] break-words whitespace-pre-line md:line-clamp-[12] md:text-sm">
-      {note.preview}
-    </p>
+    <>
+      {note.preview && (
+        <p className="m-0 line-clamp-4 text-[13px] break-words whitespace-pre-line md:line-clamp-[12] md:text-sm">
+          {note.preview}
+        </p>
+      )}
+      {files > 0 && (
+        <p
+          className="m-0 flex items-center gap-1 text-xs text-muted-foreground"
+          data-ek-sayisi={files}
+        >
+          <Paperclip className="size-3.5" aria-hidden="true" />
+          {files} ek
+        </p>
+      )}
+    </>
+  );
+}
+
+/** Metin notunun ilk görsel eki kartın üstünde tam genişlik (CardStates "görsel ekli"). */
+function CardCover({ cover }: { cover: { id: string; name: string } }) {
+  return (
+    <div className="-mx-3 -mt-3 mb-1 h-[132px] overflow-hidden rounded-t-[11px] bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] md:-mx-4 md:-mt-4 md:mb-1.5 md:rounded-t-[15px]">
+      <img
+        src={attachmentUrl(cover.id)}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        className="size-full object-cover"
+        data-kapak={cover.id}
+      />
+    </div>
   );
 }
 
