@@ -833,6 +833,50 @@ ekrana eklenmiş PWA gerekir (Aşama 6). E-posta değişikliğinde "Doğrulama b
 gönder · İptal et" satırı yok (Better Auth bekleyen değişikliği saklamıyor). Not oluşturma
 alanındaki (composer) zil devre dışı: hatırlatıcı not kaydedildikten sonra açık notta kurulur.
 
+## Hareket ve erişilebilirlik
+
+Aşama 6b (PLAN §10 Hareket; tasarım `MotionSpec`, `MicroMotion`, `AuthMotion` A).
+
+**Belirteçler.** `app/app.css` `:root`: `--dur-micro` 120 ms, `--dur-small` 180, `--dur-medium`
+240, `--dur-large` 320, `--dur-ambient` 11 s; `--ease-out` (giriş), `--ease-in` (çıkış, süre
+girişin ~%75'i), `--ease-spring`, `--ease-inout` (yer değiştirme), `--ease-ambient`. JS karşılığı
+`app/lib/motion.ts` (`DURATION`, `EASE`, `motionTransition`, `exitTransition`; azaltılmış harekette
+ikisi de süresiz döner). Basit geçişler CSS; Motion yalnızca çıkış (`AnimatePresence`), yerleşim
+ve `MotionConfig` için (`app/components/motion-config.tsx`).
+
+| Etkileşim                   | Uygulama                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Görev tamamlama             | `.task-cb` dolgu micro + tik small (40 ms gecikme), başlık çizgisi small; 1,2 sn sonra satır large ease-in-out iner (`.task-leave` → `.task-landed`)    |
+| Toast                       | sonner: giriş medium ease-out, çıkış small ease-in; not içi yığın (`TodoToasts`) Motion ile alttan 24 px, çıkış `AnimatePresence`                       |
+| Karttan modala              | `card-to-modal.ts`: tıklanan kartın kutusundan FLIP + Web Animations (large, yaylı); kapanış kartın yerine medium ease-in, örtü solar; odak karta döner |
+| Sol panel                   | ray ↔ açık genişlik: açılış medium ease-out, kapanış small ease-in; çekmece (`Sheet`) aynı ölçek                                                        |
+| Izgara                      | `note-grid.tsx`: yeni kart .92 → 1 medium, silinen 1 → .92 small ease-in, komşular `layout="position"`                                                  |
+| İskelet                     | `ui/skeleton.tsx`: 1,6 sn ışıltı + 0,8 sn ara, 300 ms'den kısa yüklemede görünmez (sürüm geçmişi, bildirim paneli)                                      |
+| Alt görev / ayrıntı         | alt satırlar ve ayrıntı akordeonu medium, 60 ms gecikmeli belirir; ok small döner                                                                       |
+| Menü, popover, tarih seçici | açılış small ease-out (.96 → 1, Radix köken noktasından), kapanış micro ease-in; diyalog örtüsü medium                                                  |
+| Sürükleme                   | `.drag-lift`: micro, 1,03 ölçek + hafif eğim + gölge (not kartı ve görev satırı); yer tutucu kesik çizgili                                              |
+| Boş durum                   | simge belirir, başlık ve metin 160 ms sonra (`.empty-in`, `.empty-in-late`)                                                                             |
+| Giriş arka planı            | `rising-grid.tsx` (Auth/TAuth ile birebir): 9–14 sn döngü, 18–30 px genlik, yalnızca transform + opacity                                                |
+
+**Hareketi azalt.** Ayarlar › Görünüm: **Sistem** (işletim sistemine uyar) / **Açık** (her zaman
+azalt) / **Kapalı** (sistem azaltsa da tam hareket). `user_preferences.motion`
+(`migrations/0004_hareket.sql`; eski `reduce_motion` değeri taşındı) ve oturumsuz sayfalar için
+`sukano_hareket` çerezi. Kök loader tercihi okur ve `<html data-motion="reduced|full">` sunucuda
+yazılır (ilk boyamada titreme yok); seçim istemcide hemen uygulanır (`applyMotionPreference`).
+Azaltılmış harekette (`prefers-reduced-motion` ve `data-motion="full"` değilse, ya da
+`data-motion="reduced"`): kayma, ölçek, eğim, ortam döngüsü ve ışıltı kapanır; durum değişimleri
+anında olur (genel kural 0,01 ms; Radix `animationend`'i yine alır). Tailwind'de
+`reduced-motion:` varyantı, JS'te `useReducedMotion()` aynı kuralı izler.
+
+**Erişilebilirlik.** Her sayfada ilk odak "İçeriğe geç" (`components/skip-link.tsx` →
+`<main id="icerik" tabIndex={-1}>`); yer imleri: `header` (üst çubuk), `nav` "Ana gezinme",
+`main`, arama `role="search"`. Açık not kapanınca odak açan kartın bağlantısına döner. Sürükleme
+seçenekleri: notlarda Alt+ok, görevlerde Alt+ok ve Tab. `tests/e2e/erisilebilirlik.spec.ts`
+tüm ana ekranları (Notlarım, Arşiv, Çöp, Arama, açık metin ve yapılacaklar notu, proje sayfası,
+proje arşivi, proje ayarları, Davetler, Silinmiş projeler, Bildirimler, Ayarlar, kimlik sayfaları)
+iki temada, üç görünümde axe ile tarar; kritik ya da ciddi ihlal yok. Ayrıca atlama bağlantısı ve
+kart odak halkası denetlenir. Hareket: `tests/e2e/hareket.spec.ts`, `tests/unit/hareket/`.
+
 ## Cloudflare tarafında yapılacaklar
 
 İlk dağıtımdan önce bir kez (`wrangler login` ya da `CLOUDFLARE_API_TOKEN` ile):
