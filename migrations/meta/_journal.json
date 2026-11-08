@@ -15,6 +15,13 @@
       "when": 1794080694152,
       "tag": "0001_proje_tasima_geri_alma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794099698172,
+      "tag": "0003_hatirlatici_bildirim",
+      "breakpoints": true
     }
   ]
 }
