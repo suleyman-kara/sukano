@@ -616,16 +616,17 @@ Canlı katman `app/root.tsx`'te `LiveConfigProvider` ile oturum varsa açılır;
 (bileşen testleri) kancalar `null` döner ve not eski HTTP davranışıyla çalışır.
 
 ```ts
-const live = useLiveNote({ noteId, kind, readOnly, enabled, onMeta, onError }); // LiveNote | null
+const live = useLiveNote({ noteId, kind, readOnly, enabled, seed, onMeta, onError }); // LiveNote | null
 live.status; // "baglaniyor" | "bagli" | "cevrimdisi"
 live.lastSyncedAt; // ms | null — son eşitleme / yayın / gönderim
 live.lastSavedAt; // ms | null — D1 kopyasının son yazımı
 live.peers; // Peer[]: { userId, name, color, avatarUrl, clientIds, focusTaskIds }
-live.canEdit; // metin gövdesi: bağlı + ilk eşitleme bitti + salt okunur değil
+live.canEdit; // metin gövdesi: salt okunur değil + (eşitlendiyse bağlı | eşitlenmediyse loader tohumu + çevrimdışı değil)
 live.canWrite; // HTTP ile yazılanlar (başlık, görevler …): çevrimdışı değil + salt okunur değil
 live.readOnly;
 live.fatal;
 live.synced;
+live.seeded; // belge loader'ın oda tohumuyla başladı (bkz. aşağı)
 live.generation;
 live.provider; // NoteSyncProvider: doc (Y.Doc), awareness
 live.editorExtensions(user, placeholder); // Collaboration + CollaborationCaret (Yjs tembel yüklenir)
@@ -637,6 +638,17 @@ live.reconnect();
 const state = useLiveChannel(channel, (event) => {}, { onGap }); // { status, lastEventAt } | null
 const { notes, live } = useLiveGrid(loaderNotes, view, channel); // PERSONAL_CHANNEL | { kind: "project", projectId }
 ```
+
+**Düzenleyici bağlantıyı beklemez.** Açık notun loader'ı not odasından belge tohumunu alır
+(`NoteRoom.collabSeed`: Yjs durumu + belge kimliği, base64; `app/domain/realtime/collab-seed.ts`).
+Sağlayıcı belgeyi bununla başlatır, metin editörü WebSocket bağlantısı ve ilk eşitleme
+gelmeden düzenlenebilir açılır; bu arada yazılanlar belgede bekler ve hoş geldinde sunucunun
+adım 1'ine verilen adım 2 yanıtıyla gider (tohum odadaki belgenin kendisi olduğundan içerik
+çoğalmaz). Hoş geldindeki belge kimliği tohumunkinden farklıysa (oda arada sıfırlandı)
+sağlayıcı yeniden kurulur, eski belge gönderilmez. Ortak düzenleme parçası (Yjs) kartın
+üzerine gelince / odaklanınca / dokununca ve önizleme açılınca iner
+(`realtime/collab-loader.ts`); hazırsa sağlayıcı ilk çizimde kurulur ve editör bir kez,
+doğrudan ortak düzenleme eklentileriyle oluşur.
 
 Saf yardımcılar: `mergePresence`, `peersOnTask` (`presence.ts`), `reconnectDelay` /
 `backoffSchedule` (500 ms → 15 sn, ±%20 titreşim; `backoff.ts`), `applyChannelEvent(s)`.

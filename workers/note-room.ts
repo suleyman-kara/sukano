@@ -7,6 +7,7 @@ import { createDb } from "~/db/client";
 import { notes } from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { can } from "~/domain/projects/permissions";
+import { encodeCollabSeed, type NoteCollabSeed } from "~/domain/realtime/collab-seed";
 import { isEmptyNoteYDoc, noteYDocToHtml, seedNoteYDoc } from "~/domain/realtime/note-doc";
 import {
   applyAwarenessEntries,
@@ -521,6 +522,20 @@ export class NoteRoom extends DurableObject<Env> {
         );
       });
     }
+  }
+
+  /**
+   * Açık notun loader'ı için belge tohumu (bkz. `collab-seed.ts`): metin notunda odadaki
+   * Yjs belgesinin durumu ve kimliği; yapılacaklar notunda, belge çok büyükse `null`.
+   * Çağıran (loader) erişimi önceden denetler; oda kimliği burada yazılır. Oda ilk kez
+   * açılıyorsa belge D1'den doldurulur, böylece hemen ardından gelen WebSocket bağlantısı
+   * da hazır bir odaya düşer.
+   */
+  async collabSeed(noteId: string): Promise<NoteCollabSeed | null> {
+    if (!this.meta("noteId")) this.setMeta("noteId", noteId);
+    const doc = await this.ready();
+    if (this.meta("kind") !== "text") return null;
+    return encodeCollabSeed(this.meta("docId") ?? "", Y.encodeStateAsUpdate(doc));
   }
 
   /**

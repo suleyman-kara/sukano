@@ -59,12 +59,15 @@ export async function routeLive(request: Request, env: Env): Promise<Response | 
 
   if (route.kind === "note") {
     try {
-      const scope = await noteScope(db, user.id, route.noteId);
-      const row = await db
-        .select({ trashedAt: notes.trashedAt })
-        .from(notes)
-        .where(and(eq(notes.id, route.noteId)))
-        .get();
+      // Erişim ve çöp denetimi paralel (her D1 turu bağlantı kurulumuna eklenir).
+      const [scope, row] = await Promise.all([
+        noteScope(db, user.id, route.noteId),
+        db
+          .select({ trashedAt: notes.trashedAt })
+          .from(notes)
+          .where(and(eq(notes.id, route.noteId)))
+          .get(),
+      ]);
       if (!row || row.trashedAt) return text("Not bulunamadı", 404);
       const readOnly = scope.kind === "project" && !can(scope.role, "note.edit");
       const presence = {

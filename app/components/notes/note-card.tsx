@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 import { AssigneeAvatars } from "~/components/tasks/person-picker";
 import { checkboxLabel } from "~/components/tasks/task-row";
 import { useCardTaskToggle } from "~/components/tasks/use-card-task-toggle";
+import { preloadCollab } from "~/components/realtime/collab-loader";
 import { ReminderChip } from "~/components/reminders/reminder-chip";
 import { attachmentUrl } from "~/domain/attachments/rules";
 import { trashDaysLeft, trashLeftLabel } from "~/domain/notes/dates";
@@ -148,6 +149,11 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
           className="absolute inset-0 z-0 rounded-[inherit] outline-none"
           onKeyDown={onKeyDown}
           onClick={(e) => rememberCardOrigin(note.id, e.currentTarget.closest("article"))}
+          // Not açılmadan ortak düzenleme parçası (Yjs) inmeye başlar; rota modülü de
+          // `prefetch="intent"` ile iner. Açılınca editör beklemeden düzenlenebilir kurulur.
+          onPointerEnter={preloadCollab}
+          onFocus={preloadCollab}
+          onTouchStart={preloadCollab}
           preventScrollReset
         />
       )}

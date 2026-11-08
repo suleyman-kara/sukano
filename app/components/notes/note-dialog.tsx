@@ -57,6 +57,7 @@ import {
 import type { NoteColor } from "~/db/schema";
 import { authorshipLine } from "~/domain/notes/authorship";
 import { formatShortDateTime } from "~/domain/notes/dates";
+import type { NoteCollabSeed } from "~/domain/realtime/collab-seed";
 import { remoteNoteOutcome, type RemoteNoteOutcome } from "~/domain/realtime/live-ui";
 import type { NoteMetaPatch } from "~/domain/realtime/protocol";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
@@ -102,6 +103,8 @@ type NoteDialogProps = {
   timeZone?: string;
   /** Hatırlatıcı seçici açık başlasın (karttan, `?hatirlatici`). */
   initialReminderOpen?: boolean;
+  /** Not odasının belge tohumu (loader): metin bağlantıyı beklemeden düzenlenebilir. */
+  collabSeed?: NoteCollabSeed | null;
 };
 
 const NO_REMINDERS: NoteReminders = { note: null, tasks: {} };
@@ -127,6 +130,7 @@ export function NoteDialog({
   reminders = NO_REMINDERS,
   timeZone = DEFAULT_TIME_ZONE,
   initialReminderOpen = false,
+  collabSeed = null,
 }: NoteDialogProps) {
   const navigate = useNavigate();
   const actions = useNoteActions();
@@ -161,6 +165,7 @@ export function NoteDialog({
     kind: note.kind,
     readOnly: viewer,
     enabled: note.trashedAt === null,
+    seed: collabSeed,
     onMeta: (m) => {
       if (m.title !== undefined) setRemoteTitle({ title: m.title });
       if (m.color !== undefined) setColor(m.color as NoteColor);
@@ -1026,8 +1031,11 @@ function NoteBody({
     }
   }
   const { me } = useLiveConfig();
-  // Canlı metin notu: gövde Yjs belgesinden (ilk eşitlemeden sonra); HTTP'ye gövde gitmez.
-  const ready = Boolean(live?.provider && live.synced && me && note.kind === "text");
+  // Canlı metin notu: gövde Yjs belgesinden (loader tohumuyla hemen, yoksa ilk eşitlemeden
+  // sonra); HTTP'ye gövde gitmez.
+  const ready = Boolean(
+    live?.provider && (live.synced || live.seeded) && me && note.kind === "text",
+  );
   const editorExtensions = live?.editorExtensions;
   const collab = useMemo(() => {
     const extensions = ready && me ? editorExtensions?.(me, "Not al…") : null;

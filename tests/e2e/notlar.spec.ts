@@ -232,8 +232,8 @@ test.describe("kişisel notlar", () => {
     await expect(page).toHaveURL(/\/not\//);
     const yeni = `${baslik} güncel`;
     await dialog.getByLabel("Not başlığı").fill(yeni);
-    // Metin gövdesi not odasıyla ilk eşitlemeden sonra düzenlenebilir olur; daha önce
-    // yazılan tuşlar salt okunur editöre gider ve kaybolur (eski kararsızlığın kökü).
+    // Metin gövdesi loader'ın oda tohumuyla hemen düzenlenebilir olur; düzenlenebilir
+    // olmadan yazılan tuşlar salt okunur editöre gider ve kaybolurdu (eski kararsızlığın kökü).
     const govde = dialog.getByRole("textbox", { name: "Not", exact: true });
     await expect(govde).toHaveAttribute("contenteditable", "true");
     await govde.click();
@@ -246,6 +246,61 @@ test.describe("kişisel notlar", () => {
     await expect(kart(page, yeni)).toContainText("İlk satır eklendi");
     await page.reload();
     await expect(kart(page, yeni)).toContainText("İlk satır eklendi");
+  });
+
+  test("not, oda bağlantısını beklemeden düzenlenir; bağlantıdan önce yazılan çoğalmadan kaydedilir", async ({
+    page,
+  }) => {
+    // Not odasının iletileri (hoş geldin, eşitleme) istenince tutulur: Durable Object soğuk
+    // başlangıcı ya da yavaş bağlantı. Yönlendirme sayfa açılmadan kurulmalı.
+    let tut = false;
+    const bekleyen: (() => void)[] = [];
+    const birak = () => {
+      tut = false;
+      bekleyen.splice(0).forEach((gonder) => gonder());
+    };
+    await page.routeWebSocket(/\/api\/notlar\/[^/]+\/canli$/, (ws) => {
+      const server = ws.connectToServer();
+      server.onMessage((m) => (tut ? bekleyen.push(() => ws.send(m)) : ws.send(m)));
+      ws.onMessage((m) => server.send(m));
+    });
+    await ac(page, "/");
+    const baslik = benzersiz("Beklemeden");
+    await notOlustur(page, baslik, "Birinci satır");
+    tut = true;
+    await kart(page, baslik).getByRole("link").click();
+    const dialog = page.getByRole("dialog");
+    const govde = dialog.getByRole("textbox", { name: "Not", exact: true });
+    await expect(govde).toHaveAttribute("contenteditable", "true");
+    await expect(dialog).toHaveAttribute("data-canli", "baglaniyor");
+    await expect(govde).toHaveText("Birinci satır");
+    await govde.click();
+    await page.keyboard.press("End");
+    await page.keyboard.type(" ve ikinci");
+    birak();
+    await expect(dialog).toHaveAttribute("data-canli", "bagli");
+    await expect(govde).toHaveText("Birinci satır ve ikinci");
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(kart(page, baslik)).toContainText("Birinci satır ve ikinci");
+    await page.reload();
+    await expect(kart(page, baslik)).toContainText("Birinci satır ve ikinci");
+    // İçerik çoğalmadı: gövde bir kez.
+    expect((await kart(page, baslik).textContent())?.split("Birinci satır")).toHaveLength(2);
+  });
+
+  test("kartın üzerine gelince ortak düzenleme parçası not açılmadan iner", async ({ page }) => {
+    test.skip(gorunum(test.info()) !== "masaustu", "Üzerine gelme fareyle, masaüstünde");
+    await ac(page, "/");
+    const baslik = benzersiz("Önceden");
+    await notOlustur(page, baslik, "gövde");
+    // Not al alanı aynı parçayı yüklemiş olabilir: sayfa yeniden açılır (taze modül önbelleği).
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    const parca = page.waitForRequest((r) => /\/assets\/collab-[^/]+\.js$/.test(r.url()));
+    await kart(page, baslik).hover();
+    await parca;
+    expect(page.url()).not.toMatch(/\/not\//);
   });
 
   // Sıralama testleri Süleyman'ın oturumuyla koşar: Ayşe'nin ızgarasına paralel testlerin

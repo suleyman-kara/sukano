@@ -6,6 +6,7 @@ import * as Y from "yjs";
 import { LiveSocket, toWsUrl, type LiveStatus } from "~/components/realtime/live-socket";
 import { NoteSyncProvider } from "~/components/realtime/note-provider";
 import { createTaskSync } from "~/components/tasks/task-sync";
+import { encodeCollabSeed } from "~/domain/realtime/collab-seed";
 import { NOTE_FRAGMENT, noteYDocToHtml, seedNoteYDoc } from "~/domain/realtime/note-doc";
 import { decodeAwarenessUpdate, encodeAwarenessUpdate } from "~/domain/realtime/presence";
 import {
@@ -343,6 +344,133 @@ describe("NoteSyncProvider", () => {
     vi.advanceTimersByTime(50);
     await closing;
     expect(FakeSocket.last.closedWith).not.toBeNull();
+  });
+
+  /** Sunucunun eşitleme adım 1'i (hoş geldinden hemen sonra gelir). */
+  function serverStep1(server: Y.Doc) {
+    const e = encoding.createEncoder();
+    encoding.writeVarUint(e, MESSAGE_SYNC);
+    syncProtocol.writeSyncStep1(e, server);
+    return encoding.toUint8Array(e);
+  }
+
+  /** İstemcinin adım 2 yanıtını sunucu belgesine uygular. */
+  function applyClientStep2(server: Y.Doc, msg: Uint8Array) {
+    const d = decoding.createDecoder(msg);
+    expect(decoding.readVarUint(d)).toBe(MESSAGE_SYNC);
+    expect(decoding.readVarUint(d)).toBe(syncProtocol.messageYjsSyncStep2);
+    Y.applyUpdate(server, decoding.readVarUint8Array(d));
+  }
+
+  function roomWith(html: string) {
+    const server = new Y.Doc();
+    seedNoteYDoc(server, html);
+    const seed = encodeCollabSeed("d1", Y.encodeStateAsUpdate(server))!;
+    return { server, seed };
+  }
+
+  /** Belgenin sonuna metin ekler (editörde yazmak gibi). */
+  function typeAtEnd(doc: Y.Doc, text: string) {
+    const paragraph = doc.getXmlFragment(NOTE_FRAGMENT).get(0) as Y.XmlElement;
+    const node = paragraph.get(0) as Y.XmlText;
+    node.insert(node.length, text);
+  }
+
+  it("tohumla başlayan belge bağlantıdan önce düzenlenebilir; yazılanlar hoş geldinde gider, içerik çoğalmaz", () => {
+    const { server, seed } = roomWith("<p>İlk satır</p>");
+    const p = provider({ initial: seed });
+    expect(p.getSnapshot()).toMatchObject({ seeded: true, synced: false, status: "baglaniyor" });
+    expect(noteYDocToHtml(p.doc)).toBe("<p>İlk satır</p>");
+    const ws = FakeSocket.last;
+    // Bağlantı kurulmadan yazılan: gönderilmez, belgede bekler.
+    typeAtEnd(p.doc, " eklendi");
+    ws.open();
+    expect(ws.binary).toHaveLength(0);
+    ws.receive(hello("d1"));
+    ws.receive(serverStep1(server));
+    const step2 = ws.binary.find((b) => {
+      const d = decoding.createDecoder(b);
+      return decoding.readVarUint(d) === MESSAGE_SYNC && decoding.readVarUint(d) === 1;
+    })!;
+    applyClientStep2(server, step2);
+    // İstemcinin adım 1'ine sunucu yanıtı: eşitlenir, hiçbir şey iki kez görünmez.
+    const clientStep1 = ws.binary.find((b) => b[0] === MESSAGE_SYNC && b[1] === 0)!;
+    ws.receive(serverStep2(server, clientStep1));
+    expect(p.getSnapshot().synced).toBe(true);
+    expect(noteYDocToHtml(server)).toBe("<p>İlk satır eklendi</p>");
+    expect(noteYDocToHtml(p.doc)).toBe("<p>İlk satır eklendi</p>");
+    p.destroy();
+  });
+
+  it("oda arada sıfırlandıysa (belge kimliği farklı) tohum atılır, eski belge gönderilmez", () => {
+    const { seed } = roomWith("<p>eski</p>");
+    const onReset = vi.fn();
+    const p = provider({ initial: seed, onReset });
+    typeAtEnd(p.doc, "!");
+    FakeSocket.last.open();
+    FakeSocket.last.receive(hello("d2"));
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(FakeSocket.last.binary).toHaveLength(0);
+    p.destroy();
+  });
+
+  it("bozuk ya da yapılacaklar notunun tohumu yok sayılır; ilk eşitleme beklenir", () => {
+    const bad = provider({ initial: { docId: "d1", state: "%%%" } });
+    expect(bad.getSnapshot().seeded).toBe(false);
+    bad.destroy();
+    const { seed } = roomWith("<p>x</p>");
+    const todo = provider({ kind: "todo", initial: seed });
+    expect(todo.getSnapshot().seeded).toBe(false);
+    todo.destroy();
+    const garbage = provider({ initial: { docId: "d1", state: btoa("çöp veri") } });
+    expect(garbage.getSnapshot().seeded).toBe(false);
+    garbage.destroy();
+  });
+
+  it("autoStart kapalıyken bağlantı start ile açılır (bir kez)", () => {
+    const p = provider({ autoStart: false });
+    expect(FakeSocket.all).toHaveLength(0);
+    p.start();
+    p.start();
+    expect(FakeSocket.all).toHaveLength(1);
+    expect(p.isDestroyed).toBe(false);
+    p.destroy();
+    expect(p.isDestroyed).toBe(true);
+    p.start();
+    expect(FakeSocket.all).toHaveLength(1);
+  });
+
+  it("kapanırken bağlantıdan önce yazılanların gitmesi beklenir", async () => {
+    const { server, seed } = roomWith("<p>a</p>");
+    const p = provider({ initial: seed });
+    typeAtEnd(p.doc, "b");
+    const ws = FakeSocket.last;
+    let closed = false;
+    void p.close().then(() => (closed = true));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(closed).toBe(false);
+    ws.open();
+    ws.receive(hello("d1"));
+    ws.receive(serverStep1(server));
+    await vi.advanceTimersByTimeAsync(0);
+    // Gitti; şimdi kaydet istenir.
+    expect(ws.json).toContainEqual({ t: "kaydet" });
+    ws.receive(JSON.stringify({ t: "kaydedildi", at: 1 }));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(closed).toBe(true);
+  });
+
+  it("bağlantı hiç kurulamazsa kapanış süre sınırında biter", async () => {
+    const { seed } = roomWith("<p>a</p>");
+    const p = provider({ initial: seed });
+    typeAtEnd(p.doc, "b");
+    let closed = false;
+    void p.close(300, 600).then(() => (closed = true));
+    await vi.advanceTimersByTimeAsync(599);
+    expect(closed).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(closed).toBe(true);
+    expect(p.isDestroyed).toBe(true);
   });
 
   it("abonelik ve yeniden bağlanma", () => {

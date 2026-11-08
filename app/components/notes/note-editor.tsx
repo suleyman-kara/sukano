@@ -1,7 +1,7 @@
 import type { Extensions } from "@tiptap/core";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import { Bold, Heading2, Italic, Link2, List } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -37,6 +37,21 @@ type UseNoteEditorOptions = {
   collab?: NoteEditorCollab | null;
 };
 
+const noopSubscribe = () => () => {};
+
+/**
+ * Hidrasyon bitti mi: sunucuda ve hidrasyon çiziminde `false`, sonraki istemci
+ * çizimlerinde `true`. Editör hidrasyondan sonra kurulurken (ızgaradan açılan not) ilk
+ * çizimde oluşur: diyalog bir kare boş gövdeyle görünmez.
+ */
+function useHydrated() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 export function useNoteEditor({
   initialHtml,
   onChange,
@@ -51,13 +66,14 @@ export function useNoteEditor({
   useEffect(() => {
     onChangeRef.current = onChange;
   });
+  const hydrated = useHydrated();
   const editor = useEditor(
     {
       extensions: collab ? collab.extensions : createNoteExtensions(placeholder),
       ...(collab ? {} : { content: initialHtml || "" }),
       editable,
       autofocus: autofocus ? "end" : false,
-      immediatelyRender: false,
+      immediatelyRender: hydrated,
       editorProps: {
         attributes: {
           "aria-label": label,

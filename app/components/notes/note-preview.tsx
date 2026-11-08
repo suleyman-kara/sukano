@@ -1,7 +1,8 @@
 import { ArrowLeft, X } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useNavigation } from "react-router";
 import { cn } from "cn";
+import { preloadCollab } from "~/components/realtime/collab-loader";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
 import type { NoteCardData } from "~/domain/notes/optimistic";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
@@ -37,6 +38,8 @@ export function NotePreviewDialog({ note }: { note: NoteCardData }) {
   const tabletUp = useMediaQuery(TABLET_UP_QUERY, true);
   const reduced = useReducedMotion();
   const enter = useCardToModalEnter(note.id, reduced, { preview: true });
+  // Klavyeyle ya da bağlantıyla açılışta da ortak düzenleme parçası loader'la paralel iner.
+  useEffect(preloadCollab, []);
   const navigate = useNavigate();
   const location = useLocation();
   // Yükleme bitmeden kapatılırsa bekleyen gezinme bulunulan adrese dönülerek iptal edilir.

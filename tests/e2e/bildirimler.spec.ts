@@ -215,9 +215,14 @@ test.describe("hatırlatıcı ve bildirimler", () => {
     const anahtar = page.getByRole("switch", { name: "Hatırlat" });
     await expect(anahtar).toBeEnabled();
     await expect(anahtar).toHaveAccessibleDescription("Sana gider");
+    // Kayıt yanıtı beklenir: `networkidle` sayfa yüklenince zaten erişildiği için hemen döner
+    // ve yeniden yükleme isteği kayıtla yarışırdı (ara sıra kapalı görünüyordu).
+    const kaydedildi = page.waitForResponse(
+      (r) => r.url().includes("/api/hatirlaticilar") && r.request().method() === "POST",
+    );
     await anahtar.click();
     await expect(anahtar).toBeChecked();
-    await page.waitForLoadState("networkidle");
+    expect((await kaydedildi).ok()).toBe(true);
     // Yeniden yüklemede açık kalır.
     await page.reload();
     await page.waitForLoadState("networkidle");

@@ -7,7 +7,14 @@ import {
   PERSONAL_CHANNEL,
   useLiveGrid,
 } from "~/components/realtime/use-live-channel";
+import { loadCollab, loadedCollab, preloadCollab } from "~/components/realtime/collab-loader";
 import { useLiveNote } from "~/components/realtime/use-live-note";
+import { encodeCollabSeed, type NoteCollabSeed } from "~/domain/realtime/collab-seed";
+import { seedNoteYDoc } from "~/domain/realtime/note-doc";
+import * as encoding from "lib0/encoding";
+import * as syncProtocol from "y-protocols/sync";
+import * as Y from "yjs";
+import { MESSAGE_SYNC } from "~/domain/realtime/protocol";
 import type { NoteCardData } from "~/domain/notes/optimistic";
 import { FakeSocket } from "./sahte-soket";
 
@@ -186,6 +193,99 @@ describe("useLiveNote", () => {
     expect(seen).toContain(1);
     act(() => FakeSocket.all.forEach((s) => s.serverClose(1006)));
     expect(screen.getByTestId("not")).toHaveTextContent("cevrimdisi:false:false:0");
+  });
+
+  function roomSeed(): NoteCollabSeed {
+    const room = new Y.Doc();
+    seedNoteYDoc(room, "<p>İlk satır</p>");
+    return encodeCollabSeed("d1", Y.encodeStateAsUpdate(room))!;
+  }
+
+  function TextNote({
+    seed,
+    readOnly = false,
+  }: {
+    seed: NoteCollabSeed | null;
+    readOnly?: boolean;
+  }) {
+    const live = useLiveNote({ noteId: "n2", kind: "text", seed, readOnly });
+    if (!live) return <p data-testid="metin">kapali</p>;
+    return (
+      <p data-testid="metin">
+        {live.status}:{String(live.canEdit)}:{String(live.seeded)}:{String(Boolean(live.provider))}
+      </p>
+    );
+  }
+
+  it("parça önceden yüklendiyse sağlayıcı ilk çizimde kurulur; tohumla bağlantıdan önce düzenlenebilir", async () => {
+    preloadCollab();
+    await loadCollab();
+    expect(loadedCollab()).not.toBeNull();
+    const seed = roomSeed();
+    render(
+      <LiveConfigProvider enabled me={me}>
+        <TextNote seed={seed} />
+      </LiveConfigProvider>,
+    );
+    // Hoş geldin gelmeden (soket açılmadı bile) metin düzenlenebilir.
+    expect(screen.getByTestId("metin")).toHaveTextContent("baglaniyor:true:true:true");
+    expect(FakeSocket.all).toHaveLength(1);
+    // Kopunca (çevrimdışı) düzenleme kapanır.
+    act(() => FakeSocket.last.serverClose(1006));
+    expect(screen.getByTestId("metin")).toHaveTextContent("cevrimdisi:false:true:true");
+  });
+
+  it("eşitlendikten sonra yeniden bağlanırken düzenleme kapalıdır (eski kural)", async () => {
+    await loadCollab();
+    const room = new Y.Doc();
+    seedNoteYDoc(room, "<p>İlk satır</p>");
+    render(
+      <LiveConfigProvider enabled me={me}>
+        <TextNote seed={encodeCollabSeed("d1", Y.encodeStateAsUpdate(room))} />
+      </LiveConfigProvider>,
+    );
+    const ws = FakeSocket.last;
+    act(() => {
+      ws.open();
+      ws.receive(
+        JSON.stringify({
+          t: "hosgeldin",
+          docId: "d1",
+          kind: "text",
+          readOnly: false,
+          user: me,
+          seq: 0,
+        }),
+      );
+      // Sunucunun adım 2'si: eşitlendi.
+      const e = encoding.createEncoder();
+      encoding.writeVarUint(e, MESSAGE_SYNC);
+      syncProtocol.writeSyncStep2(e, room);
+      ws.receive(encoding.toUint8Array(e));
+    });
+    expect(screen.getByTestId("metin")).toHaveTextContent("bagli:true:true:true");
+    vi.useFakeTimers();
+    act(() => ws.serverClose(1006));
+    act(() => vi.advanceTimersByTime(1000));
+    expect(FakeSocket.all.length).toBeGreaterThan(1);
+    expect(screen.getByTestId("metin")).toHaveTextContent("baglaniyor:false:true:true");
+  });
+
+  it("tohumsuz metin notu ilk eşitlemeyi bekler; salt okunur tohumla da düzenlenemez", async () => {
+    await loadCollab();
+    const { unmount } = render(
+      <LiveConfigProvider enabled me={me}>
+        <TextNote seed={null} />
+      </LiveConfigProvider>,
+    );
+    expect(screen.getByTestId("metin")).toHaveTextContent("baglaniyor:false:false:true");
+    unmount();
+    render(
+      <LiveConfigProvider enabled me={me}>
+        <TextNote seed={roomSeed()} readOnly />
+      </LiveConfigProvider>,
+    );
+    expect(screen.getByTestId("metin")).toHaveTextContent("baglaniyor:false:true:true");
   });
 
   it("salt okunur ipucu yazmayı kapatır", () => {
