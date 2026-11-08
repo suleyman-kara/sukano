@@ -269,7 +269,7 @@ describe("kurallar: boyut, tür, not türü, sınır", () => {
     const noteId = await personalNote(ID.ayse);
     const r = await upload(noteId, jar.ayse, { name: "balkon.mov", size: 10 * MB + 1 });
     expect(r.status).toBe(413);
-    expect(r.body?.error).toBe("10 MB · dosya başına en fazla 10 MB");
+    expect(r.body?.error).toBe("10,1 MB · dosya başına en fazla 10 MB");
     const listed = await env.FILES.list({ prefix: `ekler/${noteId}/` });
     expect(listed.objects).toHaveLength(0);
   });

@@ -87,6 +87,12 @@ describe("dosya türü ve boyutu denetimi", () => {
     });
   });
 
+  it("sınırı az aşan boyut yukarı yuvarlanır, sınırla aynı görünmez", () => {
+    expect(checkAttachment({ name: "a.mov", size: 10 * MB + 1, type: "" })).toMatchObject({
+      message: "10,1 MB · dosya başına en fazla 10 MB",
+    });
+  });
+
   it("boş dosya reddedilir", () => {
     expect(checkAttachment({ name: "a.txt", size: 0, type: "" })).toMatchObject({
       ok: false,

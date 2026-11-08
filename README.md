@@ -313,7 +313,7 @@ Aşama 1'in not parçası: kişisel metin notları (proje notları Aşama 3'te).
   birleşir, 409'da liste yeniden yüklenir); aç/kapa durumu `localStorage`'da
   (`sukano:gorevler:<notId>`). Karttan işaretleme `use-card-task-toggle.ts`.
 - **Devre dışı yer tutucular:** taşı veya kopyala, kişi seçici (sunucusu Aşama 3a'da hazır, bkz.
-  [Projeler](#projeler-roller-davetler)), not ve görev hatırlatıcısı, dosya ekleme (Aşama 5).
+  [Projeler](#projeler-roller-davetler)), not ve görev hatırlatıcısı (Aşama 5). Dosya ekleri: bkz. [Dosya ekleri](#dosya-ekleri).
 
 ## Projeler, roller, davetler
 
@@ -698,6 +698,60 @@ Testler: birim `tests/unit/realtime/canli-arayuz.test.ts` (saf metin ve kararlar
 olaylar, proje yönlendirmesi); Worker `tests/workers/canli-temizlik.test.ts`; uçtan uca
 `tests/e2e/canli-ortak.spec.ts` (iki / üç tarayıcı bağlamı, üç görünüm; Mehmet, Can ve
 Zeynep oturumları `global-setup.ts`'te kaydedilir: `tests/e2e/.auth/*.json`).
+
+## Dosya ekleri
+
+Aşama 5a (PLAN §3): yalnızca **metin notunda** görsel ve genel dosya, R2 (`FILES`, kova
+`sukano-files`) üzerinde. Tasarım: `TextNote`, `TText`, `MText`, `CardStates` ("görsel ekli"),
+`States2` ("Dosya eki · yükleniyor ve sınır"). Şema değişmedi (`attachments` tablosu `0000`'da).
+
+| Uç                           | İş                                                                                            |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `GET /api/notlar/:id/ekler`  | `{ attachments: AttachmentInfo[] }` (eklenme sırası)                                          |
+| `POST /api/notlar/:id/ekler` | multipart, alan `dosya` → 201 `{ ok, attachment }`; 400 / 403 / 404 / 409 / 413 / 415         |
+| `GET /api/ekler/:id`         | Dosya Worker üzerinden akar; görsel ve PDF `inline`, diğerleri ve `?indir=1` ile `attachment` |
+| `DELETE /api/ekler/:id`      | Eki kaldırır (R2 nesnesi de silinir) → `{ ok: true }`                                         |
+
+- **Kurallar** (`app/domain/attachments/rules.ts`, saf, birim testli): dosya başına **10 MB**,
+  not başına **20** ek. Tür **uzantıdan** belirlenir (tarayıcının MIME'ına güvenilmez; R2'ye ve
+  yanıta listedeki tür yazılır). İzin listesi: jpg/jpeg, png, gif, webp, avif, heic/heif; pdf;
+  doc(x), xls(x), ppt(x), odt/ods/odp, rtf; txt, csv, md; zip; mp3, m4a, mp4, mov. SVG (betik
+  taşıyabilir), HTML, çalıştırılabilir dosyalar ve betikler reddedilir. Ad temizlenir (yol
+  parçaları, denetim / yön karakterleri, ayrılmış karakterler; en çok 120 karakter, uzantı
+  korunur). Metinler: "48 MB · dosya başına en fazla 10 MB", "Bu dosya türü eklenemez",
+  "Bir nota en fazla 20 dosya eklenebilir", "Yüklenemedi · bağlantını denetleyip tekrar dene".
+- **Yetki** (`app/lib/attachments.server.ts`): notun erişimiyle aynı (`noteScope`). Görüntüleme ve
+  indirme her üyeye (görüntüleyici dahil); ekleme ve kaldırma `note.edit` (kişisel notta sahibi,
+  projede yönetici / düzenleyici; görüntüleyici 403). Üye olmayan için not da ek de yoktur (404;
+  ek kimliği tahmin edilse de). Yapılacaklar notu ve çöpteki not 409 (çöpteki notun eki
+  indirilebilir). Yükleme ve silme başka kökenden (Origin) 403; büyük gövde okunmadan 413.
+- **İndirme başlıkları:** `Content-Disposition` ASCII `filename` + UTF-8 `filename*`
+  (Türkçe ad), `X-Content-Type-Options: nosniff`, `Cache-Control: private, max-age=3600`, ETag ile 304. Tarayıcıda açılan görsele `Content-Security-Policy: default-src 'none'; sandbox` (PDF ve
+  indirmelerde yok: Chrome sandbox'lı yanıtta dosya adını yok sayıyor). Kova herkese açık değil;
+  küçük resim için ayrı boyutlandırma yok (görsel `object-fit: cover` ile, `loading="lazy"`).
+- **Temizlik:** eki kaldırınca R2 nesnesi silinir; kalıcı silme, çöpü boşaltma, "Kopyasını
+  oluştur"un geri alınması, cron çöp temizliği, silinmiş proje temizliği ve hesap silme
+  (kişisel notlar) mevcut `deleteNotes` yolundan R2 nesnelerini siler.
+- **Kopyalama ve taşıma:** "Kopyasını oluştur" ve "Kopyala…" ekleri yeni R2 anahtarlarına
+  (`ekler/<notId>/<ekId>`) kopyalar (`copyAttachments`); taşıma notun kimliğini korur, ekler
+  kalır. Eki olan metin notu yapılacaklara dönüştürülemez (Aşama 2 kuralı).
+- **Sürümler:** ek ekleme / kaldırma sürüm **üretmez** ve sürüm geri yükleme eklere dokunmaz
+  (sürüm metin ya da görev ağacının anlık görüntüsüdür); notun "son düzenleyen" bilgisi güncellenir.
+- **Canlı:** başarılı ekleme / kaldırmadan sonra alan kanalına `icerik` (kart kapağı) ve not
+  odasına `{t:"not", attachments:true}` (açık nottaki diğer istemciler ek listesini yeniden
+  yükler).
+- **Arayüz** (`app/components/attachments/`): görseller 200×132 küçük resim (mobilde tam genişlik
+  140 px), dosyalar rozet + ad + boyut çipi (PDF kırmızı); yüklenen dosya ilerleme çubuğu ve
+  "2,4 / 3,1 MB", hata kutucuğu (kırmızı çerçeve, metin, Kaldır; ağ hatasında Tekrar dene).
+  Ekleme: ataç düğmesi (masaüstü/tablet alt çubuk, mobilde biçimlendirme çubuğu), nota
+  sürükle-bırak (kesik çizgili alan) ve panodan yapıştırma; kaldırma iyimser. Görsele tıklayınca
+  koyu zeminli görüntüleyici (← / →, İndir, Esc). Kartta ilk görsel kapak; yalnızca dosya varsa
+  ataç + "n ek". Görüntüleyici rolü ekleri görür ve indirir, düğme / kaldırma / bırakma yok.
+- **Testler:** birim `tests/unit/attachments/kurallar.test.ts`, `bekleyen.test.ts`; bileşen
+  `ekler-arayuz.test.tsx`; Worker `tests/workers/ekler.test.ts` (rol matrisi, 404 tahmini,
+  413 / 415 / 409, başlıklar, 304, R2 temizliği her silme yolunda, kopyada nesne çoğalması, oda
+  bildirimi); uçtan uca `tests/e2e/ekler.spec.ts` (üç görünüm: görsel ekle ve aç, dosya ekle ve
+  indir, 10 MB hatası, kaldır, görüntüleyici, axe açık/koyu).
 
 ## Cloudflare tarafında yapılacaklar
 

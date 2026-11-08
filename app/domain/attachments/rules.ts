@@ -60,8 +60,9 @@ export const MESSAGES = {
   offline: "Çevrimdışıyken ekleme kapalıdır",
 } as const;
 
+/** Sınırı aşan boyut yukarı yuvarlanır: 10 MB + 1 bayt "10,1 MB" olur, "10 MB" değil. */
 export const tooLargeMessage = (size: number) =>
-  `${formatSize(size)} · dosya başına en fazla ${formatSize(MAX_ATTACHMENT_BYTES)}`;
+  `${formatSize(Math.max(size, Math.ceil((size / (1024 * 1024)) * 10) * 0.1 * 1024 * 1024))} · dosya başına en fazla ${formatSize(MAX_ATTACHMENT_BYTES)}`;
 
 export type AttachmentErrorCode = "tur" | "cok_buyuk" | "bos" | "sinir";
 
