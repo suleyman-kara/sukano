@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { SkipLink } from "~/components/skip-link";
 import { cn } from "cn";
 import { Logo } from "~/components/logo";
 import { RisingGrid } from "~/components/rising-grid";
@@ -13,6 +14,7 @@ import { ThemeToggle } from "~/components/theme-toggle";
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex min-h-dvh bg-bg text-fg md:bg-panel lg:bg-bg">
+      <SkipLink />
       <ThemeToggle className="absolute top-3 right-3 z-10 lg:top-5 lg:right-5" />
 
       {/* Masaüstü: sol tanıtım paneli */}
@@ -36,7 +38,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       {/* Tablet: tüm zemin panel rengi + ızgara */}
       <RisingGrid className="hidden md:block lg:hidden" />
 
-      <main className="relative flex flex-[1_1_480px] flex-col px-6 pt-16 pb-8 md:items-center md:justify-center md:gap-7 md:px-8 md:py-12 lg:gap-0 lg:py-12">
+      <main
+        id="icerik"
+        tabIndex={-1}
+        className="relative flex flex-[1_1_480px] flex-col px-6 pt-16 pb-8 outline-none md:items-center md:justify-center md:gap-7 md:px-8 md:py-12 lg:gap-0 lg:py-12"
+      >
         <Logo size={36} wordmarkSize={22} className="mb-6 md:mb-0 lg:hidden md:[&_svg]:size-8" />
         <div className="flex w-full flex-1 flex-col md:max-w-[460px] md:flex-none md:rounded-[20px] md:border md:border-line md:bg-surface md:p-9 md:pb-8 md:shadow-elevated lg:max-w-[400px] lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
           {children}

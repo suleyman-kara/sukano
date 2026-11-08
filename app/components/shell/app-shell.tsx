@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SkipLink } from "~/components/skip-link";
 import { Avatar } from "~/components/avatar";
 import { NewProjectDialog } from "~/components/projects/new-project-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/ui/sheet";
@@ -53,6 +54,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh bg-bg text-fg">
+      <SkipLink />
       <Sidebar
         projects={projects}
         pendingInviteCount={pendingInviteCount}
@@ -99,7 +101,7 @@ export function AppShell({
           menuExpanded={isDesktop ? mode === "open" : drawerOpen}
           onMenuClick={onMenuClick}
         />
-        <main id="icerik" className="flex min-w-0 flex-1 flex-col">
+        <main id="icerik" tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
           {children}
         </main>
       </div>

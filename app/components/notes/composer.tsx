@@ -252,7 +252,7 @@ export function Composer({
           disabled
           className={cn(IB, "size-11 md:size-9")}
           aria-label="Görsel ekleyerek not başlat"
-          title="Görsel ekle (yakında)"
+          title="Görsel, not kaydedilince açık notta eklenir"
         >
           <ImageIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -377,7 +377,7 @@ export function Composer({
           disabled
           className={IB}
           aria-label="Not hatırlatıcısı"
-          title="Not hatırlatıcısı (yakında)"
+          title="Not hatırlatıcısı, not kaydedilince açık notta kurulur"
         >
           <Bell className="size-[18px]" aria-hidden="true" />
         </button>
@@ -386,7 +386,7 @@ export function Composer({
           disabled
           className={IB}
           aria-label="Dosya ekle"
-          title="Dosya ekle (yakında)"
+          title="Dosya, not kaydedilince açık notta eklenir"
         >
           <Paperclip className="size-[18px]" aria-hidden="true" />
         </button>

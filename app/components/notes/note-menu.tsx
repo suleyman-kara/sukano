@@ -115,22 +115,15 @@ export function NoteMoreMenuContent({
           Kopyasını oluştur
         </DropdownMenuItem>
       )}
-      {dialog ? (
-        <DropdownMenuItem className={ITEM} onSelect={onConvert} disabled={!onConvert}>
-          {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
-          {convertLabel(kind)}
-        </DropdownMenuItem>
-      ) : null}
+      {/* Kanonik sıra (PLAN §10): … Kopyasını oluştur · Sürüm geçmişi · Dönüştür. */}
       <DropdownMenuItem className={ITEM} onSelect={onVersions} disabled={versionsDisabled}>
         <History aria-hidden="true" />
         Sürüm geçmişi
       </DropdownMenuItem>
-      {!dialog && (
-        <DropdownMenuItem className={ITEM} onSelect={onConvert} disabled={!onConvert}>
-          {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
-          {convertLabel(kind)}
-        </DropdownMenuItem>
-      )}
+      <DropdownMenuItem className={ITEM} onSelect={onConvert} disabled={!onConvert}>
+        {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
+        {convertLabel(kind)}
+      </DropdownMenuItem>
       {dialog && (
         <>
           <DropdownMenuSeparator />
