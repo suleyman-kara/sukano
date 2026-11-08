@@ -44,7 +44,7 @@ const TILE =
   "relative flex items-center gap-2.5 rounded-[10px] border border-[rgba(0,0,0,.08)] bg-[rgba(255,255,255,.5)] dark:border-[rgba(255,255,255,.1)] dark:bg-transparent";
 
 const IB =
-  "inline-flex size-[30px] shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-[18px] pointer-coarse:size-10";
+  "ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50";
 
 /**
  * Notun ekleri: görseller önce (küçük resim; tıklayınca görüntüleyici), sonra dosya

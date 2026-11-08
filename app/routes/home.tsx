@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
@@ -72,7 +71,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {notes.length === 0 ? (
         <EmptyState
-          icon={<FileText strokeWidth={1.75} aria-hidden="true" />}
+          icon="logo"
           title="Henüz not yok"
           actions={<Button onClick={openComposer}>Not al</Button>}
         >

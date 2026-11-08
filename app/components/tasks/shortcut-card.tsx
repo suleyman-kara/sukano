@@ -82,9 +82,9 @@ export function ShortcutCard({
             <DialogPrimitive.Close
               aria-label="Kısayolları kapat"
               title="Kapat (Esc)"
-              className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="ib inline-flex items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <X className="size-5" aria-hidden="true" />
+              <X aria-hidden="true" />
             </DialogPrimitive.Close>
           </div>
           <div className="grid grid-cols-1 gap-x-7 gap-y-1 pr-3.5 sm:grid-cols-2">

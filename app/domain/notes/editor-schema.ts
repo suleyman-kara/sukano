@@ -3,8 +3,9 @@
  * (`note-editor.tsx`) ve Worker'daki ortak düzenleme odası (`NoteRoom`, Yjs ↔ HTML)
  * aynı şemayı buradan kurar; DOM gerektirmez.
  *
- * Sınırlı StarterKit: kalın, italik, başlık (H2), madde listesi, bağlantı. Markdown
- * kısayolları (`## `, `- `, `**kalın**`, `*italik*`) StarterKit'in giriş kurallarıyla gelir.
+ * Sınırlı StarterKit: kalın, italik, üstü çizili, başlık (H2) ve alt başlık (H3), madde ve
+ * numaralı liste, bağlantı. Markdown kısayolları (`## `, `### `, `- `, `1. `, `**kalın**`,
+ * `*italik*`, `~~çizili~~`) StarterKit'in giriş kurallarıyla gelir.
  */
 import { getSchema, type Extensions } from "@tiptap/core";
 import { Placeholder } from "@tiptap/extensions";
@@ -25,13 +26,11 @@ export function noteExtensions({
 }: NoteExtensionOptions = {}): Extensions {
   return [
     StarterKit.configure({
-      heading: { levels: [2] },
+      heading: { levels: [2, 3] },
       blockquote: false,
       code: false,
       codeBlock: false,
       horizontalRule: false,
-      orderedList: false,
-      strike: false,
       underline: false,
       ...(collaborative ? { undoRedo: false } : {}),
       link: { openOnClick: false, autolink: true, defaultProtocol: "https" },

@@ -38,7 +38,7 @@ import {
   type ProjectColor,
   type ProjectRole,
 } from "~/db/schema";
-import { htmlToText } from "~/domain/notes/html";
+import { htmlToPreviewHtml, htmlToText } from "~/domain/notes/html";
 import {
   CARD_TASK_LIMIT,
   type CardTask,
@@ -406,6 +406,7 @@ export function scopedNotes(
           pinned: r.pinned,
           position: r.position,
           preview: htmlToText(r.bodyHtml),
+          ...(r.kind === "text" ? { previewHtml: htmlToPreviewHtml(r.bodyHtml) } : {}),
           tasks: t?.tasks ?? [],
           moreTasks: t ? t.total - t.tasks.length : 0,
           ...(f ? { cover: f.cover, attachmentCount: f.count } : {}),

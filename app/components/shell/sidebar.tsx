@@ -1,8 +1,9 @@
-import { FileText, Inbox, Plus, Settings, Trash2 } from "lucide-react";
+import { FileText, Inbox, Menu, Plus, Settings, Trash2 } from "lucide-react";
 import { Link, NavLink } from "react-router";
 import { cn } from "cn";
 import { usePendingSectionPath } from "~/hooks/use-pending-section";
 import { LogoMark } from "~/components/logo";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { SidebarProjects } from "./sidebar-projects";
 import type { ShellProject } from "./types";
 
@@ -22,6 +23,14 @@ type SidebarNavProps = {
    */
   variant: Variant;
   onNavigate?: () => void;
+  /**
+   * Masaüstü ve tablet (tasarım v2): sol üstteki logo menü düğmesidir; üzerine gelince ya
+   * da odakta hamburgere döner, tıklama paneli açar/kapatır. Verilmezse (mobil çekmece)
+   * logo ana sayfa bağlantısıdır.
+   */
+  onMenuToggle?: () => void;
+  /** Panel (ya da tablet çekmecesi) açık mı: "Menüyü kapat" / "Menüyü aç". */
+  menuExpanded?: boolean;
 };
 
 /** Çekmecede ray kurallarını kaldırır (sınıflar kaynakta tam yazılı kalır). */
@@ -34,10 +43,10 @@ function railClasses(variant: Variant, classes: string) {
 }
 
 const NAV_ITEM =
-  "relative flex w-full items-center gap-3 rounded-[10px] px-3.5 py-[9px] font-medium text-fg outline-none transition-colors hover:bg-hover focus-visible:ring-3 focus-visible:ring-ring/50 railed:mx-auto railed:size-11 railed:justify-center railed:gap-0 railed:p-0";
+  "relative flex w-full items-center gap-3 rounded-[10px] px-3.5 py-[9px] font-medium text-fg outline-none transition-colors hover:bg-hover focus-visible:ring-3 focus-visible:ring-ring/50 railed:mx-auto railed:size-(--nav-rail-item) railed:justify-center railed:gap-0 railed:p-0 pointer-coarse:railed:size-11";
 const NAV_ACTIVE = "bg-primary-soft text-primary hover:bg-primary-soft";
 const LABEL = "nav-label min-w-0 truncate railed:hidden";
-const ICON = "size-5 shrink-0";
+const ICON = "size-(--nav-icon) shrink-0";
 
 export function SidebarNav({
   projects,
@@ -46,6 +55,8 @@ export function SidebarNav({
   onNewProject,
   variant,
   onNavigate,
+  onMenuToggle,
+  menuExpanded = false,
 }: SidebarNavProps) {
   const rc = (classes: string) => railClasses(variant, classes);
   // Bölüm değişirken tıklanan öğe veri beklenmeden seçili görünür (`isPending`).
@@ -55,20 +66,40 @@ export function SidebarNav({
 
   return (
     <nav aria-label="Ana gezinme" className="flex min-h-0 flex-1 flex-col gap-0.5">
-      <Link
-        to="/"
-        onClick={onNavigate}
-        aria-label="Sukano, ana sayfa"
-        title="Sukano"
-        className={rc(
-          "flex items-center gap-2.5 rounded-[10px] px-3 pt-1.5 pb-[22px] text-fg outline-none focus-visible:ring-3 focus-visible:ring-ring/50 railed:justify-center railed:px-0",
-        )}
-      >
-        <LogoMark size={28} />
-        <span className={rc("text-lg leading-none font-bold tracking-[-0.01em] railed:hidden")}>
-          sukano
-        </span>
-      </Link>
+      {onMenuToggle ? (
+        <div
+          className={rc(
+            "flex items-center gap-2.5 px-2.5 pt-1.5 pb-[22px] railed:justify-center railed:px-0",
+          )}
+        >
+          <MenuLogoButton expanded={menuExpanded} onClick={onMenuToggle} />
+          <Link
+            to="/"
+            onClick={onNavigate}
+            aria-label="Sukano, ana sayfa"
+            className={rc(
+              "nav-label rounded-md text-lg leading-none font-bold tracking-[-0.01em] text-fg outline-none focus-visible:ring-3 focus-visible:ring-ring/50 railed:hidden",
+            )}
+          >
+            sukano
+          </Link>
+        </div>
+      ) : (
+        <Link
+          to="/"
+          onClick={onNavigate}
+          aria-label="Sukano, ana sayfa"
+          title="Sukano"
+          className={rc(
+            "flex items-center gap-2.5 rounded-[10px] px-3 pt-1.5 pb-[22px] text-fg outline-none focus-visible:ring-3 focus-visible:ring-ring/50 railed:justify-center railed:px-0",
+          )}
+        >
+          <LogoMark size={28} />
+          <span className={rc("text-lg leading-none font-bold tracking-[-0.01em] railed:hidden")}>
+            sukano
+          </span>
+        </Link>
+      )}
 
       <NavLink
         to="/"
@@ -168,6 +199,33 @@ export function SidebarNav({
         <span className={rc(LABEL)}>Ayarlar</span>
       </NavLink>
     </nav>
+  );
+}
+
+/**
+ * Logo ↔ menü düğmesi (tasarım v2, NavStates): logo 120 ms'de solar ve küçülür, hamburger
+ * aynı yerde dönerek belirir (180 ms); dokunmatikte basılıyken. Bkz. `.logo-tg` (app.css).
+ */
+function MenuLogoButton({ expanded, onClick }: { expanded: boolean; onClick: () => void }) {
+  const label = expanded ? "Menüyü kapat" : "Menüyü aç";
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="logo-tg"
+          aria-label={label}
+          aria-expanded={expanded}
+          onClick={onClick}
+        >
+          <LogoMark size={28} className="logo-mark" />
+          <Menu className="logo-burger" strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

@@ -3,7 +3,7 @@
  * verisine uygular; ızgara, yanıt gelmeden yeni hali gösterir.
  */
 import type { NoteColor, NoteKind } from "~/db/schema";
-import { htmlToText } from "./html";
+import { htmlToPreviewHtml, htmlToText } from "./html";
 import { planMove, topPosition } from "./ordering";
 import type { NoteIntent } from "./validation";
 
@@ -34,6 +34,11 @@ export type NoteCardData = {
   position: number;
   /** Gövdenin düz metni (başlıksız). */
   preview: string;
+  /**
+   * Metin notunun biçimli önizlemesi (`htmlToPreviewHtml`: beyaz listeden kurulmuş, güvenli,
+   * kısaltılmış HTML). Yoksa kart düz metni gösterir.
+   */
+  previewHtml?: string;
   /** Yapılacaklar notunda kartta görünen ilk üst seviye görevler. */
   tasks: CardTask[];
   /** Kartta görünmeyen tamamlanmamış üst seviye görev sayısı. */
@@ -84,6 +89,7 @@ export function applyPendingIntents(
             pinned: p.pinned,
             position: topPosition(list.map((n) => n.position)),
             preview: htmlToText(p.bodyHtml),
+            previewHtml: htmlToPreviewHtml(p.bodyHtml),
             tasks: [],
             moreTasks: 0,
             updatedAt: now.toISOString(),
@@ -122,7 +128,12 @@ export function applyPendingIntents(
             ? {
                 ...n,
                 title: p.title ?? n.title,
-                preview: p.bodyHtml === undefined ? n.preview : htmlToText(p.bodyHtml),
+                ...(p.bodyHtml === undefined
+                  ? {}
+                  : {
+                      preview: htmlToText(p.bodyHtml),
+                      previewHtml: htmlToPreviewHtml(p.bodyHtml),
+                    }),
               }
             : n,
         );
@@ -167,6 +178,7 @@ function convertCard(n: NoteCardData, to: NoteKind): NoteCardData {
       ...n,
       kind: "todo",
       preview: "",
+      previewHtml: "",
       tasks: lines.slice(0, CARD_TASK_LIMIT).map((title) => ({ id: null, title, done: false })),
       moreTasks: Math.max(0, lines.length - CARD_TASK_LIMIT),
     };
@@ -175,6 +187,7 @@ function convertCard(n: NoteCardData, to: NoteKind): NoteCardData {
     ...n,
     kind: "text",
     preview: n.tasks.map((t) => t.title).join("\n"),
+    previewHtml: "",
     tasks: [],
     moreTasks: 0,
   };

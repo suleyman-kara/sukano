@@ -8,7 +8,6 @@ import {
   Paperclip,
   Pin,
   RotateCcw,
-  Trash2,
   X,
 } from "lucide-react";
 import { forwardRef, useId, useState } from "react";
@@ -37,7 +36,7 @@ import type { NoteActions } from "./use-note-actions";
 export const COARSE_POINTER = "(pointer: coarse)";
 
 const IB =
-  "relative z-[1] inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] aria-expanded:text-fg [&_svg]:size-[18px]";
+  "ib ib-card relative z-[1] inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] aria-expanded:text-fg";
 
 export type NoteCardProps = {
   note: NoteCardData;
@@ -336,10 +335,20 @@ function CardBody({
   if (!note.preview && !files) return null;
   return (
     <>
-      {note.preview && (
-        <p className="m-0 line-clamp-4 text-[13px] break-words whitespace-pre-line md:line-clamp-[12] md:text-sm">
-          {note.preview}
-        </p>
+      {note.previewHtml ? (
+        <div
+          className="card-preview text-[13px] md:text-sm"
+          data-onizleme=""
+          // Güvenli: `htmlToPreviewHtml` çıktısı yalnızca beyaz listedeki etiketlerden
+          // (öznitelik yok, metin kaçışlı) kurulur; gövde HTML'i doğrudan basılmaz.
+          dangerouslySetInnerHTML={{ __html: note.previewHtml }}
+        />
+      ) : (
+        note.preview && (
+          <p className="card-preview m-0 text-[13px] break-words whitespace-pre-line md:text-sm">
+            {note.preview}
+          </p>
+        )
       )}
       {files > 0 && (
         <p
@@ -441,7 +450,7 @@ function CardActions({
       <div className="relative z-[1] -mr-1.5 -mb-1.5 flex justify-end">
         <button
           type="button"
-          className={cn(IB, "size-9")}
+          className={IB}
           aria-label={`${note.title || "Not"}: işlemler`}
           aria-haspopup="dialog"
           onClick={onSheet}
@@ -510,15 +519,6 @@ function CardActions({
           <ArchiveRestore aria-hidden="true" />
         </button>
       )}
-      <button
-        type="button"
-        className={IB}
-        aria-label="Çöpe at"
-        title="Çöpe at"
-        onClick={() => actions.trash(note.id)}
-      >
-        <Trash2 aria-hidden="true" />
-      </button>
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button type="button" className={IB} aria-label="Diğer" title="Diğer">
@@ -527,10 +527,16 @@ function CardActions({
         </DropdownMenuTrigger>
         <NoteMoreMenuContent
           kind={note.kind}
+          moveCopy={
+            view === "notlar" && onMoveCopy
+              ? { label: "Taşı veya kopyala…", onSelect: onMoveCopy }
+              : null
+          }
           onDuplicate={() => actions.duplicate(note.id)}
           onVersions={onVersions}
           versionsDisabled={versionsDisabled}
           onConvert={onConvert}
+          onTrash={() => actions.trash(note.id)}
         />
       </DropdownMenu>
       {view === "arsiv" && (

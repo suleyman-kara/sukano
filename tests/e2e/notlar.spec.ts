@@ -46,13 +46,19 @@ async function notOlustur(page: Page, baslik: string, govde = "") {
   await expect(kart(page, baslik)).toBeVisible();
 }
 
-/** Kart eylemi: masaüstünde eylem çubuğu, dokunmatikte ⋯ sayfası. */
+/**
+ * Kart eylemi: masaüstünde eylem çubuğu ("Sil" ⋯ menüsünün sonunda), dokunmatikte ⋯ sayfası.
+ */
 async function kartEylemi(page: Page, k: Locator, eylem: string) {
   if (await dokunmatik(page)) {
     await k.getByRole("button", { name: /: işlemler$/ }).click();
     const sayfa = page.getByRole("dialog", { name: /not işlemleri/i });
-    await sayfa.getByRole("menuitem", { name: eylem }).click();
+    await sayfa.getByRole("menuitem", { name: eylem, exact: true }).click();
     await expect(sayfa).toBeHidden();
+  } else if (eylem === "Sil") {
+    await k.hover();
+    await k.getByRole("button", { name: "Diğer" }).click();
+    await page.getByRole("menu").getByRole("menuitem", { name: "Sil" }).click();
   } else {
     await k.hover();
     await k.getByRole("button", { name: eylem, exact: true }).click();
@@ -121,6 +127,44 @@ test.describe("kişisel notlar", () => {
     await expect(basliksiz).toHaveCount(once);
   });
 
+  test("kart önizlemesi kalın, başlık ve listeleri gösterir, 10 satırdan sonra kesilir", async ({
+    page,
+  }) => {
+    const baslik = benzersiz("Biçimli");
+    const maddeler = Array.from({ length: 14 }, (_, i) => `<li><p>Madde ${i + 1}</p></li>`).join(
+      "",
+    );
+    const res = await page.request.post("/api/notlar", {
+      form: {
+        intent: "create",
+        id: crypto.randomUUID(),
+        title: baslik,
+        bodyHtml: `<h2>Mutfak</h2><p><strong>Salon:</strong> gri <a href="https://ornek.com">teklif</a></p><ol>${maddeler}</ol>`,
+      },
+    });
+    expect(res.ok()).toBe(true);
+    await ac(page, "/");
+    const onizleme = kart(page, baslik).locator("[data-onizleme]");
+    await expect(onizleme.locator("strong")).toHaveText("Salon:");
+    await expect(onizleme.locator(".pv-h")).toHaveText("Mutfak");
+    // Yük de kısaltılır (en çok 14 blok); görünen kısım 10 satır.
+    expect(await onizleme.locator("ol > li").count()).toBeGreaterThanOrEqual(10);
+    // Bağlantı kartta gezinmez: kartın içinde ikinci bir bağlantı yok.
+    await expect(onizleme.getByRole("link")).toHaveCount(0);
+    // En çok 10 satır: yükseklik satır yüksekliğinin ~10 katını geçmez, taşan kısım gizli.
+    const { yukseklik, satir, tasma } = await onizleme.evaluate((e) => ({
+      yukseklik: e.getBoundingClientRect().height,
+      satir: parseFloat(getComputedStyle(e).lineHeight),
+      tasma: e.scrollHeight > e.clientHeight,
+    }));
+    expect(yukseklik).toBeLessThanOrEqual(satir * 10.5);
+    expect(tasma).toBe(true);
+    // Kart tıklaması notu açar.
+    const kutu = (await onizleme.boundingBox())!;
+    await page.mouse.click(kutu.x + kutu.width / 2, kutu.y + kutu.height / 2);
+    await expect(page).toHaveURL(/\/not\//);
+  });
+
   test("arşivle → arşivden çıkar", { tag: "@duman" }, async ({ page }) => {
     await ac(page, "/");
     const baslik = benzersiz("Arşivlik");
@@ -148,20 +192,34 @@ test.describe("kişisel notlar", () => {
     await expect(kart(page, baslik)).toBeVisible();
   });
 
-  test("çöpe at → toast'taki Geri al notu geri getirir", { tag: "@duman" }, async ({ page }) => {
-    await ac(page, "/");
-    const baslik = benzersiz("Çöplük");
-    await notOlustur(page, baslik);
-    await kartEylemi(page, kart(page, baslik), "Çöpe at");
-    const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Not çöpe atıldı" });
-    await expect(toast).toBeVisible();
-    await expect(kart(page, baslik)).toBeHidden();
-    await toast.getByRole("button", { name: "Geri al" }).click();
-    await expect(kart(page, baslik)).toBeVisible();
-    await page.waitForLoadState("networkidle");
-    await page.reload();
-    await expect(kart(page, baslik)).toBeVisible();
-  });
+  test(
+    "⋯ menüsünün son öğesi Sil, notu onaysız çöpe atar; toast'taki Geri al geri getirir",
+    { tag: "@duman" },
+    async ({ page }) => {
+      await ac(page, "/");
+      const baslik = benzersiz("Çöplük");
+      await notOlustur(page, baslik);
+      const k = kart(page, baslik);
+      // Alt satırda çöp düğmesi yok.
+      await expect(k.getByRole("button", { name: "Çöpe at" })).toHaveCount(0);
+      if (!(await dokunmatik(page))) {
+        await k.hover();
+        await k.getByRole("button", { name: "Diğer" }).click();
+        const menu = page.getByRole("menu");
+        await expect(menu.getByRole("menuitem").last()).toHaveText("Sil");
+        await page.keyboard.press("Escape");
+      }
+      await kartEylemi(page, k, "Sil");
+      const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Not çöpe atıldı" });
+      await expect(toast).toBeVisible();
+      await expect(kart(page, baslik)).toBeHidden();
+      await toast.getByRole("button", { name: "Geri al" }).click();
+      await expect(kart(page, baslik)).toBeVisible();
+      await page.waitForLoadState("networkidle");
+      await page.reload();
+      await expect(kart(page, baslik)).toBeVisible();
+    },
+  );
 
   test("çöpten geri yükleme ve kalıcı silme", async ({ page }) => {
     await ac(page, "/");
@@ -169,8 +227,8 @@ test.describe("kişisel notlar", () => {
     const sil = benzersiz("Silinecek");
     await notOlustur(page, geri);
     await notOlustur(page, sil);
-    await kartEylemi(page, kart(page, geri), "Çöpe at");
-    await kartEylemi(page, kart(page, sil), "Çöpe at");
+    await kartEylemi(page, kart(page, geri), "Sil");
+    await kartEylemi(page, kart(page, sil), "Sil");
     await page.waitForLoadState("networkidle");
 
     await ac(page, "/cop");

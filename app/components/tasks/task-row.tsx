@@ -11,6 +11,7 @@ import {
 import { memo } from "react";
 import { cn } from "cn";
 import { Avatar } from "~/components/avatar";
+import { SORT_TRANSITION } from "~/components/drag-motion";
 import { taskFocusLabel } from "~/domain/realtime/live-ui";
 import type { Peer } from "~/domain/realtime/presence";
 import { formatRange, isOverdue } from "~/domain/tasks/dates";
@@ -111,6 +112,7 @@ export const TaskRow = memo(function TaskRow({
   const { setNodeRef, listeners, transform, transition, isDragging } = useSortable({
     id,
     disabled: !sortable,
+    transition: SORT_TRANSITION,
   });
   const shownDepth = isDragging && projectedDepth !== null ? projectedDepth : depth;
   const deep = mobile && depth > MOBILE_MAX_DEPTH;

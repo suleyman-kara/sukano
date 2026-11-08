@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 import { cn } from "cn";
+import { DROP_ANIMATION } from "~/components/drag-motion";
 import { Popover, PopoverAnchor, PopoverContent } from "~/components/ui/popover";
 import { TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import { useReducedMotion } from "~/hooks/use-reduced-motion";
@@ -217,7 +218,8 @@ export function TodoEditor({
 
   const rootRef = useRef<HTMLDivElement>(null);
   // Alt görev aç / kapa: altta kalan satırlar kayarak yer değiştirir (MicroMotion 7).
-  const recordRows = useRowFlip(rootRef, useReducedMotion());
+  const reducedMotion = useReducedMotion();
+  const recordRows = useRowFlip(rootRef, reducedMotion);
   const view = useMemo(
     () => ({
       ...baseView,
@@ -1070,7 +1072,7 @@ export function TodoEditor({
                 );
               })}
             </SortableContext>
-            <DragOverlay dropAnimation={null}>
+            <DragOverlay dropAnimation={reducedMotion ? null : DROP_ANIMATION}>
               {drag ? (
                 <DragGhost
                   row={

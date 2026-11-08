@@ -89,10 +89,14 @@ describe("iyimser arayüz", () => {
   it("güncelleme başlığı ve önizlemeyi değiştirir", () => {
     const out = applyPendingIntents(
       base,
-      [{ intent: "update", id: "a", bodyHtml: "<p>Yeni gövde</p>" }],
+      [{ intent: "update", id: "a", bodyHtml: "<p><strong>Yeni</strong> gövde</p>" }],
       "notlar",
     );
-    expect(out[0]).toMatchObject({ title: "A", preview: "Yeni gövde" });
+    expect(out[0]).toMatchObject({
+      title: "A",
+      preview: "Yeni gövde",
+      previewHtml: "<p><strong>Yeni</strong> gövde</p>",
+    });
     const out2 = applyPendingIntents(
       base,
       [{ intent: "update", id: "a", title: "Başka" }],

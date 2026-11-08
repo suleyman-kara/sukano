@@ -100,3 +100,14 @@ export async function kararliKutu(locator: Locator) {
     .toBe(true);
   return (await locator.boundingBox())!;
 }
+
+/**
+ * Gezinmeyi açan düğme: masaüstü ve tablette sol üstteki logo ("Menüyü aç" / "Menüyü kapat"),
+ * mobilde üst çubuktaki hamburger ("Gezinme menüsü").
+ */
+export function menuDugmesi(page: Page): Locator {
+  return page
+    .getByRole("button", { name: /^(Gezinme menüsü|Menüyü aç|Menüyü kapat)$/ })
+    .filter({ visible: true })
+    .first();
+}

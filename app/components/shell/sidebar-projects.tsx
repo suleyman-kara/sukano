@@ -13,6 +13,7 @@ import { Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useFetcher } from "react-router";
 import { cn } from "cn";
+import { SORT_TRANSITION } from "~/components/drag-motion";
 import { reorderIds } from "~/domain/projects/members";
 import { roleLabel } from "~/domain/projects/permissions";
 import type { ShellProject } from "./types";
@@ -125,6 +126,7 @@ function SortableProject({
 }: Omit<Props, "projects"> & { project: ShellProject; onKeyMove: (delta: -1 | 1) => void }) {
   const { setNodeRef, listeners, transform, transition, isDragging } = useSortable({
     id: project.id,
+    transition: SORT_TRANSITION,
   });
   const viewer = project.role === "goruntuleyici";
   return (

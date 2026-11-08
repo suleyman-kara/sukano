@@ -7,7 +7,7 @@ import { NotificationList } from "./notification-panel";
 import { useNotificationFeed, useSyncTimeZone, useUnreadCount } from "./use-notifications";
 
 const BUTTON =
-  "relative inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-hover aria-expanded:text-fg lg:size-9";
+  "ib relative inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-hover aria-expanded:text-fg";
 
 const label = (n: number) => (n > 0 ? `Bildirimler, ${n} yeni` : "Bildirimler");
 
@@ -16,7 +16,7 @@ function Badge({ count }: { count: number }) {
   return (
     <span
       data-testid="bildirim-rozeti"
-      className="absolute top-2.5 right-[11px] box-content size-2 rounded-full border-2 border-bg bg-danger lg:top-[7px] lg:right-2"
+      className="absolute top-[3px] right-[3px] box-content size-2 rounded-full border-2 border-bg bg-danger pointer-coarse:top-2 pointer-coarse:right-2"
       aria-hidden="true"
     />
   );
@@ -34,13 +34,13 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   return (
     <>
       <Link to="/bildirimler" aria-label={label(unread)} className={cn(BUTTON, "md:hidden")}>
-        <Bell className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        <Bell strokeWidth={1.75} aria-hidden="true" />
         <Badge count={unread} />
       </Link>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button type="button" aria-label={label(unread)} className={cn(BUTTON, "max-md:hidden")}>
-            <Bell className="size-5" strokeWidth={1.75} aria-hidden="true" />
+            <Bell strokeWidth={1.75} aria-hidden="true" />
             <Badge count={unread} />
           </button>
         </PopoverTrigger>

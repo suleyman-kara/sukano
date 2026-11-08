@@ -9,6 +9,7 @@ import {
   FolderInput,
   FolderOutput,
   History,
+  Keyboard,
   ListChecks,
   ListX,
   Palette,
@@ -25,7 +26,8 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/
 import type { NoteColor } from "~/db/schema";
 import { ColorPalette } from "./color-palette";
 
-const ITEM = "gap-3 px-2.5 py-2 font-medium [&_svg]:size-[18px] [&_svg]:text-muted-foreground";
+const ITEM =
+  "gap-3 px-2.5 py-2 font-medium pointer-coarse:min-h-11 [&_svg]:size-(--menu-icon) [&_svg]:text-muted-foreground";
 
 /** Yapılacaklar notunun en üstteki komutları (PLAN §10 kanonik sıra). */
 export type TodoMenuHandlers = {
@@ -47,6 +49,19 @@ export type NoteMenuHandlers = {
   moveCopy?: MoveCopyEntry | null;
 };
 
+/** ⋯ menüsünün sonu: ince ayraçtan sonra kırmızı "Sil" (onaysız çöpe atar, Geri al toast'ı). */
+export function TrashMenuItem({ onTrash }: { onTrash: () => void }) {
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem variant="destructive" className={ITEM} onSelect={onTrash}>
+        <Trash2 aria-hidden="true" />
+        Sil
+      </DropdownMenuItem>
+    </>
+  );
+}
+
 export type MoveCopyEntry = { label: "Taşı veya kopyala…" | "Kopyala…"; onSelect: () => void };
 
 function MoveCopyIcon({ label }: { label: MoveCopyEntry["label"] }) {
@@ -61,9 +76,9 @@ export const convertLabel = (kind: "text" | "todo") =>
   kind === "text" ? "Yapılacaklar notuna dönüştür" : "Metin notuna dönüştür";
 
 /**
- * Masaüstü "Diğer" (⋯) menüsü; kanonik sıra (PLAN §10). Kartta, kart çubuğunda duran
- * eylemler tekrarlanmaz. Açık yapılacaklar notunda en üstte Tümünü aç / Tümünü kapat /
- * Tamamlananları sil, sonda Sürüm geçmişi, Arşivle ve Çöpe at (`dialog`) yer alır.
+ * Masaüstü "Diğer" (⋯) menüsü; kanonik sıra (PLAN §10, tasarım v2): [yapılacaklar
+ * komutları] · Taşı veya kopyala… / Kopyala… · Kopyasını oluştur · Sürüm geçmişi ·
+ * Dönüştür · Klavye kısayolları (yalnızca açık not) · ─ · Sil (kırmızı, en sonda).
  */
 export function NoteMoreMenuContent({
   onDuplicate,
@@ -74,16 +89,26 @@ export function NoteMoreMenuContent({
   kind,
   todo,
   dialog,
+  onShortcuts,
+  onTrash,
+  side,
 }: NoteMenuHandlers & {
   kind: "text" | "todo";
   todo?: TodoMenuHandlers;
   dialog?: { archived: boolean; onArchive: () => void; onTrash: () => void };
+  /** "Klavye kısayolları (Ctrl+/)" (açık not, klavyeli cihaz). */
+  onShortcuts?: () => void;
+  /** Verilirse menünün sonunda ayraçtan sonra kırmızı "Sil". */
+  onTrash?: () => void;
+  /** Açılma yönü (açık notun alt çubuğunda yukarı). */
+  side?: "top" | "bottom";
 }) {
   return (
     <DropdownMenuContent
       align="end"
+      side={side}
       sideOffset={6}
-      className="w-[260px] rounded-xl p-1.5"
+      className="w-(--menu-w) rounded-xl p-1.5"
       aria-label="Not işlemleri"
     >
       {todo && (
@@ -124,6 +149,14 @@ export function NoteMoreMenuContent({
         {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
         {convertLabel(kind)}
       </DropdownMenuItem>
+      {onShortcuts && (
+        <DropdownMenuItem className={ITEM} onSelect={onShortcuts}>
+          <Keyboard aria-hidden="true" />
+          Klavye kısayolları
+          <kbd className="ml-auto font-sans text-xs text-muted-foreground">Ctrl+/</kbd>
+        </DropdownMenuItem>
+      )}
+      {onTrash && <TrashMenuItem onTrash={onTrash} />}
       {dialog && (
         <>
           <DropdownMenuSeparator />
@@ -164,8 +197,11 @@ type NoteSheetProps = NoteMenuHandlers & {
   onReminder?: () => void;
 };
 
-const ROW =
-  "flex min-h-12 w-full items-center gap-4 rounded-[10px] px-2.5 text-left text-[15px] font-medium outline-none hover:bg-hover focus-visible:bg-hover disabled:opacity-45 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
+const ROW_BASE =
+  "flex min-h-12 w-full items-center gap-4 rounded-[10px] px-2.5 text-left text-[15px] font-medium outline-none disabled:opacity-45 [&>svg]:size-5 [&>svg]:shrink-0";
+const ROW = `${ROW_BASE} hover:bg-hover focus-visible:bg-hover [&>svg]:text-muted-foreground`;
+/** Yıkıcı satır ("Sil"): kırmızı metin ve ikon. */
+const DANGER_ROW = `${ROW_BASE} text-danger hover:bg-danger-soft focus-visible:bg-danger-soft [&>svg]:text-danger`;
 
 /** Dokunmatik "⋯": alttan açılan sayfa (MNoteMenu, MTodoMenu). Renk anında uygulanır ("Bitti"). */
 export function NoteSheet({
@@ -331,9 +367,10 @@ export function NoteSheet({
             {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
             {archived ? "Arşivden çıkar" : "Arşivle"}
           </button>
-          <button type="button" role="menuitem" className={ROW} onClick={act(onTrash)}>
+          <div className="my-1 h-px bg-line" role="separator" />
+          <button type="button" role="menuitem" className={DANGER_ROW} onClick={act(onTrash)}>
             <Trash2 aria-hidden="true" />
-            Çöpe at
+            Sil
           </button>
         </div>
         {footer}

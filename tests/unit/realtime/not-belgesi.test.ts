@@ -36,6 +36,7 @@ const SAMPLES = [
   "<p>satır<br>alt satır</p><p></p><p>son</p>",
   "<p><strong><em>kalın italik</em></strong> &amp; &lt;etiket&gt; &quot;tırnak&quot;</p>",
   "<p>Çağrı, Şükrü, İğdır, ılık, ÖÜ</p>",
+  "<h3>Alt başlık</h3><p><s>eski</s> yeni</p><ol><li><p>Bir</p></li><li><p>İki</p></li></ol>",
 ];
 
 describe("HTML ↔ editör şeması", () => {
@@ -59,9 +60,12 @@ describe("HTML ↔ editör şeması", () => {
   });
 
   it("şemada olmayan etiketlerin metnini korur, eşdeğerlerine çevirir", () => {
-    expect(normalizeNoteHtml("<h1>Büyük</h1><h4>Küçük</h4>")).toBe("<h2>Büyük</h2><h2>Küçük</h2>");
+    expect(normalizeNoteHtml("<h1>Büyük</h1><h4>Küçük</h4>")).toBe("<h2>Büyük</h2><h3>Küçük</h3>");
     expect(normalizeNoteHtml("<ol><li>a</li><li>b</li></ol>")).toBe(
-      "<ul><li><p>a</p></li><li><p>b</p></li></ul>",
+      "<ol><li><p>a</p></li><li><p>b</p></li></ol>",
+    );
+    expect(normalizeNoteHtml("<p><del>d</del> <strike>s</strike></p>")).toBe(
+      "<p><s>d</s> <s>s</s></p>",
     );
     expect(normalizeNoteHtml("<p><b>k</b> <i>i</i> <u>altı</u> <code>kod</code></p>")).toBe(
       "<p><strong>k</strong> <em>i</em> altı kod</p>",

@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "~/components/shell/app-shell";
+import { ViewSwitch } from "~/components/shell/view-switch";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import type { ShellData } from "~/components/shell/types";
 import { NAV_STORAGE_KEY, THEME_STORAGE_KEY } from "~/lib/theme";
 import { hesaplar } from "../fixtures/hesaplar";
@@ -21,18 +23,22 @@ const shellData: ShellData = {
   unreadNotificationCount: 2,
 };
 
-function renderShell() {
+function renderShell(path = "/") {
+  const Page = () => (
+    <AppShell {...shellData} showViewSwitch>
+      <h1>Notlarım</h1>
+    </AppShell>
+  );
   const Stub = createRoutesStub([
-    {
-      path: "/",
-      Component: () => (
-        <AppShell {...shellData} showViewSwitch>
-          <h1>Notlarım</h1>
-        </AppShell>
-      ),
-    },
+    { path: "/", Component: Page },
+    { path: "/arsiv", Component: Page },
   ]);
-  return render(<Stub initialEntries={["/"]} />);
+  // Uygulamada ipuçlarının sağlayıcısı kökte (`root.tsx`).
+  return render(
+    <TooltipProvider>
+      <Stub initialEntries={[path]} />
+    </TooltipProvider>,
+  );
 }
 
 describe("uygulama kabuğu", () => {
@@ -50,20 +56,46 @@ describe("uygulama kabuğu", () => {
     expect(screen.getByRole("heading", { name: "Notlarım" })).toBeInTheDocument();
   });
 
-  it("masaüstünde hamburger sol paneli raya geçirir ve geri açar", async () => {
+  it("masaüstünde sol üstteki logo menü düğmesidir: paneli raya geçirir ve geri açar", async () => {
     const user = userEvent.setup();
     renderShell();
-    const menu = screen.getByRole("button", { name: "Gezinme menüsü" });
+    const nav = screen.getByRole("navigation", { name: "Ana gezinme" });
+    const menu = within(nav).getByRole("button", { name: "Menüyü kapat" });
     expect(menu).toHaveAttribute("aria-expanded", "true");
+    // "sukano" yazısı ana sayfa bağlantısı olarak kalır.
+    expect(within(nav).getByRole("link", { name: "Sukano, ana sayfa" })).toHaveAttribute(
+      "href",
+      "/",
+    );
 
     await user.click(menu);
     expect(document.documentElement).toHaveAttribute("data-nav", "rail");
     expect(localStorage.getItem(NAV_STORAGE_KEY)).toBe("rail");
     expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(menu).toHaveAccessibleName("Menüyü aç");
 
-    await user.click(menu);
+    // Klavyeyle de çalışır.
+    menu.focus();
+    await user.keyboard("{Enter}");
     expect(document.documentElement).toHaveAttribute("data-nav", "open");
     expect(menu).toHaveAttribute("aria-expanded", "true");
+    expect(menu).toHaveAccessibleName("Menüyü kapat");
+  });
+
+  it("tablette logo çekmeceyi açar, çekmecedeki logo kapatır", async () => {
+    setMedia({ width: 834 });
+    const user = userEvent.setup();
+    renderShell();
+    const menu = within(screen.getByRole("navigation", { name: "Ana gezinme" })).getByRole(
+      "button",
+      { name: "Menüyü aç" },
+    );
+    await user.click(menu);
+    const drawer = await screen.findByRole("dialog", { name: "Ana gezinme" });
+    expect(menu).toHaveAttribute("aria-expanded", "true");
+    await user.click(within(drawer).getByRole("button", { name: "Menüyü kapat" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.documentElement).not.toHaveAttribute("data-nav", "rail");
   });
 
   it("mobilde hamburger gezinme çekmecesini açar, panel durumu değişmez", async () => {
@@ -113,5 +145,25 @@ describe("uygulama kabuğu", () => {
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
+  });
+
+  it("görünüm seçicide yalnızca etkin görünümün etiketi gösterilir, diğerleri ipuçlu ikon", async () => {
+    const Stub = createRoutesStub([{ path: "/arsiv", Component: () => <ViewSwitch /> }]);
+    render(
+      <TooltipProvider>
+        <Stub initialEntries={["/arsiv"]} />
+      </TooltipProvider>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Görünüm" });
+    const active = within(nav).getByRole("link", { name: "Arşiv" });
+    expect(active).toHaveAttribute("aria-current", "page");
+    expect(active).toHaveAttribute("data-etkin");
+    for (const name of ["Notlar", "Çöp"]) {
+      const link = within(nav).getByRole("link", { name });
+      expect(link).not.toHaveAttribute("data-etkin");
+      expect(link).not.toHaveAttribute("aria-current");
+    }
+    // Etiket metni yalnızca görsel; erişilebilir ad aria-label'dan gelir, title yok.
+    expect(active).not.toHaveAttribute("title");
   });
 });

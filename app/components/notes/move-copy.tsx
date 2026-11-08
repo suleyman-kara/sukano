@@ -8,7 +8,7 @@ import { withDurationBar } from "~/components/ui/sonner";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import type { NoteColor } from "~/db/schema";
-import { MOVE_UNDO_MS } from "~/domain/projects/lifecycle";
+import { TOAST_MS } from "~/lib/motion";
 import { roleLabel } from "~/domain/projects/permissions";
 import { noteBg } from "./colors";
 import { canAddTo, type MoveTarget, type NoteProject } from "./note-access";
@@ -22,8 +22,8 @@ import { NOTES_ACTION } from "./use-note-actions";
  * olunan projeler seçilemez ("Görüntüleyici, not ekleyemez").
  */
 
-/** Taşıma "Geri al" toast'ının süresi (sunucu penceresi 10 sn + ağ payı). */
-export const MOVE_TOAST_MS = MOVE_UNDO_MS;
+/** Taşıma "Geri al" toast'ının süresi: tüm toast'lar gibi 6 sn (sunucunun geri alma penceresi 10 sn). */
+export const MOVE_TOAST_MS = TOAST_MS;
 
 type Result = { ok: boolean; error?: string };
 
@@ -255,9 +255,9 @@ export function MoveCopyDialog({
               <button
                 type="button"
                 aria-label="Kapat"
-                className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg max-sm:hidden"
+                className="ib inline-flex items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg max-sm:hidden"
               >
-                <X className="size-5" aria-hidden="true" />
+                <X aria-hidden="true" />
               </button>
             </DialogPrimitive.Close>
           </div>

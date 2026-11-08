@@ -21,6 +21,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { useReducedMotion } from "~/hooks/use-reduced-motion";
+import { DROP_ANIMATION } from "~/components/drag-motion";
 import { exitTransition, motionTransition } from "~/lib/motion";
 import type { NoteCardData } from "~/domain/notes/optimistic";
 import { NoteCard, type NoteCardProps } from "./note-card";
@@ -151,7 +152,7 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
       <SortableContext items={notes.map((n) => n.id)} strategy={() => null}>
         <LazyMotion features={domMax}>{grid}</LazyMotion>
       </SortableContext>
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={reduced ? null : DROP_ANIMATION}>
         {active ? <NoteCard note={active} overlay {...card} /> : null}
       </DragOverlay>
     </DndContext>
@@ -160,13 +161,19 @@ export function NoteGrid({ notes, hrefFor, onMove, label, ...card }: NoteGridPro
 
 /**
  * Izgaraya giriş ve çıkış (MicroMotion 5): yeni kart .92 → 1 ölçek, medium ease-out;
- * silinen 1 → .92 ve saydam, small ease-in; komşular medium kayar.
+ * silinen 1 → .92 ve saydam, small ease-in; komşular medium kayar. Azaltılmış harekette
+ * ölçek ve kayma yok (MotionConfig), kart 120 ms saydamlıkla girer ya da çıkar.
  */
 const CARD_TRANSITION = motionTransition("medium", false) as Transition;
 const CARD_EXIT: TargetAndTransition = {
   opacity: 0,
   scale: 0.92,
   transition: exitTransition("medium", false) as Transition,
+};
+const REDUCED_TRANSITION = motionTransition("medium", true) as Transition;
+const REDUCED_EXIT: TargetAndTransition = {
+  opacity: 0,
+  transition: exitTransition("medium", true) as Transition,
 };
 
 function SortableCard({
@@ -188,10 +195,10 @@ function SortableCard({
       data-note-item={note.id}
       className="break-inside-avoid"
       layout={reduced || isDragging ? false : "position"}
-      initial={reduced ? false : { opacity: 0, scale: 0.92 }}
+      initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={reduced ? undefined : CARD_EXIT}
-      transition={CARD_TRANSITION}
+      exit={reduced ? REDUCED_EXIT : CARD_EXIT}
+      transition={reduced ? REDUCED_TRANSITION : CARD_TRANSITION}
     >
       <NoteCard
         ref={setNodeRef}

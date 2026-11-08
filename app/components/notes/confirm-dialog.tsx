@@ -74,9 +74,9 @@ export function ConfirmDialog({
               <button
                 type="button"
                 aria-label="Kapat"
-                className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg"
+                className="ib inline-flex items-center justify-center rounded-full text-muted-foreground hover:bg-hover hover:text-fg"
               >
-                <X className="size-5" aria-hidden="true" />
+                <X aria-hidden="true" />
               </button>
             </AlertDialog.Cancel>
           </div>

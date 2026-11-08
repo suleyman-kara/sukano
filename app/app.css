@@ -123,6 +123,39 @@
   --ease-in-quart: var(--ease-in);
 
   --radius: 10px;
+
+  /* İkon düğmeleri (tasarım v2.1; tek yerden ayarlanır, bkz. `.ib`). Masaüstünde görünen kutu
+     isabet alanıdır (≥ 24 px, WCAG 2.5.8). Dokunmatikte isabet alanı 44 px kalır, görünen
+     daire `--ib-touch`. Metin düğmeleri (Kaydet, Kapat …) bunlardan etkilenmez. */
+  --ib: 31px; /* üst çubuk, açık not, Not al alanı */
+  --ib-icon: 18px;
+  --ib-card: 29px; /* kartın alt satırı ve iğnesi */
+  --ib-card-icon: 15px;
+  --ib-tb: 29px; /* biçimlendirme çubuğu */
+  --ib-tb-icon: 15px;
+  --ib-hit-touch: 44px;
+  --ib-touch: 40px; /* dokunmatikte görünen daire */
+  --ib-touch-icon: 18px; /* tablet */
+  --ib-touch-icon-phone: 20px; /* mobil (< 768 px) */
+  --nav-icon: 18px; /* kenar çubuğu */
+  --nav-rail-item: 40px;
+  --vs-h: 33px; /* görünüm seçici */
+  --vs-icon: 18px;
+  --menu-icon: 15px; /* ⋯ menüsü ve hesap menüsü öğeleri */
+  --menu-w: 268px;
+}
+/* Dokunmatik (tablet ve mobil) ölçüler: tasarım v2.1. */
+@media (pointer: coarse) {
+  :root {
+    --menu-icon: 17px;
+    --menu-w: 292px;
+  }
+}
+@media (pointer: coarse) and (width < 48rem) {
+  :root {
+    --menu-icon: 18px;
+    --nav-icon: 20px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -381,6 +414,22 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
+  .note-prose h3 {
+    margin: 0.8em 0 0.25em;
+    font-size: 1.05em;
+    font-weight: 600;
+  }
+  .note-prose h3:first-child {
+    margin-top: 0;
+  }
+  .note-prose ol {
+    margin: 0.25em 0;
+    padding-left: 1.4em;
+    list-style: decimal;
+  }
+  .note-prose s {
+    text-decoration-thickness: 1px;
+  }
   .note-prose p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;
@@ -448,6 +497,44 @@
   /* Çevrimdışı: düzenleme kapalı, içerik soluk (PLAN §5; MOffline). */
   [data-canli="cevrimdisi"] :is(.note-prose, .task-title, .task-cb) {
     opacity: 0.72;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Kartın biçimli önizlemesi (`htmlToPreviewHtml`): en çok 10 satır, sonra "…"   */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .card-preview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 10;
+    line-clamp: 10;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card-preview :is(p, ul, ol) {
+    margin: 0;
+  }
+  .card-preview .pv-h {
+    font-size: 0.98em;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .card-preview ul {
+    padding-left: 1.25em;
+    list-style: disc;
+  }
+  .card-preview ol {
+    padding-left: 1.25em;
+    list-style: decimal;
+  }
+  .card-preview s {
+    text-decoration-thickness: 1px;
+  }
+  .card-preview .pv-a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 }
 
@@ -587,6 +674,7 @@
   [data-motion="reduced"] :is(.task-enter, .task-leave, .task-landed, .task-nodel) {
     animation: none;
   }
+
   [data-motion="reduced"] :is(.task-cb, .task-cb::after, .task-title) {
     transition: none;
   }
@@ -607,8 +695,10 @@
 }
 
 /* Hareketi azalt (sistem tercihi ya da Ayarlar "Açık"; Ayarlar "Kapalı" sistemi geçersiz
-   kılar): giriş/çıkış animasyonları ve geçişler anında biter (Radix Presence animationend'i
-   yine alır). Kayma, ölçek, ortam döngüsü ve ışıltı yukarıdaki kurallarla tümden kapanır. */
+   kılar): kayma, ölçek, dönme, ortam döngüsü ve ışıltı kapanır; geçişler anında biter.
+   Anlam taşıyan durum değişimi 120 ms saydamlıkla kalır (MotionSpec "Kalır"): açılan
+   yüzeyler (diyalog, sayfa, menü, açılır pencere, ipucu: tw-animate `animate-in/out`)
+   kaymadan ve büyümeden yalnızca solar; `.reduced-fade` işaretli öğeler de öyle. */
 @layer base {
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion="full"]) *,
@@ -618,6 +708,21 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+    :root:not([data-motion="full"]) :is([class*="animate-in"], [class*="animate-out"]) {
+      --tw-enter-scale: 1;
+      --tw-exit-scale: 1;
+      --tw-enter-rotate: 0;
+      --tw-exit-rotate: 0;
+      --tw-enter-translate-x: 0;
+      --tw-enter-translate-y: 0;
+      --tw-exit-translate-x: 0;
+      --tw-exit-translate-y: 0;
+      animation-duration: var(--dur-micro) !important;
+    }
+    :root:not([data-motion="full"]) .reduced-fade {
+      transition-property: opacity !important;
+      transition-duration: var(--dur-micro) !important;
+    }
   }
   [data-motion="reduced"] *,
   [data-motion="reduced"] ::before,
@@ -625,6 +730,59 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  [data-motion="reduced"] :is([class*="animate-in"], [class*="animate-out"]) {
+    --tw-enter-scale: 1;
+    --tw-exit-scale: 1;
+    --tw-enter-rotate: 0;
+    --tw-exit-rotate: 0;
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 0;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 0;
+    animation-duration: var(--dur-micro) !important;
+  }
+  [data-motion="reduced"] .reduced-fade {
+    transition-property: opacity !important;
+    transition-duration: var(--dur-micro) !important;
+  }
+  [data-motion="reduced"] .task-leave {
+    animation: task-fade-out var(--dur-micro) var(--ease-in) forwards !important;
+  }
+  [data-motion="reduced"] .task-landed {
+    animation: fade-in var(--dur-micro) var(--ease-out) both !important;
+  }
+  [data-motion="reduced"] .vs-label {
+    transition-property: opacity !important;
+    transition-duration: var(--dur-micro) !important;
+  }
+  [data-motion="reduced"][data-nav-gecis="acilis"] .nav-label {
+    animation: fade-in var(--dur-micro) var(--ease-out) both !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .task-leave {
+      animation: task-fade-out var(--dur-micro) var(--ease-in) forwards !important;
+    }
+    :root:not([data-motion="full"]) .task-landed {
+      animation: fade-in var(--dur-micro) var(--ease-out) both !important;
+    }
+    :root:not([data-motion="full"]) .vs-label {
+      transition-property: opacity !important;
+      transition-duration: var(--dur-micro) !important;
+    }
+    :root:not([data-motion="full"])[data-nav-gecis="acilis"] .nav-label {
+      animation: fade-in var(--dur-micro) var(--ease-out) both !important;
+    }
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes task-fade-out {
+  to {
+    opacity: 0;
   }
 }
 
@@ -675,7 +833,7 @@
   }
   @keyframes drag-lift {
     to {
-      transform: rotate(1.5deg) scale(1.03);
+      transform: scale(1.03);
     }
   }
 
@@ -732,12 +890,35 @@
     }
   }
 
-  [data-motion="reduced"] :is(.drag-lift, .empty-in, .empty-in-late),
+  /* Boş durumda logo (MicroMotion 10): kareler sol üst → sağ üst → sağ alt → sol alt,
+     80 ms arayla, her biri 240 ms ease-out; metin 160 ms sonra (`.empty-in-late`). */
+  .empty-logo rect {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: empty-square var(--dur-medium) var(--ease-out) both;
+  }
+  .empty-logo rect:nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .empty-logo rect:nth-child(4) {
+    animation-delay: 160ms;
+  }
+  .empty-logo rect:nth-child(3) {
+    animation-delay: 240ms;
+  }
+  @keyframes empty-square {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  [data-motion="reduced"] :is(.drag-lift, .empty-in, .empty-in-late, .empty-logo rect),
   [data-motion="reduced"] .skeleton::after {
     animation: none;
   }
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-motion="full"]) :is(.drag-lift, .empty-in, .empty-in-late),
+    :root:not([data-motion="full"]) :is(.drag-lift, .empty-in, .empty-in-late, .empty-logo rect),
     :root:not([data-motion="full"]) .skeleton::after {
       animation: none;
     }
@@ -815,13 +996,233 @@
       overflow: hidden;
     }
   }
-  /* Azaltılmış hareket: etiketler kaymaz (taban kural süreyi zaten sıfırlar). */
-  [data-motion="reduced"] .nav-label {
-    animation: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* İkon düğmeleri (tasarım v2.1): ölçüler yukarıdaki `--ib*` belirteçlerinden. */
+/* `.ib` temel, `.ib-card` kart satırı, `.ib-tb` biçimlendirme çubuğu. İkonun boyutu */
+/* da buradan gelir; düğmenin içindeki svg'ye ayrıca boyut verilmez.            */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .ib {
+    width: var(--ib-size, var(--ib));
+    height: var(--ib-size, var(--ib));
+  }
+  .ib > svg {
+    width: var(--ib-icon-size, var(--ib-icon));
+    height: var(--ib-icon-size, var(--ib-icon));
+  }
+  .ib-card {
+    --ib-size: var(--ib-card);
+    --ib-icon-size: var(--ib-card-icon);
+  }
+  .ib-tb {
+    --ib-size: var(--ib-tb);
+    --ib-icon-size: var(--ib-tb-icon);
+  }
+  /* Dokunmatik: 44 px isabet alanı, görünen daire `--ib-touch` (zemin içerik kutusunda). */
+  @media (pointer: coarse) {
+    .ib {
+      --ib-size: var(--ib-hit-touch);
+      --ib-icon-size: var(--ib-touch-icon);
+      padding: calc((var(--ib-hit-touch) - var(--ib-touch)) / 2);
+      background-clip: content-box;
+    }
+  }
+  @media (pointer: coarse) and (width < 48rem) {
+    .ib {
+      --ib-icon-size: var(--ib-touch-icon-phone);
+    }
+    /* Mobil biçimlendirme çubuğu: 44 × 40 görünen kutu, ikon 18. */
+    .ib-tb {
+      --ib-icon-size: var(--ib-touch-icon);
+      padding: calc((var(--ib-hit-touch) - var(--ib-touch)) / 2) 0;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Görünüm seçici (tasarım v2): yalnızca etkin öğenin etiketi görünür.          */
+/* Genişlik 180 ms ease-in-out; yeni etiket 60 ms gecikmeli 120 ms ease-out      */
+/* saydamlık, eskisi 120 ms ease-in. Azaltılmış harekette genişlik anında,       */
+/* saydamlık 120 ms kalır.                                                     */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .vs-item {
+    transition:
+      color var(--dur-micro) var(--ease-out),
+      background-color var(--dur-micro) var(--ease-out),
+      box-shadow var(--dur-micro) var(--ease-out);
+  }
+  .vs-label {
+    display: grid;
+    grid-template-columns: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-columns var(--dur-small) var(--ease-inout),
+      opacity var(--dur-micro) var(--ease-in);
+  }
+  .vs-label > span {
+    min-width: 0;
+  }
+  .vs-item[data-etkin] .vs-label {
+    grid-template-columns: 1fr;
+    opacity: 1;
+    transition:
+      grid-template-columns var(--dur-small) var(--ease-inout),
+      opacity var(--dur-micro) var(--ease-out) 60ms;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Logo ↔ menü düğmesi (tasarım v2, NavStates): masaüstü ve tablette sol üstteki */
+/* logo menü düğmesidir. Üzerine gelince ya da odakta logo solar ve küçülür     */
+/* (120 ms ease-out), hamburger aynı yerde dönerek belirir (180 ms ease-out);    */
+/* geri dönüş 120 ms. Dokunmatikte basılıyken. Azaltılmış harekette yalnızca     */
+/* saydamlık.                                                                   */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .logo-tg {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: -2px;
+    border-radius: 8px;
+    color: var(--fg);
+    outline: none;
+    transition: background-color var(--dur-micro) var(--ease-out);
+  }
+  .logo-tg .logo-mark {
+    transition:
+      opacity var(--dur-micro) var(--ease-out),
+      transform var(--dur-micro) var(--ease-out);
+  }
+  .logo-tg .logo-burger {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--ib-icon);
+    height: var(--ib-icon);
+    margin: calc(var(--ib-icon) / -2) 0 0 calc(var(--ib-icon) / -2);
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+    transition:
+      opacity var(--dur-micro) var(--ease-in),
+      transform var(--dur-micro) var(--ease-in);
+  }
+  .logo-tg:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .logo-tg:is(:focus-visible, :active) {
+    background: var(--hover);
+  }
+  .logo-tg:is(:focus-visible, :active) .logo-mark {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  .logo-tg:is(:focus-visible, :active) .logo-burger {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-micro) var(--ease-out),
+      transform var(--dur-small) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .logo-tg:hover {
+      background: var(--hover);
+    }
+    .logo-tg:hover .logo-mark {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    .logo-tg:hover .logo-burger {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity var(--dur-micro) var(--ease-out),
+        transform var(--dur-small) var(--ease-out);
+    }
+  }
+  /* Dokunmatik: 44 px isabet alanı, yerleşim değişmez. */
+  @media (pointer: coarse) {
+    .logo-tg {
+      width: 44px;
+      height: 44px;
+      margin: -8px;
+    }
+  }
+}
+@layer base {
+  [data-motion="reduced"] :is(.logo-tg .logo-mark, .logo-tg .logo-burger) {
+    transform: none !important;
+    transition-property: opacity !important;
+    transition-duration: var(--dur-micro) !important;
   }
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-motion="full"]) .nav-label {
-      animation: none;
+    :root:not([data-motion="full"]) :is(.logo-tg .logo-mark, .logo-tg .logo-burger) {
+      transform: none !important;
+      transition-property: opacity !important;
+      transition-duration: var(--dur-micro) !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Biçimlendirme (Aa) çubuğu (MotionSpec v2): satır 0fr → 1fr 180 ms ease-in-out, */
+/* çubuk saydamlık + 4 px kayma 180 ms ease-out (40 ms gecikmeli); kapanış 120 ms  */
+/* ease-in; klavyeyle açılınca 120 ms. Gövde kaymaz (satır gövdenin altında).      */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .fmt-row {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dur-micro) var(--ease-in);
+  }
+  .fmt-row > div {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .fmt-row[data-open] {
+    grid-template-rows: 1fr;
+    transition: grid-template-rows var(--dur-small) var(--ease-inout);
+  }
+  .fmt-inner {
+    opacity: 0;
+    transform: translateY(4px);
+    transform-origin: bottom left;
+    transition:
+      opacity var(--dur-micro) var(--ease-in),
+      transform var(--dur-micro) var(--ease-in);
+  }
+  .fmt-row[data-open] .fmt-inner {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-small) var(--ease-out) 40ms,
+      transform var(--dur-small) var(--ease-out) 40ms;
+  }
+  .fmt-row[data-open][data-hizli],
+  .fmt-row[data-open][data-hizli] .fmt-inner {
+    transition-duration: var(--dur-micro);
+    transition-delay: 0ms;
+  }
+}
+@layer base {
+  [data-motion="reduced"] .fmt-inner {
+    transform: none !important;
+    transition-property: opacity !important;
+    transition-duration: var(--dur-micro) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .fmt-inner {
+      transform: none !important;
+      transition-property: opacity !important;
+      transition-duration: var(--dur-micro) !important;
     }
   }
 }

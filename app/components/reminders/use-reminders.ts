@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { TOAST_MS } from "~/lib/motion";
 import {
   enablePush,
   markPushOffered,
@@ -42,7 +43,7 @@ export function offerPushAfterReminder() {
   markPushOffered();
   toast("Zamanı gelince bu cihazda da bildirim alınsın mı?", {
     id: "push-onerisi",
-    duration: 10_000,
+    duration: TOAST_MS,
     action: {
       label: "Bildirimleri aç",
       onClick: () => {

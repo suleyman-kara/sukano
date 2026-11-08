@@ -2,11 +2,12 @@ import { useCallback, useMemo } from "react";
 import { useFetchers, useSubmit } from "react-router";
 import { toast } from "sonner";
 import { withDurationBar } from "~/components/ui/sonner";
+import { TOAST_MS } from "~/lib/motion";
 import { intentToForm, parseNoteIntent, type NoteIntent } from "~/domain/notes/validation";
 
 export const NOTES_ACTION = "/api/notlar";
-/** Geri al toast'ının süresi (PLAN §10: 6–8 sn). */
-export const UNDO_TOAST_MS = 6000;
+/** Geri al toast'ının süresi (tasarım v2.1: tüm toast'lar 6 sn). */
+export const UNDO_TOAST_MS = TOAST_MS;
 
 const newId = () => crypto.randomUUID();
 
