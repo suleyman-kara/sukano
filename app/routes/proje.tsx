@@ -8,6 +8,7 @@ import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
 import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, SectionHeading } from "~/components/notes/notes-page";
 import {
   UNDO_TOAST_MS,
@@ -132,6 +133,7 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
         {view === "arsiv" && <ArchiveView loaderData={loaderData} notes={notes} base={base} />}
         {view === "cop" && <TrashView loaderData={loaderData} notes={notes} />}
         <Outlet />
+        <PendingNotePreview notes={notes} />
       </section>
     </AppShell>
   );

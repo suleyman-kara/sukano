@@ -1,6 +1,7 @@
 import { Archive } from "lucide-react";
 import { Outlet, useNavigate } from "react-router";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, NotesPage } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
@@ -50,6 +51,7 @@ export default function ArchiveRoute({ loaderData }: Route.ComponentProps) {
         </>
       )}
       <Outlet />
+      <PendingNotePreview notes={notes} />
     </NotesPage>
   );
 }

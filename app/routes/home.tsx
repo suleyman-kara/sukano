@@ -5,6 +5,7 @@ import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
 import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
@@ -109,6 +110,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <MobileNewNote onSave={save} open={mobileComposer} onOpenChange={setMobileComposer} />
       </OfflineInert>
       <Outlet />
+      <PendingNotePreview notes={notes} />
     </NotesPage>
   );
 }

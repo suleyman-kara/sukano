@@ -26,3 +26,14 @@ export function closeHref(pathname: string, search = ""): string {
   const q = params.toString();
   return q ? `${base}?${q}` : base;
 }
+
+/** Adresteki açık notun kimliği (`/not/:id` ile biten yollar); yoksa `null`. */
+export function noteIdFromPath(pathname: string): string | null {
+  const m = /\/not\/([^/]+)\/?$/.exec(pathname);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]);
+  } catch {
+    return null;
+  }
+}

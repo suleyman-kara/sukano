@@ -142,6 +142,7 @@ export const NoteCard = forwardRef<HTMLElement, NoteCardProps>(function NoteCard
       {href && (
         <Link
           to={href}
+          prefetch="intent"
           data-open=""
           aria-label={label}
           className="absolute inset-0 z-0 rounded-[inherit] outline-none"

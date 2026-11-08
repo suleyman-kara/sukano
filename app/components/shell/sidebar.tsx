@@ -1,6 +1,7 @@
 import { FileText, Inbox, Plus, Settings, Trash2 } from "lucide-react";
 import { Link, NavLink } from "react-router";
 import { cn } from "cn";
+import { usePendingSectionPath } from "~/hooks/use-pending-section";
 import { LogoMark } from "~/components/logo";
 import { SidebarProjects } from "./sidebar-projects";
 import type { ShellProject } from "./types";
@@ -35,7 +36,7 @@ function railClasses(variant: Variant, classes: string) {
 const NAV_ITEM =
   "relative flex w-full items-center gap-3 rounded-[10px] px-3.5 py-[9px] font-medium text-fg outline-none transition-colors hover:bg-hover focus-visible:ring-3 focus-visible:ring-ring/50 railed:mx-auto railed:size-11 railed:justify-center railed:gap-0 railed:p-0";
 const NAV_ACTIVE = "bg-primary-soft text-primary hover:bg-primary-soft";
-const LABEL = "min-w-0 truncate railed:hidden";
+const LABEL = "nav-label min-w-0 truncate railed:hidden";
 const ICON = "size-5 shrink-0";
 
 export function SidebarNav({
@@ -47,7 +48,10 @@ export function SidebarNav({
   onNavigate,
 }: SidebarNavProps) {
   const rc = (classes: string) => railClasses(variant, classes);
-  const item = ({ isActive }: { isActive: boolean }) => cn(rc(NAV_ITEM), isActive && NAV_ACTIVE);
+  // Bölüm değişirken tıklanan öğe veri beklenmeden seçili görünür (`isPending`).
+  const switching = usePendingSectionPath() !== null;
+  const item = ({ isActive, isPending = false }: { isActive: boolean; isPending?: boolean }) =>
+    cn(rc(NAV_ITEM), (switching ? isPending : isActive) && NAV_ACTIVE);
 
   return (
     <nav aria-label="Ana gezinme" className="flex min-h-0 flex-1 flex-col gap-0.5">
@@ -69,6 +73,7 @@ export function SidebarNav({
       <NavLink
         to="/"
         end
+        prefetch="intent"
         onClick={onNavigate}
         className={item}
         title="Notlarım"
@@ -80,7 +85,7 @@ export function SidebarNav({
 
       <div
         className={rc(
-          "px-3.5 pt-4 pb-1.5 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase railed:mx-1.5 railed:my-2.5 railed:h-px railed:overflow-hidden railed:bg-line railed:p-0 railed:text-[0px] railed:leading-none",
+          "nav-label px-3.5 pt-4 pb-1.5 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase railed:mx-1.5 railed:my-2.5 railed:h-px railed:overflow-hidden railed:bg-line railed:p-0 railed:text-[0px] railed:leading-none",
         )}
       >
         Projeler
@@ -110,13 +115,14 @@ export function SidebarNav({
         <NavLink
           to="/silinmis-projeler"
           onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(item({ isActive }), !isActive && "text-muted-foreground", "text-[13px]")
+          prefetch="intent"
+          className={(state) =>
+            cn(item(state), !state.isActive && "text-muted-foreground", "text-[13px]")
           }
           title={`Silinmiş projeler (${deletedProjectCount})`}
         >
           <Trash2 className={cn(ICON, "size-[18px]")} strokeWidth={1.75} aria-hidden="true" />
-          <span className={rc("min-w-0 truncate railed:sr-only")}>
+          <span className={rc("nav-label min-w-0 truncate railed:sr-only")}>
             Silinmiş projeler ({deletedProjectCount})
           </span>
         </NavLink>
@@ -124,11 +130,17 @@ export function SidebarNav({
 
       <div className="flex-1" />
 
-      <NavLink to="/davetler" onClick={onNavigate} className={item} title="Davetler">
+      <NavLink
+        to="/davetler"
+        prefetch="intent"
+        onClick={onNavigate}
+        className={item}
+        title="Davetler"
+      >
         {/* Erişilebilir ad görünür metinden gelir (axe label-content-name-mismatch):
             "Davetler, 1 bekleyen davet". Rayda etiket görünmez ama okunur. */}
         <Inbox className={ICON} strokeWidth={1.75} aria-hidden="true" />
-        <span className={rc("min-w-0 truncate railed:sr-only")}>Davetler</span>
+        <span className={rc("nav-label min-w-0 truncate railed:sr-only")}>Davetler</span>
         {pendingInviteCount > 0 && (
           <>
             <span
@@ -146,6 +158,7 @@ export function SidebarNav({
 
       <NavLink
         to="/ayarlar"
+        prefetch="intent"
         onClick={onNavigate}
         className={item}
         title="Ayarlar"
