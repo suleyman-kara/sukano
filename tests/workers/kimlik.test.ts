@@ -354,6 +354,38 @@ describe("Ayarlar > Hesap", () => {
     expect(row?.theme).toBe("dark");
   });
 
+  it("Hareketi azalt tercihini yazar, çerezini koyar ve sayfa <html data-motion> ile gelir", async () => {
+    const { email, cookie } = await verifiedUser();
+    const motion = () =>
+      testEnv.DB.prepare(
+        "select p.motion from user_preferences p join user u on u.id = p.user_id where u.email = ?",
+      )
+        .bind(email)
+        .first<{ motion: string }>();
+    const res = await postForm("/ayarlar", { intent: "motion", motion: "reduced" }, { cookie });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("set-cookie")).toContain("sukano_hareket=reduced");
+    expect((await motion())?.motion).toBe("reduced");
+
+    const page = await get("/ayarlar", { cookie });
+    expect(await page.text()).toMatch(/<html[^>]*data-motion="reduced"/);
+
+    const bad = await postForm("/ayarlar", { intent: "motion", motion: "hepsi" }, { cookie });
+    expect(bad.status).toBe(400);
+    expect((await motion())?.motion).toBe("reduced");
+
+    const reset = await postForm("/ayarlar", { intent: "motion", motion: "system" }, { cookie });
+    expect(reset.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect((await motion())?.motion).toBe("system");
+  });
+
+  it("oturumsuz giriş ekranı Hareketi azalt tercihini çerezden okur", async () => {
+    const res = await get("/giris", { cookie: "sukano_hareket=reduced" });
+    expect(await res.text()).toMatch(/<html[^>]*data-motion="reduced"/);
+    const plain = await get("/giris");
+    expect(await plain.text()).not.toMatch(/<html[^>]*data-motion=/);
+  });
+
   it("şifre değiştirir; mevcut şifre yanlışsa reddeder", async () => {
     const { email, cookie } = await verifiedUser();
     const wrong = await postForm(

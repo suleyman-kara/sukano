@@ -1,14 +1,15 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { currentMotionPreference, isReducedMotion, REDUCED_MOTION_QUERY } from "~/lib/motion";
 
-export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+export { REDUCED_MOTION_QUERY };
 
 const isReduced = () =>
-  document.documentElement.dataset.motion === "reduced" ||
-  window.matchMedia(REDUCED_MOTION_QUERY).matches;
+  isReducedMotion(currentMotionPreference(), window.matchMedia(REDUCED_MOTION_QUERY).matches);
 
 /**
- * Hareketi azalt (PLAN §10): sistem tercihi ya da `<html data-motion="reduced">` (Ayarlar).
- * Motion bileşenleri bu durumda hiç kullanılmaz; sunucuda `true` (ilk boyamada hareket yok).
+ * Hareketi azalt (PLAN §10): sistem tercihi (`prefers-reduced-motion`) ya da Ayarlar'daki
+ * seçim (`<html data-motion="reduced|full">`; "full" sistemi geçersiz kılar). İkisi de
+ * dinlenir; değişince süren hareket anında durur. Sunucuda `true` (ilk boyamada hareket yok).
  */
 export function useReducedMotion(): boolean {
   const subscribe = useCallback((onChange: () => void) => {

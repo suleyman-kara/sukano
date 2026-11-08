@@ -92,6 +92,10 @@ export type ReminderTarget = (typeof REMINDER_TARGETS)[number];
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
 
+/** Ayarlar › "Hareketi azalt": Sistem / Açık (azaltılmış) / Kapalı (tam hareket). */
+export const MOTION_PREFS = ["system", "reduced", "full"] as const;
+export type MotionPref = (typeof MOTION_PREFS)[number];
+
 export const NOTIFICATION_TYPES = [
   "davet",
   "rol_degisti",
@@ -193,7 +197,10 @@ export const userPreferences = sqliteTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     theme: text("theme", { enum: THEMES }).default("system").notNull(),
+    /** Eski ikili alan (0004'ten önce); yerine `motion` kullanılır, değeri oraya taşındı. */
     reduceMotion: integer("reduce_motion", { mode: "boolean" }).default(false).notNull(),
+    /** "Hareketi azalt" (PLAN §10): sistem, azaltılmış ya da tam; `<html data-motion>`. */
+    motion: text("motion", { enum: MOTION_PREFS }).default("system").notNull(),
     /** Sol paneldeki kişiye özel proje sırası: proje kimlikleri dizisi. */
     projectOrder: text("project_order", { mode: "json" })
       .$type<string[]>()

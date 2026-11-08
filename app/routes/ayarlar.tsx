@@ -11,6 +11,7 @@ import {
   type SettingsActionData,
 } from "~/components/settings/account-dialogs";
 import { BlockerLinks, DeleteAccountDialog } from "~/components/settings/delete-account-dialog";
+import { MotionPicker } from "~/components/settings/motion-settings";
 import { NotificationSettings } from "~/components/settings/notification-settings";
 import { AppShell } from "~/components/shell/app-shell";
 import { Button } from "~/components/ui/button";
@@ -40,6 +41,7 @@ import { requireUser } from "~/lib/session.server";
 import { avatarColorFor } from "~/lib/shell.server";
 import { useShellData } from "~/lib/shell";
 import { setThemePreference, useTheme, type ThemePreference } from "~/lib/theme";
+import { isMotionPreference, motionCookie, type MotionPreference } from "~/lib/motion";
 import type { Route } from "./+types/ayarlar";
 
 export const meta: Route.MetaFunction = () => [{ title: "Ayarlar · Sukano" }];
@@ -52,7 +54,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     auth.api.listUserAccounts({ headers: request.headers }),
     auth.api.listSessions({ headers: request.headers }),
     db
-      .select({ theme: userPreferences.theme })
+      .select({ theme: userPreferences.theme, motion: userPreferences.motion })
       .from(userPreferences)
       .where(eq(userPreferences.userId, user.id))
       .get(),
@@ -78,6 +80,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     passwordChangedAt: credential?.updatedAt?.toISOString() ?? null,
     sessionCount: sessions.length,
     theme: prefs?.theme ?? "system",
+    motion: (prefs?.motion ?? "system") as MotionPreference,
     emailChanged: url.searchParams.get("durum") === "eposta-degisti",
     /** Tek yönetici olunan projeler: doluysa hesap silinemez (önce devir ya da silme). */
     deletionBlockers,
@@ -122,6 +125,21 @@ export async function action({ request, context }: Route.ActionArgs) {
           set: { theme, updatedAt: new Date() },
         });
       return result(intent, true);
+    }
+
+    case "motion": {
+      const motion = field(form, "motion");
+      if (!isMotionPreference(motion)) return result(intent, false, {}, { status: 400 });
+      await createDb(env.DB)
+        .insert(userPreferences)
+        .values({ userId: user.id, motion })
+        .onConflictDoUpdate({
+          target: userPreferences.userId,
+          set: { motion, updatedAt: new Date() },
+        });
+      // Oturumsuz sayfalar (giriş ekranı) da aynı tercihle açılsın.
+      const secure = new URL(request.url).protocol === "https:";
+      return result(intent, true, {}, { headers: { "Set-Cookie": motionCookie(motion, secure) } });
     }
 
     case "email": {
@@ -477,6 +495,7 @@ export default function Ayarlar({ loaderData }: Route.ComponentProps) {
                 Görünüm
               </h2>
               <ThemePicker />
+              <MotionPicker initial={loaderData.motion} />
             </section>
 
             <section id="bildirim" className={PANEL} aria-labelledby="bildirim-baslik">

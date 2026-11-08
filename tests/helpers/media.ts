@@ -1,12 +1,13 @@
 /**
  * jsdom'da `window.matchMedia` yok. Bu sahte uygulama şu sorguları
  * anlar: `(prefers-color-scheme: dark)`, `(min-width: Npx)` /
- * `(max-width: Npx)` ve `(pointer: coarse|fine)`. Durum `setMedia` ile değiştirilir; eşleşmesi değişen
+ * `(max-width: Npx)`, `(pointer: coarse|fine)` ve `(prefers-reduced-motion: reduce)`
+ * (varsayılan açık: bileşen testleri hareketsiz, deterministik koşar). Durum `setMedia` ile değiştirilir; eşleşmesi değişen
  * sorguların dinleyicilerine `change` olayı gönderilir.
  */
-type MediaState = { width: number; dark: boolean; coarse: boolean };
+type MediaState = { width: number; dark: boolean; coarse: boolean; reducedMotion: boolean };
 
-const state: MediaState = { width: 1440, dark: false, coarse: false };
+const state: MediaState = { width: 1440, dark: false, coarse: false, reducedMotion: true };
 const lists = new Set<FakeMediaQueryList>();
 
 function evaluate(query: string): boolean {
@@ -17,6 +18,7 @@ function evaluate(query: string): boolean {
       if (name === "min-width") return state.width >= parseFloat(raw);
       if (name === "max-width") return state.width <= parseFloat(raw);
       if (name === "pointer") return (raw === "coarse") === state.coarse;
+      if (name === "prefers-reduced-motion") return (raw === "reduce") === state.reducedMotion;
       return false;
     }),
   );
@@ -72,5 +74,6 @@ export function resetMedia() {
   state.width = 1440;
   state.dark = false;
   state.coarse = false;
+  state.reducedMotion = true;
   lists.clear();
 }

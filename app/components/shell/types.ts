@@ -32,4 +32,6 @@ export type ShellData = {
   unreadNotificationCount: number;
   /** Kişinin saat dilimi (hatırlatıcı çipleri); yoksa İstanbul. */
   timeZone?: string;
+  /** Ayarlar › "Hareketi azalt" (`<html data-motion>`); yoksa sistem. */
+  motion?: "system" | "reduced" | "full";
 };

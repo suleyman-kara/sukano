@@ -5,11 +5,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { ErrorView } from "~/components/error-view";
+import { MotionPreferenceConfig } from "~/components/motion-config";
 import { NotFoundView } from "~/components/not-found";
 import { InstallHint } from "~/components/pwa/install-hint";
 import { ServiceWorkerManager } from "~/components/pwa/service-worker";
@@ -20,6 +22,7 @@ import { isPublicPath, stripDataSuffix } from "~/domain/auth/redirects";
 import { useNonce } from "~/lib/nonce";
 import { markOfflineSession } from "~/lib/offline-session.server";
 import { protectRoute } from "~/lib/session.server";
+import { motionAttribute, parseMotionCookie } from "~/lib/motion";
 import { loadShellData } from "~/lib/shell.server";
 import { themeInitScript } from "~/lib/theme";
 import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
@@ -66,14 +69,20 @@ export const shouldRevalidate = revalidateUnlessOffline;
  */
 export async function loader({ request, context }: Route.LoaderArgs) {
   const pathname = stripDataSuffix(new URL(request.url).pathname);
-  if (isPublicPath(pathname)) return { shell: null };
-  return { shell: await loadShellData(request, context) };
+  // "Hareketi azalt": oturumda kullanıcı tercihi, oturumsuz sayfalarda çerez (app/lib/motion.ts).
+  const cookieMotion = parseMotionCookie(request.headers.get("cookie"));
+  if (isPublicPath(pathname)) return { shell: null, motion: cookieMotion };
+  const shell = await loadShellData(request, context);
+  return { shell, motion: shell.motion ?? cookieMotion };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // Hareket tercihi sunucuda yazılır: ilk boyamada animasyon titremesi olmaz.
+  const root = useRouteLoaderData<typeof loader>("root");
+  const motion = root?.motion ? motionAttribute(root.motion) : undefined;
   const nonce = useNonce();
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr" data-motion={motion} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -115,7 +124,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
     : null;
   return (
     <LiveConfigProvider enabled={me !== null} me={me}>
-      <Outlet />
+      <MotionPreferenceConfig>
+        <Outlet />
+      </MotionPreferenceConfig>
       <ServiceWorkerManager signedIn={me !== null} />
       {me && <InstallHint />}
     </LiveConfigProvider>

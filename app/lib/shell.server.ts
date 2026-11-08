@@ -5,6 +5,7 @@ import { createDb } from "~/db/client";
 import { invitations, notifications, userPreferences } from "~/db/schema";
 import { resolveTimeZone } from "~/domain/reminders/time";
 import { getCloudflare } from "./context";
+import { toMotionPreference } from "./motion";
 import { getSession } from "./session.server";
 import { projectsService } from "./projects.server";
 import { emptyShell } from "./shell";
@@ -47,7 +48,7 @@ export async function loadShellData(
       .from(notifications)
       .where(and(eq(notifications.userId, user.id), isNull(notifications.readAt))),
     db
-      .select({ timeZone: userPreferences.timeZone })
+      .select({ timeZone: userPreferences.timeZone, motion: userPreferences.motion })
       .from(userPreferences)
       .where(eq(userPreferences.userId, user.id))
       .get(),
@@ -72,5 +73,6 @@ export async function loadShellData(
     pendingInviteCount: invites?.n ?? 0,
     unreadNotificationCount: unread?.n ?? 0,
     timeZone: resolveTimeZone(prefs?.timeZone),
+    motion: toMotionPreference(prefs?.motion),
   };
 }
