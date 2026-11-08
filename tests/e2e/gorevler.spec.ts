@@ -319,12 +319,8 @@ test.describe("yapılacaklar notu", () => {
       },
     });
     await ac(page, `/not/${id}`);
-    if (gorunum(test.info()) === "mobil") {
-      await page.getByRole("dialog").getByRole("button", { name: "Diğer" }).click();
-      await page.getByRole("menuitem", { name: "Yapılacaklar notuna dönüştür" }).click();
-    } else {
-      await page.getByRole("button", { name: "Yapılacaklar notuna dönüştür" }).click();
-    }
+    // Tasarım v2: dönüştürme her görünümde ⋯ menüsünde.
+    await digerMenu(page, "Yapılacaklar notuna dönüştür");
     const onay = page.getByRole("alertdialog", { name: "Yapılacaklar notuna dönüştürülsün mü?" });
     await onay.getByRole("button", { name: "Dönüştür" }).click();
     await expect.poll(() => satirlar(page)).toEqual(["0:Süt", "0:Ekmek"]);

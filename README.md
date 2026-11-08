@@ -483,11 +483,25 @@ Aşama 3b-2: notun içindeki proje arayüzü (proje sayfası, ayarlar ve davetle
   altında açılır; kapanınca yoldaki `/not/:id` atılır (`note-links.ts` → `closeHref`).
 - **Yazar satırı:** proje notunda "Ayşe Demir oluşturdu · Son düzenleyen Mehmet Kaya, 2 saat
   önce" (`app/domain/notes/authorship.ts`; silinmiş kişi "Silinmiş kullanıcı").
+- **Açık not (tasarım v2.1):** sağ üstte Sabitle · Arşivle (✕ yok; kapanış dışarı tıklama, Esc ya
+  da "Kapat"). Alt çubuk: Renk · Hatırlatıcı · Dosya eki · Aa (biçimlendirme, varsayılan gizli) ·
+  ⋯ … Düzenlendi … Kapat; yapılacaklar notunda Renk · Hatırlatıcı · ⋯. ⋯ menüsü yukarı açılır:
+  [görev komutları] · Taşı veya kopyala… / Kopyala… · Kopyasını oluştur · Sürüm geçmişi ·
+  Dönüştür · Klavye kısayolları (yapılacaklar, klavyeli cihaz) · ─ · Sil (kırmızı, onaysız çöpe
+  atar, Geri al toast'ı). Kartta da çöp düğmesi yok, Sil ⋯ menüsünün sonunda. Mobil metin notu:
+  üstte Geri · Sabitle · Arşivle, altta Renk · Hatırlatıcı · Dosya eki · Aa · ⋯; mobil
+  yapılacaklar notu: üstte Geri · Sabitle · Arşivle · Hatırlatıcı · ⋯. İkon düğmesi ölçüleri tek
+  yerde: `app/app.css` `--ib*` belirteçleri ve `.ib` / `.ib-card` / `.ib-tb`.
+- **Kart önizlemesi:** `htmlToPreviewHtml` (`app/domain/notes/html.ts`) gövdeyi beyaz listeyle
+  güvenli, kısaltılmış HTML'e çevirir (kalın, italik, üstü çizili, başlık, madde/numaralı liste,
+  boş satır, bağlantı gezinmeyen `span`); kart en çok 10 satır gösterir (`.card-preview`). Arama
+  düz metinle (`body_text`) kalır.
 - **Görüntüleyici:** kilitli "Görüntüleyici" rozeti, "Salt okunur." notu; başlık ve gövde salt
   okunur, görevlerde kutucuk yerine madde işareti, araç simgeleri yok; menü yerine yalnızca
   Sürüm geçmişi (geri yükleme kapalı) ve Kapat.
 - **Taşı / kopyala** (`app/components/notes/move-copy.tsx`): kişisel notta "Taşı veya kopyala…"
-  (Taşı / Kopyala sekmeleri; taşıma sonrası 10 sn "Geri al" toast'ı `undo-move` gönderir),
+  (Taşı / Kopyala sekmeleri; taşıma sonrası 6 sn "Geri al" toast'ı `undo-move` gönderir; sunucu
+  penceresi 10 sn),
   proje notunda "Kopyala…" (Kişisel alanım ya da başka proje). Görüntüleyici olunan projeler
   seçilemez. Mobilde alttan açılan sayfa. Kanonik menü sırasında (⋯ ve mobil not sayfası).
 - **Kişi seçici** (`app/components/tasks/person-picker.tsx`, yalnızca proje notunda):
@@ -855,7 +869,7 @@ Aşama 6b (PLAN §10 Hareket; tasarım `MotionSpec`, `MicroMotion`, `AuthMotion`
 240, `--dur-large` 320, `--dur-ambient` 11 s; `--ease-out` (giriş), `--ease-in` (çıkış, süre
 girişin ~%75'i), `--ease-spring`, `--ease-inout` (yer değiştirme), `--ease-ambient`. JS karşılığı
 `app/lib/motion.ts` (`DURATION`, `EASE`, `motionTransition`, `exitTransition`; azaltılmış harekette
-ikisi de süresiz döner). Basit geçişler CSS; Motion yalnızca çıkış (`AnimatePresence`), yerleşim
+ikisi de 120 ms saydamlık döner, `REDUCED_FADE`; `TOAST_MS` tüm toast'lar 6 sn). Basit geçişler CSS; Motion yalnızca çıkış (`AnimatePresence`), yerleşim
 ve `MotionConfig` için (`app/components/motion-config.tsx`).
 
 | Etkileşim                   | Uygulama                                                                                                                                                |
@@ -868,8 +882,12 @@ ve `MotionConfig` için (`app/components/motion-config.tsx`).
 | İskelet                     | `ui/skeleton.tsx`: 1,6 sn ışıltı + 0,8 sn ara, 300 ms'den kısa yüklemede görünmez (sürüm geçmişi, bildirim paneli)                                      |
 | Alt görev / ayrıntı         | alt satırlar ve ayrıntı akordeonu medium, 60 ms gecikmeli belirir; ok small döner                                                                       |
 | Menü, popover, tarih seçici | açılış small ease-out (.96 → 1, Radix köken noktasından), kapanış micro ease-in; diyalog örtüsü medium                                                  |
-| Sürükleme                   | `.drag-lift`: micro, 1,03 ölçek + hafif eğim + gölge (not kartı ve görev satırı); yer tutucu kesik çizgili                                              |
-| Boş durum                   | simge belirir, başlık ve metin 160 ms sonra (`.empty-in`, `.empty-in-late`)                                                                             |
+| Sürükleme                   | `.drag-lift`: micro, 1,03 ölçek + gölge, eğim yok; komşular small ease-out kayar, bırakma small yaylı (`drag-motion.ts`); yer tutucu kesik çizgili      |
+| Alt görev kapanışı          | `use-row-flip.ts`: kaybolan satırların kopyası eski yerinde small ease-in ile kırpılarak kapanır, alttakiler kayar                                      |
+| Boş durum                   | not alanı boşken logo kareleri sırayla (80 ms arayla, medium ease-out; `.empty-logo`), başlık ve metin 160 ms sonra (`.empty-in-late`)                  |
+| Biçimlendirme (Aa)          | `formatting-toolbar.tsx` `.fmt-row`: satır 0fr → 1fr small ease-in-out, çubuk saydamlık + 4 px 40 ms gecikmeli; kapanış micro; klavyeyle micro          |
+| Logo ↔ hamburger            | `.logo-tg`: üzerine gelince / odakta logo micro'da solup küçülür, hamburger small'da dönerek belirir; tıklama paneli açar/kapatır                       |
+| Görünüm seçici              | `.vs-label`: yalnızca etkin öğe etiketli; genişlik small ease-in-out, yeni etiket 60 ms gecikmeli micro saydamlık; diğerlerinde 500 ms ipucu            |
 | Giriş arka planı            | `rising-grid.tsx` (Auth/TAuth ile birebir): 9–14 sn döngü, 18–30 px genlik, yalnızca transform + opacity                                                |
 
 **Hareketi azalt.** Ayarlar › Görünüm: **Sistem** (işletim sistemine uyar) / **Açık** (her zaman
@@ -878,8 +896,11 @@ azalt) / **Kapalı** (sistem azaltsa da tam hareket). `user_preferences.motion`
 `sukano_hareket` çerezi. Kök loader tercihi okur ve `<html data-motion="reduced|full">` sunucuda
 yazılır (ilk boyamada titreme yok); seçim istemcide hemen uygulanır (`applyMotionPreference`).
 Azaltılmış harekette (`prefers-reduced-motion` ve `data-motion="full"` değilse, ya da
-`data-motion="reduced"`): kayma, ölçek, eğim, ortam döngüsü ve ışıltı kapanır; durum değişimleri
-anında olur (genel kural 0,01 ms; Radix `animationend`'i yine alır). Tailwind'de
+`data-motion="reduced"`): kayma, ölçek, eğim, ortam döngüsü ve ışıltı kapanır; geçişler anında
+biter (genel kural 0,01 ms; Radix `animationend`'i yine alır). Anlam taşıyan durum değişimi 120 ms
+saydamlıkla kalır: açılan yüzeyler (diyalog, menü, açılır pencere, ipucu) kaymadan solar, ızgaraya
+giren / çıkan kart, tamamlanıp inen görev satırı, panel etiketleri, Aa çubuğu ve görünüm
+seçicinin etiketi (genişlik anında). Tailwind'de
 `reduced-motion:` varyantı, JS'te `useReducedMotion()` aynı kuralı izler.
 
 **Erişilebilirlik.** Her sayfada ilk odak "İçeriğe geç" (`components/skip-link.tsx` →

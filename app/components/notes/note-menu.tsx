@@ -16,6 +16,7 @@ import {
   Pin,
   Trash2,
 } from "lucide-react";
+import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenuContent,
@@ -88,24 +89,24 @@ export function NoteMoreMenuContent({
   moveCopy,
   kind,
   todo,
-  dialog,
   onShortcuts,
   onTrash,
   side,
+  align = "end",
 }: NoteMenuHandlers & {
   kind: "text" | "todo";
   todo?: TodoMenuHandlers;
-  dialog?: { archived: boolean; onArchive: () => void; onTrash: () => void };
   /** "Klavye kısayolları (Ctrl+/)" (açık not, klavyeli cihaz). */
   onShortcuts?: () => void;
   /** Verilirse menünün sonunda ayraçtan sonra kırmızı "Sil". */
   onTrash?: () => void;
-  /** Açılma yönü (açık notun alt çubuğunda yukarı). */
+  /** Açılma yönü: açık notun alt çubuğunda düğmenin sol üstünden yukarı (v2.1). */
   side?: "top" | "bottom";
+  align?: "start" | "end";
 }) {
   return (
     <DropdownMenuContent
-      align="end"
+      align={align}
       side={side}
       sideOffset={6}
       className="w-(--menu-w) rounded-xl p-1.5"
@@ -157,23 +158,6 @@ export function NoteMoreMenuContent({
         </DropdownMenuItem>
       )}
       {onTrash && <TrashMenuItem onTrash={onTrash} />}
-      {dialog && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className={ITEM} onSelect={dialog.onArchive}>
-            {dialog.archived ? (
-              <ArchiveRestore aria-hidden="true" />
-            ) : (
-              <Archive aria-hidden="true" />
-            )}
-            {dialog.archived ? "Arşivden çıkar" : "Arşivle"}
-          </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={dialog.onTrash}>
-            <Trash2 aria-hidden="true" />
-            Çöpe at
-          </DropdownMenuItem>
-        </>
-      )}
     </DropdownMenuContent>
   );
 }
@@ -181,12 +165,18 @@ export function NoteMoreMenuContent({
 type NoteSheetProps = NoteMenuHandlers & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * "card": kartın ⋯ sayfası (renk, sabitle, hatırlatıcı, … Arşivle, Sil). "open": açık
+   * notun ⋯ sayfası (MNoteMenu, MTodoMenu): Sabitle, Arşivle ve Hatırlatıcı üst/alt
+   * çubukta olduğundan sayfada yok; renk yalnızca `onColor` verilirse.
+   */
+  variant?: "card" | "open";
   title: string;
   kind: "text" | "todo";
   color: NoteColor;
   pinned: boolean;
   archived: boolean;
-  onColor: (color: NoteColor) => void;
+  onColor?: (color: NoteColor) => void;
   onPin: () => void;
   onArchive: () => void;
   onTrash: () => void;
@@ -207,6 +197,7 @@ const DANGER_ROW = `${ROW_BASE} text-danger hover:bg-danger-soft focus-visible:b
 export function NoteSheet({
   open,
   onOpenChange,
+  variant = "card",
   title,
   kind,
   color,
@@ -225,6 +216,7 @@ export function NoteSheet({
   footer,
   onReminder,
 }: NoteSheetProps) {
+  const card = variant === "card";
   const act = (fn: () => void) => () => {
     onOpenChange(false);
     fn();
@@ -255,15 +247,17 @@ export function NoteSheet({
         <SheetDescription className="sr-only">
           Renk, sabitleme, kopya, sürümler, arşiv ve çöp
         </SheetDescription>
+        {(todo || !onColor) && (
+          <div className="-my-1 flex items-center gap-2">
+            <span className="min-w-0 truncate rounded-full bg-line px-[7px] py-0.5 text-xs text-muted-foreground">
+              {title || "Başlıksız not"}
+            </span>
+            <span className="flex-1" />
+            {done}
+          </div>
+        )}
         {todo && (
           <>
-            <div className="-my-1 flex items-center gap-2">
-              <span className="min-w-0 truncate rounded-full bg-line px-[7px] py-0.5 text-xs text-muted-foreground">
-                {title || "Başlıksız not"}
-              </span>
-              <span className="flex-1" />
-              {done}
-            </div>
             <div role="menu" aria-label="Görev işlemleri" className="flex flex-col">
               <button type="button" role="menuitem" className={ROW} onClick={act(todo.onExpandAll)}>
                 <ChevronsUpDown aria-hidden="true" />
@@ -290,41 +284,47 @@ export function NoteSheet({
             </div>
           </>
         )}
-        <div
-          className={
-            todo
-              ? "flex items-center gap-2 border-t border-line pt-2"
-              : "-mb-1 flex items-center gap-2"
-          }
-        >
-          <Palette className="size-[22px] text-muted-foreground" aria-hidden="true" />
-          <span className="flex-1 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase">
-            Not rengi
-          </span>
-          {!todo && done}
-        </div>
-        <ColorPalette value={color} onChange={onColor} layout="grid" />
+        {onColor && (
+          <>
+            <div
+              className={
+                todo
+                  ? "flex items-center gap-2 border-t border-line pt-2"
+                  : "-mb-1 flex items-center gap-2"
+              }
+            >
+              <Palette className="size-[22px] text-muted-foreground" aria-hidden="true" />
+              <span className="flex-1 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase">
+                Not rengi
+              </span>
+              {!todo && done}
+            </div>
+            <ColorPalette value={color} onChange={onColor} layout="grid" />
+          </>
+        )}
         <div
           role="menu"
           aria-label="Not işlemleri"
-          className="flex flex-col border-t border-line pt-1.5"
+          className={cn("flex flex-col", (todo || onColor) && "border-t border-line pt-1.5")}
         >
-          {!archived && (
+          {card && !archived && (
             <button type="button" role="menuitem" className={ROW} onClick={act(onPin)}>
               <Pin aria-hidden="true" />
               {pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
             </button>
           )}
-          <button
-            type="button"
-            role="menuitem"
-            className={ROW}
-            disabled={!onReminder}
-            onClick={onReminder ? act(onReminder) : undefined}
-          >
-            <Bell aria-hidden="true" />
-            Not hatırlatıcısı
-          </button>
+          {card && (
+            <button
+              type="button"
+              role="menuitem"
+              className={ROW}
+              disabled={!onReminder}
+              onClick={onReminder ? act(onReminder) : undefined}
+            >
+              <Bell aria-hidden="true" />
+              Not hatırlatıcısı
+            </button>
+          )}
           {moveCopy ? (
             <button type="button" role="menuitem" className={ROW} onClick={act(moveCopy.onSelect)}>
               <MoveCopyIcon label={moveCopy.label} />
@@ -362,11 +362,15 @@ export function NoteSheet({
             {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
             {convertLabel(kind)}
           </button>
-          <div className="my-1 h-px bg-line" role="separator" />
-          <button type="button" role="menuitem" className={ROW} onClick={act(onArchive)}>
-            {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
-            {archived ? "Arşivden çıkar" : "Arşivle"}
-          </button>
+          {card && (
+            <>
+              <div className="my-1 h-px bg-line" role="separator" />
+              <button type="button" role="menuitem" className={ROW} onClick={act(onArchive)}>
+                {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
+                {archived ? "Arşivden çıkar" : "Arşivle"}
+              </button>
+            </>
+          )}
           <div className="my-1 h-px bg-line" role="separator" />
           <button type="button" role="menuitem" className={DANGER_ROW} onClick={act(onTrash)}>
             <Trash2 aria-hidden="true" />

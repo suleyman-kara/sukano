@@ -306,6 +306,61 @@ test.describe("kişisel notlar", () => {
     await expect(kart(page, yeni)).toContainText("İlk satır eklendi");
   });
 
+  test("açık notta ✕ yok; Aa biçimlendirme çubuğunu açar, kalın uygulanır; Esc kapatır", async ({
+    page,
+  }) => {
+    await ac(page, "/");
+    const baslik = benzersiz("Aa");
+    await notOlustur(page, baslik, "düz");
+    await kart(page, baslik).getByRole("link").click();
+    const dialog = page.getByRole("dialog", { name: baslik });
+    await expect(dialog.getByRole("button", { name: "Arşivle" })).toBeVisible();
+    const mobil = gorunum(test.info()) === "mobil";
+    // Masaüstü/tablette yalnızca metin düğmesi "Kapat"; mobilde geri oku.
+    await expect(dialog.getByRole("button", { name: "Kapat" })).toHaveCount(mobil ? 0 : 1);
+    const cubuk = dialog.getByRole("toolbar", { name: "Biçimlendirme" });
+    await expect(cubuk).toBeHidden();
+    const aa = dialog.getByRole("button", { name: "Biçimlendirme" });
+    await aa.click();
+    await expect(aa).toHaveAttribute("aria-expanded", "true");
+    await expect(cubuk).toBeVisible();
+    const govde = dialog.getByRole("textbox", { name: "Not", exact: true });
+    await expect(govde).toHaveAttribute("contenteditable", "true");
+    await govde.click();
+    await page.keyboard.press("End");
+    await cubuk.getByRole("button", { name: "Kalın" }).click();
+    await page.keyboard.type(" kalın");
+    await expect(govde.locator("strong")).toHaveText("kalın");
+    await aa.click();
+    await expect(cubuk).toBeHidden();
+    if (mobil) await dialog.getByRole("button", { name: "Geri" }).click();
+    else await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(kart(page, baslik).locator("[data-onizleme] strong")).toHaveText("kalın");
+  });
+
+  test("açık notun ⋯ menüsünün son öğesi Sil; not çöpe gider, Geri al geri getirir", async ({
+    page,
+  }) => {
+    await ac(page, "/");
+    const baslik = benzersiz("Açık sil");
+    await notOlustur(page, baslik, "gövde");
+    await kart(page, baslik).getByRole("link").click();
+    const dialog = page.getByRole("dialog", { name: baslik });
+    await dialog.getByRole("button", { name: "Diğer" }).click();
+    const sil = page.getByRole("menuitem", { name: "Sil", exact: true });
+    if (gorunum(test.info()) !== "mobil") {
+      await expect(page.getByRole("menu").getByRole("menuitem").last()).toHaveText("Sil");
+    }
+    await sil.click();
+    await expect(page).toHaveURL(/\/$/);
+    const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Not çöpe atıldı" });
+    await expect(toast).toBeVisible();
+    await expect(kart(page, baslik)).toBeHidden();
+    await toast.getByRole("button", { name: "Geri al" }).click();
+    await expect(kart(page, baslik)).toBeVisible();
+  });
+
   test("not, oda bağlantısını beklemeden düzenlenir; bağlantıdan önce yazılan çoğalmadan kaydedilir", async ({
     page,
   }) => {
@@ -470,12 +525,9 @@ test.describe("kişisel notlar", () => {
     await page.waitForTimeout(1200);
     await page.waitForLoadState("networkidle");
 
-    if (gorunum(test.info()) === "mobil") {
-      await dialog.getByRole("button", { name: "Diğer" }).click();
-      await page.getByRole("menuitem", { name: "Sürüm geçmişi" }).click();
-    } else {
-      await dialog.getByRole("button", { name: "Sürüm geçmişi" }).click();
-    }
+    // Tasarım v2: Sürüm geçmişi her görünümde ⋯ menüsünde.
+    await dialog.getByRole("button", { name: "Diğer" }).click();
+    await page.getByRole("menuitem", { name: "Sürüm geçmişi" }).click();
     const gecmis = page.getByRole("dialog", { name: "Sürüm geçmişi" });
     const surumler = gecmis.getByRole("option");
     await expect(surumler).toHaveCount(2);

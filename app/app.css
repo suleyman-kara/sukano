@@ -1191,20 +1191,25 @@
     grid-template-rows: 1fr;
     transition: grid-template-rows var(--dur-small) var(--ease-inout);
   }
+  /* Kapalıyken görünmez (kapanış hareketinden sonra `visibility: hidden`). */
   .fmt-inner {
+    visibility: hidden;
     opacity: 0;
     transform: translateY(4px);
     transform-origin: bottom left;
     transition:
       opacity var(--dur-micro) var(--ease-in),
-      transform var(--dur-micro) var(--ease-in);
+      transform var(--dur-micro) var(--ease-in),
+      visibility 0s linear var(--dur-micro);
   }
   .fmt-row[data-open] .fmt-inner {
+    visibility: visible;
     opacity: 1;
     transform: none;
     transition:
       opacity var(--dur-small) var(--ease-out) 40ms,
-      transform var(--dur-small) var(--ease-out) 40ms;
+      transform var(--dur-small) var(--ease-out) 40ms,
+      visibility 0s;
   }
   .fmt-row[data-open][data-hizli],
   .fmt-row[data-open][data-hizli] .fmt-inner {

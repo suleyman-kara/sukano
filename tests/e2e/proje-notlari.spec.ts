@@ -104,15 +104,11 @@ async function yapilacaklar(page: Page, baslik: string, gorevler: string[], proj
 
 const notDiyalogu = (page: Page, baslik: string) => page.getByRole("dialog", { name: baslik });
 
-/** Not menüsündeki bir eylem: masaüstü/tablette alt çubuk düğmesi, mobilde ⋯ sayfası. */
+/** Not menüsündeki bir eylem: masaüstü/tablette alt çubuktaki ⋯ menüsü, mobilde ⋯ sayfası. */
 async function notEylemi(page: Page, baslik: string, ad: string) {
   const dlg = notDiyalogu(page, baslik);
-  if (gorunum(test.info()) === "mobil") {
-    await dlg.getByRole("button", { name: "Diğer" }).click();
-    await page.getByRole("menuitem", { name: ad }).click();
-  } else {
-    await dlg.getByRole("button", { name: ad }).click();
-  }
+  await dlg.getByRole("button", { name: "Diğer" }).click();
+  await page.getByRole("menuitem", { name: ad }).click();
 }
 
 const kaydedilsin = (page: Page) =>

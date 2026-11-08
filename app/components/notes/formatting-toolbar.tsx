@@ -20,6 +20,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover
 const TB =
   "ib ib-tb inline-flex shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 aria-pressed:bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] aria-pressed:text-fg disabled:opacity-50";
 
+const keepFocus = (e: React.MouseEvent) => e.preventDefault();
+
 const SEP = (
   <span
     className="mx-1 h-4 w-px shrink-0 bg-[color-mix(in_srgb,var(--fg)_16%,transparent)]"
@@ -91,6 +93,8 @@ export function FormattingToolbar({
       title={title}
       aria-pressed={pressed}
       disabled={!editor}
+      // Editör odağı ve seçimi korunur: sonraki yazı biçimi alır (kalın açıp yazmak).
+      onMouseDown={keepFocus}
       onClick={run}
     >
       <Icon aria-hidden="true" />
@@ -135,6 +139,7 @@ export function FormattingToolbar({
         aria-label="Biçimi temizle"
         title="Biçimi temizle"
         disabled={!editor}
+        onMouseDown={keepFocus}
         onClick={() => chain()?.unsetAllMarks().clearNodes().run()}
       >
         <RemoveFormatting aria-hidden="true" />

@@ -282,11 +282,10 @@ describe("yükleme durumları", () => {
     expect(FakeXhr.all).toHaveLength(1);
   });
 
-  it("mobilde Dosya ekle biçimlendirme çubuğundadır ve ekler tam genişlikte alt alta dizilir", () => {
+  it("mobilde Dosya ekle alt çubuktadır ve ekler tam genişlikte alt alta dizilir", () => {
     setMedia({ width: 390 });
     const dialog = open();
-    const toolbar = within(dialog).getByRole("toolbar", { name: "Biçimlendirme" });
-    expect(within(toolbar).getByRole("button", { name: "Dosya ekle" })).toBeEnabled();
+    expect(within(dialog).getByRole("button", { name: "Dosya ekle" })).toBeEnabled();
     expect(within(dialog).getByRole("region", { name: "Ekler" })).toHaveClass("flex-col");
   });
 });

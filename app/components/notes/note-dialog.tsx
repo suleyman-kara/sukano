@@ -3,18 +3,11 @@ import {
   ArchiveRestore,
   ArrowLeft,
   Bell,
-  Copy,
-  FolderInput,
-  FolderOutput,
   History,
-  Keyboard,
-  ListChecks,
   Lock,
   MoreVertical,
   Palette,
   Pin,
-  Trash2,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher, useNavigate, useRevalidator, useSubmit } from "react-router";
@@ -48,6 +41,7 @@ import { OfflineBanner, SyncStatus, useOfflineShown } from "~/components/realtim
 import { PresenceAvatars } from "~/components/realtime/presence-avatars";
 import { useLiveNote, type LiveNote } from "~/components/realtime/use-live-note";
 import type { TodoPeople } from "~/components/tasks/person-picker";
+import { useKeyboardInset } from "~/components/tasks/todo-toolbar";
 import {
   COARSE_QUERY,
   editorHandlesEscape,
@@ -78,7 +72,13 @@ import {
   type MoveCopyEntry,
   type TodoMenuHandlers,
 } from "./note-menu";
-import { FormattingToolbar, NoteEditorContent, useNoteEditor } from "./note-editor";
+import {
+  FormatPanel,
+  FormatToggleButton,
+  useFormatToggle,
+  type FormatToggleState,
+} from "./formatting-toolbar";
+import { NoteEditorContent, useNoteEditor } from "./note-editor";
 import { NOTES_ACTION, useNoteActions } from "./use-note-actions";
 import { VersionHistory } from "./version-history";
 
@@ -112,13 +112,20 @@ const NO_REMINDERS: NoteReminders = { note: null, tasks: {} };
 const NO_TARGETS: readonly MoveTarget[] = [];
 const NO_FILES: NonNullable<NoteDetail["attachments"]> = [];
 
+/** İkon düğmesi (tasarım v2.1 ölçüleri `.ib`, app.css). */
 const IB =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] [&_svg]:size-5 pointer-coarse:size-11";
+  "ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] aria-expanded:text-fg";
 
 /**
  * Açık not. Masaüstü ve tablette ortalanmış modal, mobilde tam ekran. Başlık ve
  * gövde 800 ms sonra kendiliğinden kaydedilir; kapatırken bekleyen değişiklik
  * hemen gönderilir.
+ *
+ * Tasarım v2 / v2.1: sağ üstte yalnızca Sabitle · Arşivle (✕ yok; kapanış dışarı tıklama,
+ * Esc ya da "Kapat"). Alt çubuk: Renk · Hatırlatıcı · Dosya eki · Aa (biçimlendirme) · ⋯
+ * … Düzenlendi … Kapat; yapılacaklar notunda Renk · Hatırlatıcı · ⋯. ⋯ menüsü yukarı açılır,
+ * sonunda kırmızı "Sil". Mobilde üstte Geri · Sabitle · Arşivle (yapılacaklarda ayrıca
+ * Hatırlatıcı · ⋯), metin notunun alt çubuğu Renk · Hatırlatıcı · Dosya eki · Aa · ⋯.
  */
 export function NoteDialog({
   note,
@@ -140,7 +147,11 @@ export function NoteDialog({
   const tabletUp = useMediaQuery(TABLET_UP_QUERY, true);
   const coarse = useMediaQuery(COARSE_QUERY, false);
   const todoRef = useRef<TodoEditorHandle>(null);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const [, setHelpOpen] = useState(false);
+  // Biçimlendirme çubuğu varsayılan gizli; Aa açar (seçim balonu yok).
+  const format = useFormatToggle();
+  // Tablette ekran klavyesi açıkken alt çubuk (⋯ dahil) gizlenir.
+  const keyboardOpen = useKeyboardInset(coarse && tabletUp) > 80;
   const convert = useConvertNote();
   const isTodo = note.kind === "todo";
   const [revision, setRevision] = useState(0);
@@ -277,7 +288,11 @@ export function NoteDialog({
     });
   }, [saver, flushTasks, navigate, closeTo, note.id, reduced]);
 
+  const closedRemotely = useRef(false);
   const leave = (fn: () => void) => {
+    // Kendi eylemimiz (arşivle, sil): odanın geri yansıyan "başka sekmede…" bildirimi
+    // ikinci bir toast açmasın.
+    closedRemotely.current = true;
     saver.flush();
     void flushTasks().then(fn);
     setHidden(true);
@@ -286,7 +301,6 @@ export function NoteDialog({
 
   // Başka biri notu çöpe attı / arşivledi / taşıdı ya da erişim kalktı: bekleyen yazım
   // (başlık, görevler, Yjs → D1) önce gönderilir, sonra not kapanır ve toast söyler.
-  const closedRemotely = useRef(false);
   const closeRemotely = (outcome: RemoteNoteOutcome) => {
     if (closedRemotely.current || !outcome.close) return;
     closedRemotely.current = true;
@@ -397,6 +411,59 @@ export function NoteDialog({
       }
     : undefined;
 
+  const reminderButton = (
+    <ReminderControl
+      {...reminderProps}
+      trigger={
+        <button
+          type="button"
+          className={cn(IB, noteReminder.at !== null && "text-primary")}
+          disabled={!editable}
+          aria-label="Not hatırlatıcısı"
+          title="Not hatırlatıcısı"
+          aria-haspopup="dialog"
+          onClick={() => setReminderOpen(true)}
+        >
+          <Bell aria-hidden="true" />
+        </button>
+      }
+    />
+  );
+  // Mobil ⋯: alttan açılan sayfa (MNoteMenu, MTodoMenu).
+  const mobileMoreButton = (
+    <button
+      type="button"
+      className={IB}
+      aria-label="Diğer"
+      aria-haspopup="dialog"
+      onClick={() => setSheetOpen(true)}
+    >
+      <MoreVertical aria-hidden="true" />
+    </button>
+  );
+  // Masaüstü / tablet ⋯: alt çubukta, düğmenin sol üstünden yukarı açılır (v2.1).
+  const moreMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className={IB} aria-label="Diğer" title="Diğer">
+          <MoreVertical aria-hidden="true" />
+        </button>
+      </DropdownMenuTrigger>
+      <NoteMoreMenuContent
+        kind={note.kind}
+        side="top"
+        align="start"
+        todo={editable ? todoMenu : undefined}
+        moveCopy={moveCopy}
+        onDuplicate={onDuplicate}
+        onVersions={openVersions}
+        onConvert={editable ? onConvert : undefined}
+        onShortcuts={isTodo && !coarse ? () => todoRef.current?.toggleHelp() : undefined}
+        onTrash={editable ? onTrash : undefined}
+      />
+    </DropdownMenu>
+  );
+
   const presence = live ? (
     <PresenceAvatars
       peers={live.peers}
@@ -493,6 +560,18 @@ export function NoteDialog({
           editable={editable}
           tabletUp={tabletUp}
           saver={saver}
+          format={format}
+          mobileBar={
+            !tabletUp && !isTodo && !viewer ? (
+              <>
+                <ColorButton color={color} onChange={changeColor} />
+                {reminderButton}
+                <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
+                {editable && <FormatToggleButton format={format} className={IB} />}
+                {mobileMoreButton}
+              </>
+            ) : null
+          }
           header={(titleInput) =>
             tabletUp ? (
               <div className="flex items-center gap-2.5 pt-[18px] pr-5 pb-1 pl-7">
@@ -500,15 +579,7 @@ export function NoteDialog({
                 {presence}
                 {viewer && <ViewerBadge />}
                 <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label="Kapat"
-                  title="Kapat"
-                  onClick={close}
-                >
-                  <X aria-hidden="true" />
-                </button>
+                <ArchiveButton archived={archived} onClick={onArchive} hidden={!editable} />
               </div>
             ) : (
               <div className="flex items-center gap-0.5 px-2 pt-[max(12px,env(safe-area-inset-top))]">
@@ -532,30 +603,14 @@ export function NoteDialog({
                 ) : (
                   <>
                     <PinButton pinned={pinned} onClick={togglePin} hidden={archived || !editable} />
-                    <ReminderControl
-                      {...reminderProps}
-                      trigger={
-                        <button
-                          type="button"
-                          className={cn(IB, noteReminder.at !== null && "text-primary")}
-                          disabled={!editable}
-                          aria-label="Not hatırlatıcısı"
-                          aria-haspopup="dialog"
-                          onClick={() => setReminderOpen(true)}
-                        >
-                          <Bell aria-hidden="true" />
-                        </button>
-                      }
-                    />
-                    <button
-                      type="button"
-                      className={IB}
-                      aria-label="Diğer"
-                      aria-haspopup="dialog"
-                      onClick={() => setSheetOpen(true)}
-                    >
-                      <MoreVertical aria-hidden="true" />
-                    </button>
+                    <ArchiveButton archived={archived} onClick={onArchive} hidden={!editable} />
+                    {/* Yapılacaklar notunda alt çubuk yok: Hatırlatıcı ve ⋯ üstte. */}
+                    {isTodo && (
+                      <>
+                        {reminderButton}
+                        {mobileMoreButton}
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -579,127 +634,19 @@ export function NoteDialog({
                 </Button>
               </div>
             ) : tabletUp ? (
-              <div className="relative flex shrink-0 flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]">
+              <div
+                className={cn(
+                  "relative flex shrink-0 flex-wrap items-center gap-0.5 pt-2 pr-3.5 pb-3 pl-[18px]",
+                  keyboardOpen && "hidden",
+                )}
+              >
                 <ColorButton color={color} onChange={changeColor} />
-                <ReminderControl
-                  {...reminderProps}
-                  trigger={
-                    <button
-                      type="button"
-                      className={cn(IB, noteReminder.at !== null && "text-primary")}
-                      disabled={!editable}
-                      aria-label="Not hatırlatıcısı"
-                      title="Not hatırlatıcısı"
-                      aria-haspopup="dialog"
-                    >
-                      <Bell aria-hidden="true" />
-                    </button>
-                  }
-                />
+                {reminderButton}
                 {!isTodo && (
                   <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
                 )}
-                {moveCopy && (
-                  <button
-                    type="button"
-                    className={IB}
-                    aria-label={moveCopy.label}
-                    title={moveCopy.label}
-                    aria-haspopup="dialog"
-                    onClick={moveCopy.onSelect}
-                  >
-                    {project ? (
-                      <FolderOutput aria-hidden="true" />
-                    ) : (
-                      <FolderInput aria-hidden="true" />
-                    )}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label="Kopyasını oluştur"
-                  title="Kopyasını oluştur"
-                  onClick={onDuplicate}
-                >
-                  <Copy aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label="Sürüm geçmişi"
-                  title="Sürüm geçmişi"
-                  onClick={openVersions}
-                >
-                  <History aria-hidden="true" />
-                </button>
-                {!isTodo && (
-                  <button
-                    type="button"
-                    className={IB}
-                    aria-label="Yapılacaklar notuna dönüştür"
-                    title="Yapılacaklar notuna dönüştür"
-                    onClick={onConvert}
-                  >
-                    <ListChecks aria-hidden="true" />
-                  </button>
-                )}
-                <span
-                  className="mx-1.5 h-5 w-px bg-[color-mix(in_srgb,var(--fg)_16%,transparent)]"
-                  aria-hidden="true"
-                />
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label={archived ? "Arşivden çıkar" : "Arşivle"}
-                  title={archived ? "Arşivden çıkar" : "Arşivle"}
-                  onClick={onArchive}
-                >
-                  {archived ? (
-                    <ArchiveRestore aria-hidden="true" />
-                  ) : (
-                    <Archive aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className={IB}
-                  aria-label="Çöpe at"
-                  title="Çöpe at"
-                  onClick={onTrash}
-                >
-                  <Trash2 aria-hidden="true" />
-                </button>
-                {isTodo && !coarse && (
-                  <button
-                    type="button"
-                    className={cn(IB, helpOpen && "bg-primary-soft text-primary")}
-                    aria-label="Klavye kısayolları (Ctrl+/)"
-                    title="Kısayollar (Ctrl+/)"
-                    aria-expanded={helpOpen}
-                    onClick={() => todoRef.current?.toggleHelp()}
-                  >
-                    <Keyboard aria-hidden="true" />
-                  </button>
-                )}
-                {isTodo && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button type="button" className={IB} aria-label="Diğer" title="Diğer">
-                        <MoreVertical aria-hidden="true" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <NoteMoreMenuContent
-                      kind={note.kind}
-                      todo={todoMenu}
-                      onDuplicate={onDuplicate}
-                      onVersions={openVersions}
-                      onConvert={onConvert}
-                      moveCopy={moveCopy}
-                      dialog={{ archived, onArchive, onTrash }}
-                    />
-                  </DropdownMenu>
-                )}
+                {!isTodo && editable && <FormatToggleButton format={format} className={IB} />}
+                {moreMenu}
                 <span className="flex-1 px-3 text-right text-xs text-muted-foreground">
                   {offline ? (
                     <SyncStatus at={live?.lastSyncedAt ?? null} />
@@ -744,16 +691,10 @@ export function NoteDialog({
           people={people}
           reminderChip={reminderChip}
           taskReminders={editable ? taskReminders : undefined}
-          colorButton={<ColorButton color={color} onChange={changeColor} />}
           attachments={
             isTodo ? null : (
               <AttachmentStrip attachments={files} editable={editable} stacked={!tabletUp} />
             )
-          }
-          attachButton={
-            !tabletUp && !isTodo ? (
-              <AttachButton canAdd={files.canAdd} onFiles={files.addFiles} className={IB} />
-            ) : null
           }
         />
 
@@ -761,12 +702,14 @@ export function NoteDialog({
           <NoteSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
+            variant="open"
             title={note.title}
             kind={note.kind}
             color={color}
             pinned={pinned}
             archived={archived}
-            onColor={changeColor}
+            // Metin notunda Renk alt çubukta; yapılacaklar notunda sayfada kalır.
+            onColor={isTodo ? changeColor : undefined}
             onPin={togglePin}
             onArchive={onArchive}
             onTrash={onTrash}
@@ -775,7 +718,6 @@ export function NoteDialog({
             onConvert={onConvert}
             todo={todoMenu}
             moveCopy={moveCopy}
-            onReminder={editable ? () => setReminderOpen(true) : undefined}
             footer={
               <p className="m-0 px-1.5 pt-1 text-xs text-muted-foreground">
                 {project ? meta : edited}
@@ -832,6 +774,25 @@ function PinButton({
       onClick={onClick}
     >
       <Pin fill={pinned ? "currentColor" : "none"} aria-hidden="true" />
+    </button>
+  );
+}
+
+/** Sağ üstte Sabitle'nin sağında: Arşivle / Arşivden çıkar (tasarım v2). */
+function ArchiveButton({
+  archived,
+  onClick,
+  hidden,
+}: {
+  archived: boolean;
+  onClick: () => void;
+  hidden?: boolean;
+}) {
+  if (hidden) return null;
+  const label = archived ? "Arşivden çıkar" : "Arşivle";
+  return (
+    <button type="button" className={IB} aria-label={label} title={label} onClick={onClick}>
+      {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
     </button>
   );
 }
@@ -979,11 +940,12 @@ type NoteBodyProps = {
   header: (titleInput: React.ReactNode) => React.ReactNode;
   footer: React.ReactNode;
   mobileExtras: (toolbar: React.ReactNode) => React.ReactNode;
-  colorButton: React.ReactNode;
+  /** Biçimlendirme çubuğunun durumu (Aa). */
+  format: FormatToggleState;
+  /** Mobil metin notunun alt çubuğu: Renk · Hatırlatıcı · Dosya eki · Aa · ⋯. */
+  mobileBar?: React.ReactNode;
   /** Metin notunun ekleri (görseller, dosyalar, yüklemeler). */
   attachments?: React.ReactNode;
-  /** Mobil biçimlendirme çubuğunda "Dosya ekle". */
-  attachButton?: React.ReactNode;
   /** Proje notu: oluşturan / son düzenleyen satırı. */
   meta?: React.ReactNode;
   /** Görüntüleyici: salt okunur açıklaması. */
@@ -1007,9 +969,9 @@ function NoteBody({
   header,
   footer,
   mobileExtras,
-  colorButton,
+  format,
+  mobileBar,
   attachments,
-  attachButton,
   meta,
   lockbar,
   people,
@@ -1097,24 +1059,18 @@ function NoteBody({
     </>
   );
 
-  const toolbar =
+  // Biçimlendirme çubuğu Aa'nın arkasında, alt çubuğun hemen üstünde açılır (tasarım v2).
+  const formatPanel =
     note.kind === "text" && editable ? (
-      <FormattingToolbar
-        editor={editor}
-        className={
-          tabletUp
-            ? "px-[22px] pb-1.5"
-            : "sticky bottom-0 -mx-5 mt-auto border-t border-[color-mix(in_srgb,var(--fg)_10%,transparent)] bg-[color-mix(in_srgb,var(--surface)_35%,transparent)] px-2 pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur"
-        }
-      >
-        {!tabletUp && (
-          <>
-            <span className="flex-1" />
-            {colorButton}
-            {attachButton}
-          </>
-        )}
-      </FormattingToolbar>
+      <FormatPanel format={format} editor={editor} className={tabletUp ? "px-3.5" : "px-2"} />
+    ) : null;
+  // Mobil metin notu: alt çubuk (biçimlendirme satırı üstünde) ekranın altına yapışık.
+  const toolbar =
+    !tabletUp && (mobileBar || formatPanel) ? (
+      <div className="sticky bottom-0 -mx-5 mt-auto border-t border-[color-mix(in_srgb,var(--fg)_10%,transparent)] bg-[color-mix(in_srgb,var(--surface)_35%,transparent)] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+        {formatPanel}
+        {mobileBar && <div className="flex items-center gap-1 px-2 pt-1">{mobileBar}</div>}
+      </div>
     ) : null;
 
   const top =
@@ -1185,11 +1141,11 @@ function NoteBody({
       <>
         {header(titleInput)}
         {top}
-        {toolbar}
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pt-1.5 pb-3">
           {body}
           {attachments}
         </div>
+        {formatPanel}
         {footer}
       </>
     );
