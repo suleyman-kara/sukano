@@ -108,6 +108,14 @@ export { CARD_TASK_LIMIT };
 const DISCARD_WINDOW_MS = 2 * 60 * 1000;
 const TRASH_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const SEARCH_LIMIT = 100;
+/** `IN (…)` listelerinin parça boyu (D1: sorgu başına en çok 100 bağlı parametre). */
+const IN_CHUNK = 90;
+
+function chunks<T>(items: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
 
 export type VersionSnapshot = { html: string; text: string };
 
@@ -276,16 +284,23 @@ export function scopedNotes(
   async function cardTasks(noteIds: string[]) {
     const byNote = new Map<string, { tasks: CardTask[]; total: number }>();
     if (noteIds.length === 0) return byNote;
-    const rows = await db
-      .select({
-        id: tasks.id,
-        noteId: tasks.noteId,
-        title: tasks.title,
-        completedAt: tasks.completedAt,
-      })
-      .from(tasks)
-      .where(and(inArray(tasks.noteId, noteIds), isNull(tasks.parentId)))
-      .orderBy(asc(tasks.noteId), asc(tasks.position));
+    // D1 sorgu başına en çok 100 bağlı parametre kabul eder: parça parça (sıra not içinde).
+    const rows = (
+      await Promise.all(
+        chunks(noteIds, IN_CHUNK).map((part) =>
+          db
+            .select({
+              id: tasks.id,
+              noteId: tasks.noteId,
+              title: tasks.title,
+              completedAt: tasks.completedAt,
+            })
+            .from(tasks)
+            .where(and(inArray(tasks.noteId, part), isNull(tasks.parentId)))
+            .orderBy(asc(tasks.noteId), asc(tasks.position)),
+        ),
+      )
+    ).flat();
     for (const r of rows) {
       const entry = byNote.get(r.noteId) ?? { tasks: [], total: 0 };
       entry.total++;
@@ -303,17 +318,24 @@ export function scopedNotes(
     const shown = entries.flatMap((e) => e.tasks);
     const ids = shown.flatMap((t) => (t.id ? [t.id] : []));
     if (ids.length === 0) return;
-    const rows = await db
-      .select({
-        taskId: taskAssignees.taskId,
-        id: user.id,
-        name: user.name,
-        color: user.avatarColor,
-      })
-      .from(taskAssignees)
-      .innerJoin(user, eq(user.id, taskAssignees.userId))
-      .where(inArray(taskAssignees.taskId, ids))
-      .orderBy(asc(taskAssignees.createdAt), asc(taskAssignees.userId));
+    // D1 sorgu başına en çok 100 bağlı parametre kabul eder: parça parça.
+    const rows = (
+      await Promise.all(
+        chunks(ids, IN_CHUNK).map((part) =>
+          db
+            .select({
+              taskId: taskAssignees.taskId,
+              id: user.id,
+              name: user.name,
+              color: user.avatarColor,
+            })
+            .from(taskAssignees)
+            .innerJoin(user, eq(user.id, taskAssignees.userId))
+            .where(inArray(taskAssignees.taskId, part))
+            .orderBy(asc(taskAssignees.createdAt), asc(taskAssignees.userId)),
+        ),
+      )
+    ).flat();
     const byTask = new Map<string, { id: string; name: string; color: string }[]>();
     for (const r of rows) {
       const list = byTask.get(r.taskId) ?? [];
@@ -374,15 +396,17 @@ export function scopedNotes(
           asc(notes.position),
           asc(notes.createdAt),
         );
-      const taskMap = await cardTasks(rows.filter((r) => r.kind === "todo").map((r) => r.id));
-      const fileMap = await cardAttachments(rows.filter((r) => r.kind === "text").map((r) => r.id));
-      const reminderMap =
+      // Kart ayrıntıları birbirinden bağımsız: paralel (D1 gidiş-dönüşleri üst üste biner).
+      const [taskMap, fileMap, reminderMap] = await Promise.all([
+        cardTasks(rows.filter((r) => r.kind === "todo").map((r) => r.id)),
+        cardAttachments(rows.filter((r) => r.kind === "text").map((r) => r.id)),
         view === "cop"
           ? new Map<string, number>()
-          : await noteReminderMap(
+          : noteReminderMap(
               db,
               rows.map((r) => r.id),
-            );
+            ),
+      ]);
       return rows.map((r) => {
         const t = taskMap.get(r.id);
         const f = fileMap.get(r.id);
@@ -410,7 +434,13 @@ export function scopedNotes(
       const row = await owned(id);
       const todoTasks = row.kind === "todo" ? treeOrder(await loadTasks(db, id)) : [];
       const assignees = row.projectId && row.kind === "todo" ? await loadAssignees(db, id) : {};
-      const files = row.kind === "text" ? (await noteAttachments(db, id)).map(toInfo) : [];
+      const [files, createdBy, updatedBy] = await Promise.all([
+        row.kind === "text"
+          ? noteAttachments(db, id).then((list) => list.map(toInfo))
+          : Promise.resolve([]),
+        person(row.createdBy),
+        person(row.updatedBy),
+      ]);
       // Aşama 1: yapılacaklar notunun üst seviye görevleri salt okunur gösterilir.
       const detailTasks: DetailTask[] = todoTasks
         .filter((t) => t.parentId === null)
@@ -427,8 +457,8 @@ export function scopedNotes(
         attachmentCount: files.length,
         attachments: files,
         projectId: row.projectId,
-        createdBy: await person(row.createdBy),
-        updatedBy: await person(row.updatedBy),
+        createdBy,
+        updatedBy,
         assignees,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
