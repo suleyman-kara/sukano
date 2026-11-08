@@ -25,7 +25,7 @@ import { protectRoute } from "~/lib/session.server";
 import { motionAttribute, parseMotionCookie } from "~/lib/motion";
 import { loadShellData } from "~/lib/shell.server";
 import { themeInitScript } from "~/lib/theme";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateShell } from "~/lib/offline-revalidate";
 
 export const links: Route.LinksFunction = () => [
   {
@@ -60,8 +60,8 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Kabuk gezinmede ve not eylemlerinden sonra yüklenmez (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateShell;
 
 /**
  * Kabuk verisi (kullanıcı, projeler, sayaçlar). Kabuksuz kimlik sayfalarında

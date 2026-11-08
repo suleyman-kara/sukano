@@ -2,6 +2,9 @@ import type { Config } from "@react-router/dev/config";
 
 export default {
   ssr: true,
+  // Rota bildirimi ilk yüklemede gelir: yeni bir yola ilk tıklamada önce `/__manifest`
+  // isteği beklenmez (uygulamanın rota sayısı az, bildirim küçük).
+  routeDiscovery: { mode: "initial" },
   // Paralel uçtan uca koşuları için ayrı derleme klasörü seçilebilir (varsayılan `build`).
   buildDirectory: process.env.SUKANO_BUILD_DIR ?? "build",
   future: {

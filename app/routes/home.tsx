@@ -16,15 +16,15 @@ import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/home";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateGrid } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Notlarım · Sukano" },
   { name: "description", content: "Kişisel notların ve ekip projelerin, tek yerde." },
 ];
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateGrid;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

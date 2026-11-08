@@ -21,14 +21,28 @@ import type { Route } from "./+types/api.notlar";
  * kişisel alan kanalına ızgara olayı, açık not odasına başlık / renk / sıfırlama
  * (bkz. `noteIntentEffects`).
  */
+/** Notun kanalını değiştiren ya da notu kaldıran eylemler: önceki bilgi önce okunur. */
+const CHANGES_CHANNEL = new Set<string>([
+  "move-to-project",
+  "undo-move",
+  "delete",
+  "discard",
+  "empty-trash",
+]);
+
 export async function action({ request, context }: Route.ActionArgs) {
   const { user } = await requireUser(request, context);
   const parsed = parseNoteIntent(Object.fromEntries(await request.formData()));
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
   const { env, ctx } = getCloudflare(context);
   try {
-    const before = await readIntentContext(env, user.id, parsed.value);
+    // Eylem öncesi bilgi (notun kanalı) eylemi değiştirmeyen eylemlerde eylemle aynı anda
+    // okunur: bir D1 turu az. Notu silen, taşıyan ya da çöpü boşaltan eylemde önce okunur.
+    const pendingBefore = readIntentContext(env, user.id, parsed.value);
+    pendingBefore.catch(() => {});
+    if (CHANGES_CHANNEL.has(parsed.value.intent)) await pendingBefore;
     const result = await noteAccess(env, user.id).run(parsed.value);
+    const before = await pendingBefore;
     ctx.waitUntil(
       applyIntentEffects(env, user.id, noteIntentEffects(parsed.value, user.id, before)),
     );

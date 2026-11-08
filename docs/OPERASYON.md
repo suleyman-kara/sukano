@@ -187,15 +187,34 @@ Derleme dosyaları `Cache-Control: public, max-age=31536000, immutable` ile geli
 
 ### D1
 
-- Izgara listesi (`notes.server.ts → list`): kart görevleri, ekleri ve hatırlatıcıları **paralel**
-  sorgulanır (önceden sıralı üç gidiş-dönüş). Not ayrıntısında ekler ve iki kişi sorgusu paralel.
-- **Düzeltilen hata:** kart görevleri ve atananlar sorgusu `IN (…)` listesini bölmüyordu; D1
-  sorgu başına 100 bağlı parametre kabul ettiği için 100'den çok yapılacaklar notu olan ızgara
-  düşüyordu. Artık 90'lık parçalarla (Worker testiyle).
+Her D1 sorgusu Worker'ın çalıştığı kenardan birincil veritabanına bir yolculuktur (Türkiye'den
+EEUR birincile ~20–50 ms). Önemli olan sorgu sayısı değil, **sırayla beklenen tur** sayısıdır:
+
+| İstek                          | Tur | Notlar                                                         |
+| ------------------------------ | --- | -------------------------------------------------------------- |
+| Oturum                         | 1   | Oturum + kullanıcı tek sorgu (`advanced.database.joins`)       |
+| Notlarım / Arşiv / Çöp ızgarası | 2   | oturum + (not satırları ∥ kart görevleri ∥ ekler ∥ hatırlatıcılar; alt sorgu) |
+| Açık not (`/not/:id`)          | 3   | oturum + (erişim ∥ hedefler ∥ hatırlatıcılar ∥ saat dilimi) + (not ∥ görevler ∥ ekler ∥ üyeler) |
+| Proje ızgarası                 | 3   | oturum + üyelik + (üyeler ∥ notlar)                             |
+| Kabuk (kök loader)             | 2   | not sayıları okunmaz                                            |
+
+Bunlar `tests/workers/performans.test.ts`'te denetlenir.
+
+- **Yeniden doğrulama** (`app/lib/offline-revalidate.ts`): React Router'ın tek istek kipi
+  varsayılan olarak her gezinmede bütün loader'ları yeniden çalıştırır. Kabuk gezinmede ve not
+  içeriği eylemlerinden sonra yüklenmez; ızgara kart açıp kapamakla yüklenmez; açık not yalnızca
+  not değişince yüklenir. Kart ayrıntıları kimlik listesi yerine alt sorguyla okunduğu için 100
+  bağlı parametre sınırı da sorun değildir.
+- **Ölçüm:** her yanıtta `Server-Timing: total;dur=…, db;dur=…;desc="N sorgu / M tur"`
+  (`app/lib/db-timing.server.ts`). Üretimde tarayıcının Ağ sekmesinde ya da
+  `curl -sI https://<alan>/health` ile okunur. `db` duvar saatidir (paralel sorgular üst üste
+  sayılmaz). Yerel adreste (`BETTER_AUTH_URL` localhost) `x-sukano-db-gecikme: <ms>` başlığı her
+  sorguya yapay gecikme ekler: üretim gecikmesini önizlemede taklit etmek için; üretimde yok
+  sayılır.
 - Dizinler: not listeleri (`owner/project, trashed_at, archived_at, position`), görevler
   (`note_id, parent_id, position`), hatırlatıcılar (`sent_at, at`, hedef tekil), bildirimler
   (`user_id, read_at` / `created_at`), davetler, ekler, sürümler. Izgara sorguları dizinlerle
-  karşılanıyor; N+1 yok (kart ayrıntıları toplu `IN` sorgularıyla).
+  karşılanıyor; N+1 yok.
 
 ### Durable Object maliyeti
 

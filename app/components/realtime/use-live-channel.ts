@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useRevalidator } from "react-router";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import type { NoteCardData, NoteView } from "~/domain/notes/optimistic";
 import {
   applyChannelEvent,
@@ -106,7 +106,7 @@ export function useLiveGrid(
     base: notes,
     events: [],
   });
-  const revalidator = useRevalidator();
+  const revalidator = useContentRevalidator();
   const revalidate = useRef(revalidator.revalidate);
   useEffect(() => {
     revalidate.current = revalidator.revalidate;

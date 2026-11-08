@@ -32,7 +32,7 @@ export async function loadShellData(
   const now = new Date();
 
   const [sidebar, [invites], [unread], prefs] = await Promise.all([
-    projectsService(env, user.id).sidebar(),
+    projectsService(env, user.id).sidebar({ counts: false }),
     db
       .select({ n: count() })
       .from(invitations)

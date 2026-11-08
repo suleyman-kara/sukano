@@ -1,8 +1,10 @@
 import { Check, FileText, FolderOutput, TriangleAlert, X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useRevalidator } from "react-router";
+import { useNavigate } from "react-router";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import { toast } from "sonner";
+import { withDurationBar } from "~/components/ui/sonner";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import type { NoteColor } from "~/db/schema";
@@ -45,7 +47,7 @@ export type CopyPlace = { kind: "personal" } | { kind: "project"; project: NoteP
  * kopyada "Aç" bağlantılı toast. Bitince sayfa verisi yeniden doğrulanır.
  */
 export function useMoveCopy() {
-  const revalidator = useRevalidator();
+  const revalidator = useContentRevalidator();
   const navigate = useNavigate();
   const revalidate = useRef(revalidator.revalidate);
   useEffect(() => {
@@ -60,7 +62,7 @@ export function useMoveCopy() {
     }
     void revalidate.current();
     toast(`Not ${project.name} projesine taşındı`, {
-      duration: MOVE_TOAST_MS,
+      ...withDurationBar(MOVE_TOAST_MS),
       action: {
         label: "Geri al",
         onClick: () => {

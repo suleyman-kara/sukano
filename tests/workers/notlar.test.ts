@@ -108,20 +108,21 @@ describe("oluşturma ve güncelleme", () => {
 describe("sahiplik", () => {
   it("başka kullanıcının notu bulunamadı sayılır (her işlemde)", async () => {
     const other = svc(AYSE);
+    // Her deneme sırayla başlatılır: biri beklenirken diğerinin reddi sahipsiz kalmasın.
     const attempts = [
-      other.get("market"),
-      other.update("market", { title: "x" }),
-      other.setColor("market", "mor"),
-      other.setPinned("market", false),
-      other.archive("market"),
-      other.trash("market"),
-      other.restore("market"),
-      other.duplicate("market", uuid()),
-      other.move("market", true, 0),
-      other.listVersions("market"),
-      other.deletePermanently("silinecek-taslak"),
+      () => other.get("market"),
+      () => other.update("market", { title: "x" }),
+      () => other.setColor("market", "mor"),
+      () => other.setPinned("market", false),
+      () => other.archive("market"),
+      () => other.trash("market"),
+      () => other.restore("market"),
+      () => other.duplicate("market", uuid()),
+      () => other.move("market", true, 0),
+      () => other.listVersions("market"),
+      () => other.deletePermanently("silinecek-taslak"),
     ];
-    for (const p of attempts) await expect(p).rejects.toThrow(NoteNotFoundError);
+    for (const attempt of attempts) await expect(attempt()).rejects.toThrow(NoteNotFoundError);
     expect((await svc().get("market")).title).toBe("Market");
   });
 

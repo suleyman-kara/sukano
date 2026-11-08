@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useRevalidator } from "react-router";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import { toast } from "sonner";
 import {
   attachmentsReducer,
@@ -31,7 +31,7 @@ export function useNoteAttachments({
   server: readonly AttachmentView[];
   canAdd: boolean;
 }) {
-  const revalidator = useRevalidator();
+  const revalidator = useContentRevalidator();
   const [state, dispatch] = useReducer(attachmentsReducer, EMPTY_ATTACHMENTS);
   const files = useRef(new Map<string, File>());
   const [dragging, setDragging] = useState(false);

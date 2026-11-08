@@ -1,6 +1,9 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 import { createNonce, isCrossOriginWrite, securityHeaders } from "~/domain/security/headers";
+import { isLocalUrl } from "~/domain/auth/links";
 import { cloudflareContext } from "~/lib/context";
+import { currentServerTiming, runWithTiming } from "~/lib/db-timing.server";
+import { DB_DELAY_HEADER, parseDelayHeader } from "~/lib/server-timing";
 import { routeLive } from "./live-routes";
 import { runScheduled } from "./scheduled";
 
@@ -39,13 +42,34 @@ export default {
     const nonce = DOCUMENT_CSP ? createNonce() : undefined;
     const context = new RouterContextProvider();
     context.set(cloudflareContext, { env, ctx, nonce });
-    return withSecurityHeaders(await requestHandler(request, context), request, nonce);
+    // Server-Timing: toplam süre ve D1 (sorgu / gidiş sayısı). Yerel adreste uçtan uca
+    // ölçüm, üretim gecikmesini taklit etmek için her sorguya yapay gecikme isteyebilir.
+    const delay = isLocalUrl(env.BETTER_AUTH_URL)
+      ? parseDelayHeader(request.headers.get(DB_DELAY_HEADER))
+      : 0;
+    return runWithTiming(delay, async () => {
+      const response = withSecurityHeaders(await requestHandler(request, context), request, nonce);
+      return withServerTiming(response, currentServerTiming());
+    });
   },
 
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(runScheduled(controller, env));
   },
 } satisfies ExportedHandler<Env>;
+
+/** `Server-Timing` başlığını ekler (değişmez başlıklı yanıtta kopyaya). */
+function withServerTiming(response: Response, value: string | null): Response {
+  if (!value || response.status === 101) return response;
+  try {
+    response.headers.set("Server-Timing", value);
+    return response;
+  } catch {
+    const copy = new Response(response.body, response);
+    copy.headers.set("Server-Timing", value);
+    return copy;
+  }
+}
 
 /**
  * Güvenlik başlıklarını ekler (bkz. `app/domain/security/headers.ts`). Rotanın kendi

@@ -33,7 +33,7 @@ import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
 import { useShellData } from "~/lib/shell";
 import type { Route } from "./+types/proje";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateGrid } from "~/lib/offline-revalidate";
 
 /** `/proje/:projeId[/arsiv|/cop][/not/:id]` → görünüm. */
 export function projectViewOf(pathname: string): NoteView {
@@ -49,8 +49,8 @@ export const meta: Route.MetaFunction = ({ data: d, location }) => {
   return [{ title: [VIEW_TITLES[view], name, "Sukano"].filter(Boolean).join(" · ") }];
 };
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateGrid;
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);

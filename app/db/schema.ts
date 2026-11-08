@@ -10,7 +10,7 @@
  *   `npx @better-auth/cli generate` (sqlite) çıktısıyla aynı alan adlarını kullanır;
  *   tek ek alan `user.avatarColor` (auth.server.ts içinde `additionalFields`).
  */
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   type AnySQLiteColumn,
   check,
@@ -161,6 +161,21 @@ export const account = sqliteTable(
   },
   (t) => [index("account_userId_idx").on(t.userId)],
 );
+
+/**
+ * Better Auth birleştirmeleri (`advanced.database.joins`): oturum kullanıcıyla tek sorguda
+ * okunur (her istekte bir D1 turu az). İlişkiler yalnızca sorgu katmanıdır; şemayı değiştirmez.
+ */
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+}));
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, { fields: [session.userId], references: [user.id] }),
+}));
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, { fields: [account.userId], references: [user.id] }),
+}));
 
 export const verification = sqliteTable(
   "verification",
