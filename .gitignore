@@ -31,3 +31,6 @@ blob-report/
 tests/e2e/.auth/
 /build-*/
 /test-results-*/
+
+# Lighthouse raporları
+lighthouse-report/

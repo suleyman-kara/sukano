@@ -33,16 +33,17 @@ Geliştirme sunucusu Cloudflare Vite eklentisiyle Worker'ı yerel `workerd` içi
 
 ## Betikler
 
-| Komut                           | İş                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| `npm run dev`                   | Geliştirme sunucusu                                                            |
-| `npm run build`                 | Üretim derlemesi (`build/client`, `build/server`)                              |
-| `npm run preview`               | Derleyip üretim çıktısını yerelde önizler                                      |
-| `npm run typecheck`             | `wrangler types` + `react-router typegen` + `tsc -b`                           |
-| `npm run lint`                  | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier denetimi          |
-| `npm run format`                | Prettier ile biçimlendirir                                                     |
-| `npm run db:*`                  | Veritabanı betikleri; bkz. [Veritabanı ve migration](#veritabanı-ve-migration) |
-| `npm run test*`, `npm run e2e*` | Testler; bkz. [Testler](#testler)                                              |
+| Komut                           | İş                                                                                  |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run dev`                   | Geliştirme sunucusu                                                                 |
+| `npm run build`                 | Üretim derlemesi (`build/client`, `build/server`)                                   |
+| `npm run preview`               | Derleyip üretim çıktısını yerelde önizler                                           |
+| `npm run typecheck`             | `wrangler types` + `react-router typegen` + `tsc -b`                                |
+| `npm run lint`                  | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier denetimi               |
+| `npm run format`                | Prettier ile biçimlendirir                                                          |
+| `npm run db:*`                  | Veritabanı betikleri; bkz. [Veritabanı ve migration](#veritabanı-ve-migration)      |
+| `npm run test*`, `npm run e2e*` | Testler; bkz. [Testler](#testler)                                                   |
+| `npm run lighthouse`            | Lighthouse denetimi (erişilebilirlik ≥ 95); bkz. [PWA](#pwa-çevrimdışı-ve-güvenlik) |
 
 ## Yapı
 
@@ -799,8 +800,9 @@ bağımlılık yok. Abonelik cihaz başına (`push_subscriptions`, uç nokta tek
 404 / 410 dönerse silinir. Yük `{ title, body, url, tag, action? }` (States2 metinleri);
 hatırlatıcıda aciliyet `high`. VAPID anahtarı yoksa push sessizce atlanır. Push yalnızca
 hatırlatıcı, göreve atanma ve davette gider; her biri Ayarlar'dan kapatılır, uygulama içi
-bildirim her zaman yazılır. `public/sw.js` yalnızca `push` ve `notificationclick` dinler (açık
-sekmeye odaklanıp adrese gider); önbellek / çevrimdışı Aşama 6'da aynı dosyaya eklenecek.
+bildirim her zaman yazılır. `public/sw.js` `push` ve `notificationclick` dinler (açık
+sekmeye odaklanıp adrese gider); önbellek ve çevrimdışı okuma için bkz.
+[PWA, çevrimdışı ve güvenlik](#pwa-çevrimdışı-ve-güvenlik).
 İzin sayfa açılışında sorulmaz: Ayarlar → Bildirimler'de "Bu cihazda aç" ya da ilk hatırlatıcı
 kurulduktan sonra bir kez gösterilen toast ("Bildirimleri aç").
 
@@ -877,7 +879,52 @@ proje arşivi, proje ayarları, Davetler, Silinmiş projeler, Bildirimler, Ayarl
 iki temada, üç görünümde axe ile tarar; kritik ya da ciddi ihlal yok. Ayrıca atlama bağlantısı ve
 kart odak halkası denetlenir. Hareket: `tests/e2e/hareket.spec.ts`, `tests/unit/hareket/`.
 
+## PWA, çevrimdışı ve güvenlik
+
+Aşama 6a (PLAN §5, §6; tasarım: `States` "PWA kurulum ipucu", "Çevrimdışı", "Hata · sayfa
+bulunamadı"; `MInstall`, `MOffline`). Yayın kontrol listesi, CSP kararının gerekçesi, hız
+sınırları, yetki denetimi ve performans notları: [`docs/OPERASYON.md`](docs/OPERASYON.md).
+
+- **PWA:** `public/manifest.webmanifest` (+ 192 / 512 / maskable simgeler, `apple-touch-icon`),
+  kök düzende `application-name` / `apple-mobile-web-app-*` meta etiketleri. Service worker
+  (`public/sw.js`) üretim derlemesinde `app/components/pwa/service-worker.tsx` ile kaydedilir
+  (geliştirme sunucusunda kaydedilmez).
+- **Kurulum ipucu** (`app/components/pwa/install-hint.tsx`, kurallar
+  `app/domain/pwa/install.ts`): oturum varken; Android / masaüstünde tarayıcı
+  `beforeinstallprompt` gönderince "Ekle" (tarayıcının kurulum penceresi), iPhone / iPad
+  Safari'de "Paylaş → Ana Ekrana Ekle" adımları. "Şimdi değil" / kapat 30 gün, kurulu açılışta
+  hiç gösterilmez (`localStorage` `sukano:kurulum-ipucu`).
+- **Çevrimdışı okuma:** sayfalar önce ağdan; sunucunun `X-Sukano-Oturum` başlığıyla işaretlediği
+  belge ve `.data` yanıtları oturum başına ayrı önbelleğe (en çok 40). Açık sayfa kısa süre
+  görününce service worker belgeyi ayrıca saklar (istemci tarafı gezinmede belge isteği yok).
+  Çevrimdışıyken önbellekteki sayfa açılır, canlı katman bandı gösterir ve düzenlemeyi kapatır;
+  ızgara ve not rotaları çevrimdışıyken yeniden doğrulama yapmaz
+  (`app/lib/offline-revalidate.ts`). Hiç açılmamış sayfa `public/cevrimdisi.html`. Çıkış, hesap
+  silme ve oturum değişimi sayfa önbelleklerini siler. "Not al" düzenleyicisi tembel yüklenir
+  (`components/notes/lazy-composer.tsx`); çevrimdışıyken yer tutucu kalır.
+- **Hata görünümleri:** 404 (`components/not-found.tsx`), beklenmeyen hata ve "Bu sayfa çevrimdışı
+  açılamıyor" (`components/error-view.tsx`; sayfa önbellekteyse bir kez yeniden yükler).
+- **Güvenlik başlıkları** (`app/domain/security/headers.ts`, `workers/app.ts`, statikler için
+  `public/_headers`): nonce'lu CSP (`'strict-dynamic'`, satır içi betik yok; stillerde
+  `'unsafe-inline'`), HSTS, `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy,
+  Permissions-Policy, COOP. Başka kökenden durum değiştiren istek Worker girişinde 403.
+- **Hız sınırları:** kimlik uçlarına ek olarak dosya yükleme (30 / dk), davet (20 / dk) ve push
+  aboneliği (10 / dk), kullanıcı başına; aşılınca 429 + Türkçe ileti
+  (`app/lib/api-limits.server.ts`).
+- **Testler:** birim `tests/unit/guvenlik/`, `tests/unit/pwa/` (service worker sahte
+  CacheStorage'da: oturum yalıtımı, çıkışta silme, 40 sayfa sınırı); Worker
+  `tests/workers/guvenlik.test.ts` (başlıklar, nonce, CSRF, oturum işareti, 429'lar, **tüm rota
+  tablosunun** oturumsuz denetimi, üye olmayanın API erişimi, 100'den çok yapılacaklar notu);
+  uçtan uca `tests/e2e/pwa.spec.ts` (üç görünüm: manifest + kurulabilirlik, CSP ihlali yok,
+  çevrimdışı yeniden yükleme salt okunur, çevrimdışı gezinme, çıkışta önbellek silme, 404,
+  kurulum ipucu Android / iOS, axe açık / koyu).
+- **Lighthouse:** `npm run lighthouse` (sunucu yoksa derler, ayrı yerel durumla `vite preview`
+  açar; `LH_BASE_URL` ile çalışan sunucuya). Raporlar `lighthouse-report/`; erişilebilirlik < 95
+  başarısız. CI'da `lighthouse` işi (PR ve `main`).
+
 ## Cloudflare tarafında yapılacaklar
+
+Ayrıntılı kontrol listesi ve gerekli tüm gizli değişkenler: [`docs/OPERASYON.md`](docs/OPERASYON.md).
 
 İlk dağıtımdan önce bir kez (`wrangler login` ya da `CLOUDFLARE_API_TOKEN` ile):
 
@@ -978,6 +1025,7 @@ GitHub Actions, `.github/workflows/`:
 | `ci.yml`     | her push ve PR                       | `npm ci` → `typecheck` → `lint` → `coverage` (eşikli) → `build`                             |
 |              | yalnızca PR                          | `test:workers`; `e2e:duman` (Chromium `npx playwright install --with-deps chromium`)        |
 |              | yalnızca `main`'e push               | tam `e2e`                                                                                   |
+|              | PR ve `main`'e push                  | `lighthouse` (üretim derlemesi; erişilebilirlik ≥ 95, rapor iş akışı eki)                   |
 | `deploy.yml` | CI başarıyla bitince (push kaynaklı) | `main`: `wrangler d1 migrations apply sukano --remote` + `wrangler deploy`                  |
 |              |                                      | diğer dallar: `wrangler versions upload --preview-alias <dal>`; önizleme adresi iş özetinde |
 

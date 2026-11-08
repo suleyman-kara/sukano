@@ -111,3 +111,36 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  lighthouse:
+    name: Lighthouse (erişilebilirlik ≥ 95)
+    # PR'da ve main'e push'ta: üretim derlemesine (vite preview) karşı performans, erişilebilirlik,
+    # en iyi uygulamalar ve SEO. Erişilebilirlik 95'in altındaysa iş düşer. Kurulabilirlik (PWA)
+    # uçtan uca testte Chromium'un kendi denetimiyle doğrulanır (tests/e2e/pwa.spec.ts).
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Chromium kurulumu
+        run: npx playwright install --with-deps chromium
+      - name: Yerel gizli değişkenler (test değerleri)
+        run: cp .dev.vars.example .dev.vars
+      - name: Lighthouse
+        run: npm run lighthouse
+      - name: Lighthouse raporu
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-raporu
+          path: lighthouse-report/
+          if-no-files-found: ignore
+          retention-days: 7
