@@ -1,4 +1,5 @@
 import { data } from "react-router";
+import { checkApiLimit } from "~/lib/api-limits.server";
 import { assertSameOrigin } from "~/lib/auth-api.server";
 import { getCloudflare } from "~/lib/context";
 import {
@@ -49,6 +50,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
   if (request.method !== "POST")
     return data({ ok: false as const, error: "Yöntem desteklenmiyor" }, { status: 405 });
+  const limited = await checkApiLimit(env, "push", user.id);
+  if (limited) return limited;
   if (!vapidKeys(env))
     return data(
       { ok: false as const, error: "Tarayıcı bildirimleri bu sunucuda kapalı" },

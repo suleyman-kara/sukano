@@ -4,6 +4,8 @@ import { createContext, type RouterContextProvider } from "react-router";
 export type CloudflareContext = {
   env: Env;
   ctx: ExecutionContext;
+  /** Bu isteğin CSP nonce'u (HTML yanıtın satır içi betikleri); geliştirmede yok. */
+  nonce?: string;
 };
 
 export const cloudflareContext = createContext<CloudflareContext>();

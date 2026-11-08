@@ -1,6 +1,7 @@
 import { data } from "react-router";
 import { isProjectId, parseProjectIntent } from "~/domain/projects/validation";
 import { apiError, loaderError } from "~/lib/api-errors.server";
+import { checkApiLimit } from "~/lib/api-limits.server";
 import { getCloudflare } from "~/lib/context";
 import { deliverPendingNotifications } from "~/lib/notifications.server";
 import { projectsService } from "~/lib/projects.server";
@@ -40,6 +41,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const parsed = parseProjectIntent(Object.fromEntries(await request.formData()));
   if (!parsed.ok) return data({ ok: false as const, error: parsed.error }, { status: 400 });
   const { env, ctx } = getCloudflare(context);
+  if (parsed.value.intent === "invite") {
+    const limited = await checkApiLimit(env, "davet", user.id);
+    if (limited) return limited;
+  }
   try {
     const result = await projectsService(env, user.id).run(params.id, parsed.value);
     // Proje kanalına olay (proje, üyelik, silindi); yanıt beklemez.

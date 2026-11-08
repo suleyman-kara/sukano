@@ -14,6 +14,11 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
+          // Ek testleri aynı kişiyle dakikada 30'dan çok dosya yükler: yükleme sınırı testte
+          // geniş. Sınırın 429 yanıtı `guvenlik.test.ts`'te binding taklidiyle denetlenir.
+          ratelimits: {
+            UPLOAD_LIMITER: { namespace_id: "1003", simple: { limit: 10_000, period: 60 } },
+          },
           // `.dev.vars` CI'da yoktur; kimlik testleri için sabit, gizli olmayan değerler.
           // Turnstile: Cloudflare'in her zaman geçen test anahtarı. Resend boş: e-postalar
           // `globalThis.__sukanoOutbox`'a düşer.

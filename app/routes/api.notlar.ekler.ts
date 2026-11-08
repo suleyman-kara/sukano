@@ -2,6 +2,7 @@ import { data } from "react-router";
 import { MAX_ATTACHMENT_BYTES, tooLargeMessage } from "~/domain/attachments/rules";
 import { isNoteId } from "~/domain/notes/validation";
 import { apiError, fail, loaderError } from "~/lib/api-errors.server";
+import { checkApiLimit } from "~/lib/api-limits.server";
 import {
   attachmentChangeEffects,
   attachmentsService,
@@ -40,6 +41,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   if (request.method !== "POST") return fail("Yöntem desteklenmiyor", 405);
   if (!sameOrigin(request)) return fail("İzin verilmeyen köken", 403);
   if (!isNoteId(params.id)) return fail("Not bulunamadı", 404);
+  const { env, ctx } = getCloudflare(context);
+  const limited = await checkApiLimit(env, "yukleme", user.id);
+  if (limited) return limited;
   // Gövdeyi okumadan önce: açıkça büyük istek hemen reddedilir.
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_ATTACHMENT_BYTES + MULTIPART_SLACK) {
@@ -55,7 +59,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return fail("Geçersiz istek", 400);
   }
   if (!(file instanceof File)) return fail("Dosya seçilmedi", 400);
-  const { env, ctx } = getCloudflare(context);
   try {
     const { attachment, note } = await attachmentsService(env, user.id).upload(params.id, file);
     ctx.waitUntil(attachmentChangeEffects(env, user.id, note));
