@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, beforeEach } from "vitest";
+import { afterAll, afterEach, beforeEach } from "vitest";
 import { installMatchMedia, resetMedia } from "./helpers/media";
 
 // Radix bileşenlerinin jsdom'da eksik bulduğu tarayıcı API'leri.
@@ -34,6 +34,17 @@ beforeEach(() => {
   }
 });
 
+// sonner, kapanan toast'ı 200 ms sonra kaldırmak için zamanlayıcı kurar. Dosyanın son
+// testinde toast kapanırsa bu zamanlayıcı jsdom ortamı yıkıldıktan sonra çalışıp
+// "window is not defined" hatası verir; toast gösteren dosyalar bitmeden beklenir.
+let usedToaster = false;
+
 afterEach(() => {
-  if (typeof window !== "undefined") cleanup();
+  if (typeof window === "undefined") return;
+  if (document.querySelector("[data-sonner-toaster]")) usedToaster = true;
+  cleanup();
+});
+
+afterAll(async () => {
+  if (usedToaster) await new Promise((resolve) => setTimeout(resolve, 400));
 });
