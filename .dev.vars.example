@@ -18,6 +18,9 @@ RESEND_API_KEY=
 
 # Cloudflare Turnstile gizli anahtarı. Aşağıdaki değer her zaman geçen test anahtarıdır.
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+# Site anahtarı gizli değildir; üretim değeri wrangler.jsonc → vars içindedir. Yerelde
+# her zaman geçen test site anahtarı kullanılır (gerçek anahtar localhost'ta çalışmaz).
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
 
 # Web Push (VAPID). Aşağıdaki çift YALNIZCA yerel geliştirme ve testler içindir (herkese
 # açık); üretimde kendi çiftini üret ve `wrangler secret put` ile yaz:

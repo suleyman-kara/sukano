@@ -40,7 +40,7 @@ ile yapılır. Kutucuklar sırayla işaretlenmeli; bir adım atlanırsa dağıt�
   `wrangler.jsonc → secrets.required` listesi tip üretimi içindir.
 
 - [ ] **Gizli olmayan değerler** (`wrangler.jsonc → vars`, commit'le):
-  - `EMAIL_FROM`: Resend'de **doğrulanmış alan adından** gönderen, ör. `Sukano <bildirim@sukano.app>`.
+  - `EMAIL_FROM`: Resend'de **doğrulanmış alan adından** gönderen, ör. `Sukano <info@sukano.suleymankara.com>`.
   - `TURNSTILE_SITE_KEY`: panelde oluşturulan Turnstile sitesinin anahtarı (alan adı listesine
     üretim adresini ve önizleme için `*.workers.dev` alt alanını ekle).
   - `VAPID_SUBJECT`: gerçek iletişim adresi (`mailto:…`).

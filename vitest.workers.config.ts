@@ -27,6 +27,7 @@ export default defineConfig(async () => {
             BETTER_AUTH_SECRET: "workers-testleri-icin-en-az-32-karakterlik-gizli-deger",
             BETTER_AUTH_URL: "http://sukano.test",
             TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+            TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
             RESEND_API_KEY: "",
             GOOGLE_CLIENT_ID: "",
             GOOGLE_CLIENT_SECRET: "",

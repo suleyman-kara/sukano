@@ -15,11 +15,13 @@
   // (bkz. `.dev.vars.example`), üretimde `wrangler secret put <AD>`.
   "vars": {
     "APP_NAME": "Sukano",
-    "EMAIL_FROM": "Sukano <bildirim@sukano.app>",
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "EMAIL_FROM": "Sukano <info@sukano.suleymankara.com>",
+    // Üretim Turnstile site anahtarı. Yerel geliştirme ve uçtan uca testler `.dev.vars`
+    // içindeki her zaman geçen test anahtarıyla bunu geçersiz kılar.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAF4wMQ4nklTnTLRr",
     // Web Push VAPID iletişim adresi (`mailto:` ya da `https:`); push hizmetleri sorun
     // olursa buraya ulaşır.
-    "VAPID_SUBJECT": "mailto:bildirim@sukano.app",
+    "VAPID_SUBJECT": "mailto:suleymankara600@gmail.com",
   },
   // Gizli değişken adları: `Env` tipi bunlardan üretilir (CI'da `.dev.vars` olmasa da)
   // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. README.

@@ -26,7 +26,9 @@ function turnstileSecret(env: Env): string {
   if (env.TURNSTILE_SECRET_KEY) return env.TURNSTILE_SECRET_KEY;
   // Gizli anahtar yoksa yalnızca test site anahtarıyla eşleşen test gizli anahtarı
   // kullanılır; gerçek site anahtarıyla yapılandırılmış ortamda istek reddedilir.
-  return env.TURNSTILE_SITE_KEY === TURNSTILE_TEST_SITE_KEY ? TURNSTILE_TEST_SECRET_PASS : "";
+  return (env.TURNSTILE_SITE_KEY as string) === TURNSTILE_TEST_SITE_KEY
+    ? TURNSTILE_TEST_SECRET_PASS
+    : "";
 }
 
 /** Turnstile jetonunu doğrular. Boş jeton her zaman reddedilir. */
