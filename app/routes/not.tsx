@@ -11,14 +11,14 @@ import { NoteNotFoundError } from "~/lib/notes.server";
 import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/not";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateNote } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = ({ data: d }) => [
   { title: `${d?.note.title || "Not"} · Sukano` },
 ];
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateNote;
 
 /**
  * Açık not: kişisel not ya da üyesi olunan projenin notu (`noteAccess.forNote`).
@@ -30,11 +30,21 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   if (!isNoteId(params.id)) throw data(null, { status: 404 });
   const env = getCloudflare(context).env;
   try {
-    const { scope, notes } = await noteAccess(env, user.id).forNote(params.id);
-    const note = await notes.get(params.id);
-    if (note.trashedAt) throw data(null, { status: 404 });
     const projects = projectsService(env, user.id);
-    const sidebar = await projects.sidebar();
+    // Birbirinden bağımsız okumalar paralel (her D1 turu birincil veritabanına bir yolculuk):
+    // erişim, hedef projeler, hatırlatıcılar ve saat dilimi aynı anda; sonra not ve üyeler.
+    // Hatırlatıcılar erişim denetiminden önce okunur ama erişim yoksa hiçbir şey dönmez.
+    const [{ scope, notes }, sidebar, reminders, { timeZone }] = await Promise.all([
+      noteAccess(env, user.id).forNote(params.id),
+      projects.sidebar({ counts: false }),
+      noteReminders(env, params.id),
+      userSettings(env, user.id),
+    ]);
+    const [note, members] = await Promise.all([
+      notes.get(params.id),
+      scope.kind === "project" ? projects.members(scope.projectId, { verified: true }) : null,
+    ]);
+    if (note.trashedAt) throw data(null, { status: 404 });
     const targets: MoveTarget[] = sidebar.projects.map((p) => ({
       id: p.id,
       name: p.name,
@@ -42,8 +52,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       role: p.role,
     }));
     let access: NoteAccessInfo = { kind: "personal" };
-    if (scope.kind === "project") {
-      const members = await projects.members(scope.projectId);
+    if (scope.kind === "project" && members) {
       const project = targets.find((t) => t.id === scope.projectId);
       access = {
         kind: "project",
@@ -63,10 +72,6 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
         })),
       };
     }
-    const [reminders, { timeZone }] = await Promise.all([
-      noteReminders(env, params.id),
-      userSettings(env, user.id),
-    ]);
     return { note, access, targets, reminders, timeZone };
   } catch (error) {
     if (error instanceof NoteNotFoundError) throw data(null, { status: 404 });

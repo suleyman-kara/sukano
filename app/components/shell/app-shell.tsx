@@ -4,6 +4,7 @@ import { Avatar } from "~/components/avatar";
 import { NewProjectDialog } from "~/components/projects/new-project-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/ui/sheet";
 import { DESKTOP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
+import { useRouteFade } from "~/hooks/use-route-fade";
 import { useNavMode } from "~/lib/nav-state";
 import { Sidebar, SidebarNav } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -41,6 +42,7 @@ export function AppShell({
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const { mode, toggle } = useNavMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const mainRef = useRouteFade<HTMLElement>();
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const openNewProject = () => {
     setDrawerOpen(false);
@@ -101,7 +103,12 @@ export function AppShell({
           menuExpanded={isDesktop ? mode === "open" : drawerOpen}
           onMenuClick={onMenuClick}
         />
-        <main id="icerik" tabIndex={-1} className="flex min-w-0 flex-1 flex-col outline-none">
+        <main
+          ref={mainRef}
+          id="icerik"
+          tabIndex={-1}
+          className="flex min-w-0 flex-1 flex-col outline-none"
+        >
           {children}
         </main>
       </div>

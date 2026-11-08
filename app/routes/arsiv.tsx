@@ -1,6 +1,7 @@
 import { Archive } from "lucide-react";
 import { Outlet, useNavigate } from "react-router";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, NotesPage } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { PERSONAL_CHANNEL, useLiveGrid } from "~/components/realtime/use-live-channel";
@@ -9,12 +10,12 @@ import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/arsiv";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateGrid } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = () => [{ title: "Arşiv · Notlarım · Sukano" }];
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateGrid;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);
@@ -50,6 +51,7 @@ export default function ArchiveRoute({ loaderData }: Route.ComponentProps) {
         </>
       )}
       <Outlet />
+      <PendingNotePreview notes={notes} />
     </NotesPage>
   );
 }

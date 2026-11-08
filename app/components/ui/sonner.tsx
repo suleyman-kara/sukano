@@ -42,4 +42,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
+/**
+ * "Geri al" toast'larının süre çizgisi (MicroMotion 2): altta, süre boyunca linear daralır;
+ * imleç toast'ların üstündeyken durur (sonner da süreyi durdurur). Azaltılmış harekette
+ * çizgi durağan kalır. `toast(metin, { ...withDurationBar(6000), action })`.
+ */
+export function withDurationBar(ms: number) {
+  return {
+    duration: ms,
+    className: "toast-sure",
+    style: { "--toast-sure": `${ms}ms` } as React.CSSProperties,
+  };
+}
+
 export { Toaster };

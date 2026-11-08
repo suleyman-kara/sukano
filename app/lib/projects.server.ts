@@ -587,18 +587,24 @@ export function projectsService(env: Env, userId: string, clock: () => Date = ()
     async page(projectId: string, view: NoteView = "notlar"): Promise<ProjectPageData> {
       const { project, role } = await memberRole(db, userId, projectId);
       const notesSvc = scopedNotes(env, userId, { kind: "project", projectId, role }, clock);
+      // Üyeler ve notlar birbirinden bağımsız: paralel (bir D1 turu az).
+      const [members, notes] = await Promise.all([memberList(projectId), notesSvc.list(view)]);
       return {
         project: summary(project),
         myRole: role,
         permissions: permissionsOf(role),
-        members: await memberList(projectId),
-        notes: await notesSvc.list(view),
+        members,
+        notes,
       };
     },
 
     /** Üye listesi (kişi seçici; sen önce). */
-    async members(projectId: string): Promise<ProjectMember[]> {
-      await memberRole(db, userId, projectId);
+    async members(
+      projectId: string,
+      { verified = false }: { verified?: boolean } = {},
+    ): Promise<ProjectMember[]> {
+      // `verified`: üyelik az önce denetlendi (ör. açık notun alanı); bir D1 turu az.
+      if (!verified) await memberRole(db, userId, projectId);
       return memberList(projectId);
     },
 
@@ -659,7 +665,14 @@ export function projectsService(env: Env, userId: string, clock: () => Date = ()
     },
 
     /** Sol menü: üyesi olunan silinmemiş projeler (kişisel sırayla) + silinmiş proje sayısı. */
-    async sidebar(): Promise<{ projects: SidebarProject[]; deletedCount: number }> {
+    /**
+     * Sol panel projeleri. `counts: false`: not sayıları okunmaz (kabuk ve açık notun
+     * hedef listesi göstermez; bir D1 turu az), `noteCount` 0 döner.
+     */
+    async sidebar({ counts: withCounts = true }: { counts?: boolean } = {}): Promise<{
+      projects: SidebarProject[];
+      deletedCount: number;
+    }> {
       const [rows, prefs] = await Promise.all([
         db
           .select({
@@ -680,10 +693,12 @@ export function projectsService(env: Env, userId: string, clock: () => Date = ()
           .get(),
       ]);
       const active = rows.filter((r) => !r.deletedAt);
-      const counts = await noteCounts(
-        db,
-        active.map((r) => r.id),
-      );
+      const counts = withCounts
+        ? await noteCounts(
+            db,
+            active.map((r) => r.id),
+          )
+        : new Map<string, number>();
       const list = orderProjects(active, prefs?.projectOrder ?? []).map(
         ({ deletedAt: _d, ...r }) => ({ ...r, noteCount: counts.get(r.id) ?? 0 }),
       );

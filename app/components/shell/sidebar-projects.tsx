@@ -131,6 +131,7 @@ function SortableProject({
     <NavLink
       ref={setNodeRef}
       to={projectHref(project.id)}
+      prefetch="intent"
       data-project-id={project.id}
       onClick={onNavigate}
       className={(state) =>

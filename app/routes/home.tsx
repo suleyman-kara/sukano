@@ -5,6 +5,7 @@ import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
 import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, NotesPage, SectionHeading } from "~/components/notes/notes-page";
 import { useNoteActions, usePendingNoteIntents } from "~/components/notes/use-note-actions";
 import { Button } from "~/components/ui/button";
@@ -16,15 +17,15 @@ import { getCloudflare } from "~/lib/context";
 import { personalNotes } from "~/lib/notes.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/home";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateGrid } from "~/lib/offline-revalidate";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Notlarım · Sukano" },
   { name: "description", content: "Kişisel notların ve ekip projelerin, tek yerde." },
 ];
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateGrid;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);
@@ -109,6 +110,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <MobileNewNote onSave={save} open={mobileComposer} onOpenChange={setMobileComposer} />
       </OfflineInert>
       <Outlet />
+      <PendingNotePreview notes={notes} />
     </NotesPage>
   );
 }

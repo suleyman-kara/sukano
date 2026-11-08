@@ -71,6 +71,10 @@ test.describe("projeler", () => {
 
     // 2. Projeye not ekler (proje notu).
     if (gorunum(test.info()) === "mobil") {
+      // Mobilde toast alttaki "not ekle" çubuğunun üstünde durur; imleç üstüne gelince sonner
+      // süreyi durdurur. Gezinme artık ağ beklemediği için toast'ın kalkması beklenir.
+      await suleyman.mouse.move(0, 0);
+      await expect(suleyman.getByText("Proje oluşturuldu")).toBeHidden({ timeout: 10_000 });
       await suleyman
         .locator("div.fixed")
         .getByRole("button", { name: "Projeye not ekle…" })

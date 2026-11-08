@@ -5,6 +5,7 @@ import {
   markPushOffered,
   shouldOfferPush,
 } from "~/components/notifications/push-client";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 
 export const REMINDERS_ACTION = "/api/hatirlaticilar";
 
@@ -55,8 +56,12 @@ export function offerPushAfterReminder() {
   });
 }
 
-/** Not hatırlatıcısı: kur, değiştir, kaldır. */
+/**
+ * Not hatırlatıcısı: kur, değiştir, kaldır. Kayıttan sonra ızgara arkada yeniden doğrulanır
+ * (karttaki hatırlatıcı çipi); not kapanışı ağ beklemediği için bunu kendisi yapmaz.
+ */
 export function useNoteReminder(noteId: string, initial: number | null) {
+  const { revalidate } = useContentRevalidator();
   const [at, setAt] = useState<number | null>(initial);
   /** Son kaydın saat dilimi (tarayıcının); çip onunla yazılır. */
   const [zone, setZone] = useState<string | null>(null);
@@ -70,9 +75,10 @@ export function useNoteReminder(noteId: string, initial: number | null) {
       setAt(res.at ? Date.parse(res.at) : null);
       setZone(browserTimeZone());
       offerPushAfterReminder();
+      void revalidate();
       return true;
     },
-    [noteId],
+    [noteId, revalidate],
   );
   const clear = useCallback(async () => {
     const res = await post({ intent: "note-clear", noteId });
@@ -81,8 +87,9 @@ export function useNoteReminder(noteId: string, initial: number | null) {
       return false;
     }
     setAt(null);
+    void revalidate();
     return true;
-  }, [noteId]);
+  }, [noteId, revalidate]);
   return { at, zone, save, clear };
 }
 

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
-import { useRevalidator } from "react-router";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import { toast } from "sonner";
+import { withDurationBar } from "~/components/ui/sonner";
 import type { CardTask } from "~/domain/notes/optimistic";
 import { makeTask, type Task } from "~/domain/tasks/model";
 import { applyUndo, emptyUndo, TOAST_MS, toggleWithUndo } from "~/domain/tasks/undo";
@@ -23,7 +24,7 @@ export function changedByCompletion(tasks: readonly Task[], id: string): string[
  * Görev karttan hemen kalkar (`hide`); geri alınınca döner (`show`).
  */
 export function useCardTaskToggle() {
-  const revalidator = useRevalidator();
+  const revalidator = useContentRevalidator();
   const revalidate = revalidator.revalidate;
 
   return useCallback(
@@ -57,7 +58,7 @@ export function useCardTaskToggle() {
       );
       const text = r.undo.toasts[0]?.text ?? `${task.title} tamamlandı`;
       toast(text, {
-        duration: TOAST_MS,
+        ...withDurationBar(TOAST_MS),
         action: {
           label: "Geri al",
           onClick: () => {

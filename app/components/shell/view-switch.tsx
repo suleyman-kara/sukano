@@ -1,6 +1,7 @@
 import { Archive, FileText, Trash2 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { cn } from "cn";
+import { usePendingSectionPath } from "~/hooks/use-pending-section";
 
 export type View = "notlar" | "arsiv" | "cop";
 
@@ -32,7 +33,9 @@ export function ViewSwitch({
   views,
 }: { current?: View; className?: string } & Partial<ViewSwitchTarget>) {
   const { pathname } = useLocation();
-  const active = current ?? viewOf(pathname, base);
+  // Görünüm değişirken tıklanan sekme veri beklenmeden seçili görünür.
+  const pending = usePendingSectionPath();
+  const active = current ?? viewOf(pending ?? pathname, base);
   return (
     <nav
       aria-label="Görünüm"
@@ -49,6 +52,7 @@ export function ViewSwitch({
             <Link
               key={id}
               to={to}
+              prefetch="intent"
               title={label}
               aria-label={label}
               aria-current={on ? "page" : undefined}

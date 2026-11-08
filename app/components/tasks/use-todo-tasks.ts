@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRevalidator } from "react-router";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import { toast } from "sonner";
 import type { Task } from "~/domain/tasks/model";
 import type { TaskOp } from "~/domain/tasks/ops";
@@ -83,7 +83,7 @@ export function useTodoTasks(
     assigneesRef.current = next;
     setAssigneesState(next);
   }, []);
-  const revalidator = useRevalidator();
+  const revalidator = useContentRevalidator();
   const revalidate = useRef(revalidator.revalidate);
   useEffect(() => {
     revalidate.current = revalidator.revalidate;

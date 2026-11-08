@@ -8,6 +8,7 @@ import type { ComposerDraft, ComposerMode } from "~/components/notes/composer";
 import { LazyComposer as Composer } from "~/components/notes/lazy-composer";
 import { MobileNewNote } from "~/components/notes/mobile-new-note";
 import { NoteGrid } from "~/components/notes/note-grid";
+import { PendingNotePreview } from "~/components/notes/note-preview";
 import { EmptyState, SectionHeading } from "~/components/notes/notes-page";
 import {
   UNDO_TOAST_MS,
@@ -33,7 +34,7 @@ import { projectsService } from "~/lib/projects.server";
 import { requireUser } from "~/lib/session.server";
 import { useShellData } from "~/lib/shell";
 import type { Route } from "./+types/proje";
-import { revalidateUnlessOffline } from "~/lib/offline-revalidate";
+import { revalidateGrid } from "~/lib/offline-revalidate";
 
 /** `/proje/:projeId[/arsiv|/cop][/not/:id]` → görünüm. */
 export function projectViewOf(pathname: string): NoteView {
@@ -49,8 +50,8 @@ export const meta: Route.MetaFunction = ({ data: d, location }) => {
   return [{ title: [VIEW_TITLES[view], name, "Sukano"].filter(Boolean).join(" · ") }];
 };
 
-/** Çevrimdışıyken ekrandaki veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
-export const shouldRevalidate = revalidateUnlessOffline;
+/** Yalnızca kendi verisi değişince yüklenir; çevrimdışıyken veri kalır (bkz. `app/lib/offline-revalidate.ts`). */
+export const shouldRevalidate = revalidateGrid;
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { user } = await requireUser(request, context);
@@ -132,6 +133,7 @@ export default function ProjectRoute({ loaderData }: Route.ComponentProps) {
         {view === "arsiv" && <ArchiveView loaderData={loaderData} notes={notes} base={base} />}
         {view === "cop" && <TrashView loaderData={loaderData} notes={notes} />}
         <Outlet />
+        <PendingNotePreview notes={notes} />
       </section>
     </AppShell>
   );

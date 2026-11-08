@@ -89,6 +89,8 @@ export function createAuth(env: Env) {
     // güvenilmez). Yerine Workers Rate Limiting binding'leri: `auth-policy.server.ts`.
     rateLimit: { enabled: false },
     advanced: {
+      // Oturum + kullanıcı tek sorguda (ilişkiler: app/db/schema.ts); her istekte bir tur az.
+      database: { joins: true },
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"] },
     },
     hooks: {

@@ -64,10 +64,11 @@ import { useReducedMotion } from "~/hooks/use-reduced-motion";
 import type { NoteDetail } from "~/lib/notes.server";
 import type { NoteReminders } from "~/lib/reminders.server";
 import { DEFAULT_TIME_ZONE } from "~/domain/reminders/time";
+import { useContentRevalidator } from "~/lib/offline-revalidate";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
 import { useConvertNote } from "./convert-note";
-import { closeToCard, focusCard, useCardToModalEnter } from "./card-to-modal";
+import { closeToCard, enteredFromPreview, focusCard, useCardToModalEnter } from "./card-to-modal";
 import { MoveCopyDialog } from "./move-copy";
 import { canWriteNote, PERSONAL_ACCESS, type MoveTarget, type NoteAccessInfo } from "./note-access";
 import {
@@ -131,6 +132,7 @@ export function NoteDialog({
   const actions = useNoteActions();
   const { me } = useLiveConfig();
   const revalidator = useRevalidator();
+  const content = useContentRevalidator();
   const tabletUp = useMediaQuery(TABLET_UP_QUERY, true);
   const coarse = useMediaQuery(COARSE_QUERY, false);
   const todoRef = useRef<TodoEditorHandle>(null);
@@ -165,7 +167,7 @@ export function NoteDialog({
       if (m.pinned !== undefined) setPinned(m.pinned);
       if (m.trashed !== undefined) setTrashedLive(m.trashed);
       // Başka yerden ek eklendi / kaldırıldı: ek listesi loader'dan yeniden gelir.
-      if (m.attachments) void revalidator.revalidate();
+      if (m.attachments) void content.revalidate();
       onRemote.current(m);
     },
     // Sunucu düzenlemeyi reddetti (görüntüleyici, rolü düşürülen): tek toast.
@@ -229,19 +231,21 @@ export function NoteDialog({
   const [openedAt] = useState(() => (typeof performance === "undefined" ? 0 : performance.now()));
 
   /**
-   * Bekleyen görev işlemleri (ve canlı metin notunda odadaki değişikliklerin D1'e yazımı)
-   * bitince ızgara yeniden doğrulanır (kart güncel kalsın).
+   * Bekleyen görev işlemlerini (ve canlı metin notunda odadaki değişikliklerin D1'e yazımını)
+   * gönderir. Izgara, görev eşitleyicisi boşta kalınca kendiliğinden yeniden doğrulanır
+   * (`useTodoTasks`); kapanış bunu beklemez.
    */
   const liveFlush = live?.flush;
   const flushTasks = useCallback(() => {
     const pending = todoRef.current?.flush();
-    if (pending) void pending.then(() => revalidator.revalidate());
     const saved = note.kind === "text" ? liveFlush?.() : undefined;
     return Promise.all([pending, saved]).then(() => {});
-  }, [revalidator, liveFlush, note.kind]);
+  }, [liveFlush, note.kind]);
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const reduced = useReducedMotion();
+  // Yükleme sürerken önizleme açıldıysa örtü zaten ekranda: yeniden solmaz.
+  const [fromPreview] = useState(() => enteredFromPreview(note.id));
   const enterFromCard = useCardToModalEnter(note.id, reduced);
   const setContent = useCallback(
     (el: HTMLDivElement | null) => {
@@ -251,21 +255,28 @@ export function NoteDialog({
     [enterFromCard],
   );
   const closing = useRef(false);
+  /**
+   * Kapanış hareketi bitti: diyalog hemen kalkar (örtü ve odak kilidi ızgarayı bırakır),
+   * adres değişimi arkada tamamlanır. Izgaranın verisi zaten elde; gezinme ağ beklemez.
+   */
+  const [hidden, setHidden] = useState(false);
   const close = useCallback(() => {
     if (closing.current) return;
     closing.current = true;
     saver.flush();
     void flushTasks();
     // Kartın yerine küçülerek kapanır (azaltılmış harekette anında).
-    closeToCard(note.id, contentRef.current, reduced, () =>
-      navigate(closeTo, { preventScrollReset: true }),
-    );
+    closeToCard(note.id, contentRef.current, reduced, () => {
+      setHidden(true);
+      void navigate(closeTo, { preventScrollReset: true });
+    });
   }, [saver, flushTasks, navigate, closeTo, note.id, reduced]);
 
   const leave = (fn: () => void) => {
     saver.flush();
     void flushTasks().then(fn);
-    navigate(closeTo, { preventScrollReset: true });
+    setHidden(true);
+    void navigate(closeTo, { preventScrollReset: true });
   };
 
   // Başka biri notu çöpe attı / arşivledi / taşıdı ya da erişim kalktı: bekleyen yazım
@@ -390,10 +401,15 @@ export function NoteDialog({
   ) : null;
 
   return (
-    <Dialog open onOpenChange={(o) => !o && close()}>
+    <Dialog open={!hidden} onOpenChange={(o) => !o && close()}>
       <DialogContent
         ref={setContent}
         showCloseButton={false}
+        overlayClassName={cn(
+          // Kapanırken saydamlaşan örtü tıklamayı tutmaz: ızgara hemen kullanılabilir.
+          "data-closed:pointer-events-none",
+          fromPreview && "data-open:animate-none",
+        )}
         data-canli={live?.status ?? "kapali"}
         data-canli-kisi={live?.peers.length ?? 0}
         data-salt-okunur={live?.readOnly ? "" : undefined}
@@ -418,7 +434,8 @@ export function NoteDialog({
         }}
         className={cn(
           // Açılış hareketi `useCardToModalEnter` ile (karttan büyür); CSS girişi kapalı.
-          "flex flex-col gap-0 overflow-hidden p-0 text-fg ring-0 data-open:animate-none",
+          // Kapanış hareketi `closeToCard` ile oynar; Radix'in çıkışı beklenmez.
+          "flex flex-col gap-0 overflow-hidden p-0 text-fg ring-0 data-open:animate-none data-closed:animate-none",
           tabletUp
             ? cn(
                 "top-[60px] max-h-[calc(100dvh-120px)] w-[calc(100%-2rem)] max-w-[680px] translate-y-0 rounded-2xl shadow-elevated sm:max-w-[680px]",

@@ -56,26 +56,6 @@ export async function noteReminders(env: DbEnv, noteId: string): Promise<NoteRem
   return out;
 }
 
-/** Izgara kartları: not kimliği → gönderilmemiş not hatırlatıcısının anı (ms). */
-export async function noteReminderMap(db: Database, noteIds: readonly string[]) {
-  const out = new Map<string, number>();
-  for (let i = 0; i < noteIds.length; i += 90) {
-    const chunk = noteIds.slice(i, i + 90);
-    const rows = await db
-      .select({ noteId: reminders.noteId, at: reminders.at })
-      .from(reminders)
-      .where(
-        and(
-          eq(reminders.targetType, "note"),
-          inArray(reminders.targetId, chunk),
-          isNull(reminders.sentAt),
-        ),
-      );
-    for (const r of rows) out.set(r.noteId, r.at.getTime());
-  }
-  return out;
-}
-
 /** Notu düzenleyebilir mi; not satırı (çöpteyse 409). */
 async function editableNote(db: Database, userId: string, noteId: string) {
   const scope = await noteScope(db, userId, noteId);
