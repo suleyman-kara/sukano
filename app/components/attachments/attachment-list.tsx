@@ -43,7 +43,7 @@ export function FileBadge({ name, className }: { name: string; className?: strin
 
 /** Ek kutucuğunun ortak çerçevesi (TextNote `.att`). */
 const TILE =
-  "relative flex items-center gap-2.5 rounded-[10px] border border-[rgba(0,0,0,.08)] bg-[rgba(255,255,255,.5)] dark:border-[rgba(255,255,255,.08)] dark:bg-[rgba(255,255,255,.04)]";
+  "relative flex items-center gap-2.5 rounded-[10px] border border-[rgba(0,0,0,.08)] bg-[rgba(255,255,255,.5)] dark:border-[rgba(255,255,255,.1)] dark:bg-transparent";
 
 const IB =
   "inline-flex size-[30px] shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-[18px] pointer-coarse:size-10";
@@ -196,11 +196,13 @@ function FileTile({
         href={attachmentUrl(item.id, true)}
         download={item.name}
         className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md text-fg no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        aria-label={`İndir: ${item.name}, ${formatSize(item.size)}`}
       >
         <FileBadge name={item.name} />
         <span className="flex min-w-0 flex-1 flex-col leading-[1.3]">
-          <span className="truncate font-medium">{item.name}</span>
+          <span className="truncate font-medium">
+            <span className="sr-only">İndir:</span> {item.name}
+            <span className="sr-only">,</span>
+          </span>{" "}
           <span className="text-xs text-muted-foreground">{formatSize(item.size)}</span>
         </span>
         {!editable && (

@@ -179,6 +179,7 @@ describe("kişisel not: yükleme, listeleme, indirme, kaldırma", () => {
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(PNG);
     const dl = await download(id, jar.ayse, "?indir=1");
     expect(dl.headers.get("content-disposition")).toMatch(/^attachment; /);
+    expect(dl.headers.get("content-security-policy")).toBeNull();
     await dl.arrayBuffer();
   });
 

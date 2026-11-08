@@ -29,8 +29,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       "Cache-Control": "private, max-age=3600",
       ETag: object.httpEtag,
     });
-    // PDF görüntüleyicisi dışında sayfa olarak hiçbir şey çalışmasın.
-    if (att.contentType !== "application/pdf") {
+    // Tarayıcıda açılan görsel sayfa olarak hiçbir şey çalıştırmasın. (PDF görüntüleyicisi
+    // ve indirmeler sandbox'la bozulur: Chrome sandbox'lı yanıtta dosya adını yok sayar.)
+    if (inline && att.contentType !== "application/pdf") {
       headers.set("Content-Security-Policy", "default-src 'none'; img-src 'self'; sandbox");
     }
     if (!("body" in object)) return new Response(null, { status: 304, headers });
