@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PERSIST_DIR } from "./ortam";
+import { AUTH_STATES, PERSIST_DIR } from "./ortam";
 import { ac, gorunum, kararliKutu } from "./yardimcilar";
 
 /**
@@ -75,15 +74,6 @@ async function renkVer(page: Page, k: Locator, renk: string) {
       .click();
     await page.keyboard.press("Escape");
   }
-}
-
-async function ciddiIhlaller(page: Page) {
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze();
-  return violations
-    .filter((v) => v.impact === "critical" || v.impact === "serious")
-    .map((v) => ({ kural: v.id, ozet: v.help, ornekler: v.nodes.map((n) => n.target.join(" ")) }));
 }
 
 test.describe("kişisel notlar", () => {
@@ -242,7 +232,11 @@ test.describe("kişisel notlar", () => {
     await expect(page).toHaveURL(/\/not\//);
     const yeni = `${baslik} güncel`;
     await dialog.getByLabel("Not başlığı").fill(yeni);
-    await dialog.getByRole("textbox", { name: "Not", exact: true }).click();
+    // Metin gövdesi not odasıyla ilk eşitlemeden sonra düzenlenebilir olur; daha önce
+    // yazılan tuşlar salt okunur editöre gider ve kaybolur (eski kararsızlığın kökü).
+    const govde = dialog.getByRole("textbox", { name: "Not", exact: true });
+    await expect(govde).toHaveAttribute("contenteditable", "true");
+    await govde.click();
     await page.keyboard.press("End");
     await page.keyboard.type(" eklendi");
     await page.waitForTimeout(1200);
@@ -254,60 +248,77 @@ test.describe("kişisel notlar", () => {
     await expect(kart(page, yeni)).toContainText("İlk satır eklendi");
   });
 
-  test("sürükleyerek sıralama", async ({ page }) => {
-    test.skip(gorunum(test.info()) !== "masaustu", "Sürükleme fareyle, masaüstünde");
-    await ac(page, "/");
-    const a = benzersiz("Sıra A");
-    const b = benzersiz("Sıra B");
-    await notOlustur(page, a);
-    await notOlustur(page, b);
-    const diger = page.getByRole("list", { name: /Diğer notlar|Notlar/ });
-    const sira = async () => {
-      const basliklar = await diger.locator("article h3").allTextContents();
-      return { a: basliklar.indexOf(a), b: basliklar.indexOf(b) };
-    };
-    expect((await sira()).b).toBeLessThan((await sira()).a);
+  // Sıralama testleri Süleyman'ın oturumuyla koşar: Ayşe'nin ızgarasına paralel testlerin
+  // eklediği notlar kartları sürükleme ve Alt+ok sırasında kaydırıyordu.
+  test.describe("sıralama (ayrı hesap)", () => {
+    test.use({ storageState: AUTH_STATES.suleyman });
 
-    const kaynak = kart(page, a);
-    const hedef = kart(page, b);
-    // Yeni kartlar ızgarada kayarken (Motion layout) ölçülmesin.
-    const kb = await kararliKutu(kaynak);
-    const hb = await kararliKutu(hedef);
-    await page.mouse.move(kb.x + kb.width / 2, kb.y + 20);
-    await page.mouse.down();
-    await page.mouse.move(kb.x + kb.width / 2 + 10, kb.y + 30, { steps: 5 });
-    await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2, { steps: 15 });
-    await page.mouse.up();
+    test("sürükleyerek sıralama", async ({ page }) => {
+      test.skip(gorunum(test.info()) !== "masaustu", "Sürükleme fareyle, masaüstünde");
+      await ac(page, "/");
+      const a = benzersiz("Sıra A");
+      const b = benzersiz("Sıra B");
+      await notOlustur(page, a);
+      await notOlustur(page, b);
+      const diger = page.getByRole("list", { name: /Diğer notlar|Notlar/ });
+      const sira = async () => {
+        const basliklar = await diger.locator("article h3").allTextContents();
+        return { a: basliklar.indexOf(a), b: basliklar.indexOf(b) };
+      };
+      expect((await sira()).b).toBeLessThan((await sira()).a);
 
-    await expect
-      .poll(async () => {
-        const s = await sira();
-        return s.a < s.b;
-      })
-      .toBe(true);
-    await page.waitForLoadState("networkidle");
-    await page.reload();
-    const s = await sira();
-    expect(s.a).toBeLessThan(s.b);
-  });
+      const kaynak = kart(page, a);
+      const hedef = kart(page, b);
+      // Yeni kartlar ızgarada kayarken (Motion layout) ölçülmesin.
+      const kb = await kararliKutu(kaynak);
+      const hb = await kararliKutu(hedef);
+      await page.mouse.move(kb.x + kb.width / 2, kb.y + 20);
+      await page.mouse.down();
+      await page.mouse.move(kb.x + kb.width / 2 + 10, kb.y + 30, { steps: 5 });
+      await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2, { steps: 15 });
+      await page.mouse.up();
 
-  test("klavyeyle sıralama: odaklı kartta Alt+ok", async ({ page }) => {
-    test.skip(gorunum(test.info()) !== "masaustu", "Klavye akışı masaüstünde");
-    await ac(page, "/");
-    const a = benzersiz("Klavye A");
-    const b = benzersiz("Klavye B");
-    await notOlustur(page, a);
-    await notOlustur(page, b);
-    const diger = page.getByRole("list", { name: /Diğer notlar|Notlar/ });
-    const sira = async () => {
-      const basliklar = await diger.locator("article h3").allTextContents();
-      return basliklar.indexOf(b) - basliklar.indexOf(a);
-    };
-    expect(await sira()).toBeLessThan(0);
-    await kart(page, b).getByRole("link").focus();
-    await page.keyboard.press("Alt+ArrowDown");
-    await expect.poll(sira).toBeGreaterThan(0);
-    await expect(kart(page, b).getByRole("link")).toBeFocused();
+      await expect
+        .poll(async () => {
+          const s = await sira();
+          return s.a < s.b;
+        })
+        .toBe(true);
+      await page.waitForLoadState("networkidle");
+      await page.reload();
+      const s = await sira();
+      expect(s.a).toBeLessThan(s.b);
+    });
+
+    test("klavyeyle sıralama: odaklı kartta Alt+ok", async ({ page }) => {
+      test.skip(gorunum(test.info()) !== "masaustu", "Klavye akışı masaüstünde");
+      await ac(page, "/");
+      const a = benzersiz("Klavye A");
+      const b = benzersiz("Klavye B");
+      await notOlustur(page, a);
+      await notOlustur(page, b);
+      const diger = page.getByRole("list", { name: /Diğer notlar|Notlar/ });
+      const basliklar = () => diger.locator("article h3").allTextContents();
+      // Komşuya göre bakılır: arada başka not oluşsa bile B bir sonraki kartın ardına geçer.
+      const once = await basliklar();
+      expect(once.indexOf(b)).toBeLessThan(once.indexOf(a));
+      const komsu = once[once.indexOf(b) + 1];
+      await kararliKutu(kart(page, b));
+      await kart(page, b).getByRole("link").focus();
+      await expect(kart(page, b).getByRole("link")).toBeFocused();
+      await page.keyboard.press("Alt+ArrowDown");
+      await expect
+        .poll(async () => {
+          const l = await basliklar();
+          return l.indexOf(b) - l.indexOf(komsu!);
+        })
+        .toBe(1);
+      await expect(kart(page, b).getByRole("link")).toBeFocused();
+      await page.waitForLoadState("networkidle");
+      await page.reload();
+      const sonra = await basliklar();
+      expect(sonra.indexOf(b) - sonra.indexOf(komsu!)).toBe(1);
+    });
   });
 
   test("sürüm geçmişinden eski sürüm geri yüklenir", async ({ page }) => {
@@ -339,6 +350,7 @@ test.describe("kişisel notlar", () => {
 
     const dialog = page.getByRole("dialog");
     const govde = dialog.getByRole("textbox", { name: "Not", exact: true });
+    await expect(govde).toHaveAttribute("contenteditable", "true");
     await govde.click();
     await page.keyboard.press("ControlOrMeta+A");
     await page.keyboard.type("İkinci hali");
@@ -371,25 +383,5 @@ test.describe("kişisel notlar", () => {
     ).toHaveText("Birinci hali");
   });
 
-  for (const yol of ["/", "/arsiv", "/cop", "/ara?q=not"]) {
-    test(
-      `${yol} kritik ya da ciddi erişilebilirlik ihlali içermez`,
-      { tag: yol === "/" ? "@duman" : undefined },
-      async ({ page }) => {
-        await page.emulateMedia({ reducedMotion: "reduce" });
-        await ac(page, yol);
-        expect(await ciddiIhlaller(page)).toEqual([]);
-      },
-    );
-  }
-
-  test("açık not modalı kritik ya da ciddi erişilebilirlik ihlali içermez", async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await ac(page, "/");
-    const baslik = benzersiz("Erişilebilir");
-    await notOlustur(page, baslik, "Gövde");
-    await kart(page, baslik).getByRole("link").click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    expect(await ciddiIhlaller(page)).toEqual([]);
-  });
+  // Ekran düzeyindeki axe taramaları: tests/e2e/erisilebilirlik.spec.ts.
 });

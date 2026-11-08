@@ -171,8 +171,13 @@ test.describe("dosya ekleri", () => {
     const dialog = await notuAc(page, `/not/${id}`, title);
     await dialog.getByRole("button", { name: "Eki kaldır: plan.pdf" }).click();
     await expect(dialog.getByRole("region", { name: "Ekler" })).toBeHidden();
-    const list = await page.request.get(`/api/notlar/${id}/ekler`);
-    expect((await list.json()).attachments).toEqual([]);
+    // Kaldırma iyimserdir: bölge hemen gizlenir, istek ardından gider (yükte yarışıyordu).
+    await expect
+      .poll(async () => {
+        const list = await page.request.get(`/api/notlar/${id}/ekler`);
+        return (await list.json()).attachments;
+      })
+      .toEqual([]);
   });
 
   test("görüntüleyici ekleri görür ve indirir ama ekleyemez, kaldıramaz", async ({
