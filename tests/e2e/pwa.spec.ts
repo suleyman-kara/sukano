@@ -165,6 +165,7 @@ test.describe("PWA", () => {
       for (const tema of ["light", "dark"] as const) {
         await page.emulateMedia({ colorScheme: tema, reducedMotion: "reduce" });
         await expect(page.locator("html")).toHaveAttribute("data-theme", tema);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", tema);
         expect(await ciddiIhlaller(page)).toEqual([]);
       }
     } finally {
@@ -340,6 +341,7 @@ test.describe("kurulum ipucu", () => {
     await ekranGoruntusu(page, testInfo, "kurulum-ipucu");
     for (const tema of ["light", "dark"] as const) {
       await page.emulateMedia({ colorScheme: tema, reducedMotion: "reduce" });
+      await expect(page.locator("html")).toHaveAttribute("data-theme", tema);
       expect(await ciddiIhlaller(page)).toEqual([]);
     }
     await ipucu.getByRole("button", { name: "Ekle" }).click();
@@ -406,6 +408,7 @@ test.describe("kurulum ipucu", () => {
       await ekranGoruntusu(page, testInfo, "kurulum-ipucu-ios");
       for (const tema of ["light", "dark"] as const) {
         await page.emulateMedia({ colorScheme: tema, reducedMotion: "reduce" });
+        await expect(page.locator("html")).toHaveAttribute("data-theme", tema);
         expect(await ciddiIhlaller(page)).toEqual([]);
       }
       await ipucu.getByRole("button", { name: "Şimdi değil" }).click();
