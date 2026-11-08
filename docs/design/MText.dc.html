@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil metin notu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.6;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--n-turuncu:#FBE2CC}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--n-turuncu:#4A3827}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);flex:0 0 auto}
+.ib svg{width:22px;height:22px}
+.body p{margin:0 0 12px}.body ul{margin:0 0 12px;padding-left:22px}.body h2{font-size:18px;margin:0 0 8px}
+.body a{color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 8px;border-radius:999px;background:rgba(0,0,0,.07);font-size:13px;font-weight:500}
+.sk[data-theme="dark"] .chip{background:rgba(255,255,255,.08)}
+.chip svg{width:14px;height:14px}
+.att{display:flex;align-items:center;gap:10px;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 10px 8px 8px;background:rgba(255,255,255,.5);font-size:14px}
+.sk[data-theme="dark"] .att{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+.tb{display:inline-flex;align-items:center;justify-content:center;width:44px;height:40px;border-radius:9px;color:var(--fg)}
+.tb.on{background:var(--accent-soft);color:var(--accent)}
+.tb svg{width:20px;height:20px}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:390px; height:844px; background:var(--n-turuncu); color:var(--fg); display:flex; flex-direction:column; overflow:hidden">
+  <header style="display:flex; align-items:center; gap:2px; padding:50px 8px 0">
+    <a class="ib" href="MHome.dc.html" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></a>
+    <div style="flex:1"></div>
+    <button class="ib" aria-label="Sabitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3-1-6Z"/><path d="M12 15v5"/></svg></button>
+    <button class="ib" aria-label="Not hatırlatıcısı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
+    <a class="ib" href="MNoteMenu.dc.html" aria-label="Diğer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+  </header>
+
+  <div style="flex:1; overflow:auto; padding:4px 20px 20px">
+    <label style="display:block; padding:4px 0 8px"><span class="sr">Not başlığı</span><input value="Ev tadilatı fikirleri" style="width:100%; border:0; background:transparent; font-size:22px; font-weight:600; padding:0"></label>
+    <div style="margin-bottom:12px"><span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>Yarın, 09:00</span></div>
+    <div class="body">
+      <p><strong>Salon:</strong> duvar için sıcak gri tonları; pencere kenarına uzun perde yerine stor.</p>
+      <h2>Mutfak</h2>
+      <ul>
+        <li>Dolapları boyamak yerine kapakları değiştirmek daha ucuz olabilir.</li>
+        <li>Tezgâh altı aydınlatma şeridi.</li>
+        <li>Ustadan iki ayrı teklif al, teklif karşılaştırması notunda topla.</li>
+      </ul>
+      <p>Balkona katlanır masa ve iki tabure. Bitkiler için duvara askılı raf.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px">
+      <div class="att" style="padding:0; overflow:hidden; height:140px; align-items:stretch"><div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); background:color-mix(in srgb, var(--fg) 6%, transparent)"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-6-6-9 9"/></svg></div></div>
+      <div class="att"><span style="width:34px; height:34px; border-radius:8px; background:var(--danger-soft); color:var(--danger); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700">PDF</span><span style="flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.3"><span style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">usta-teklifi-kasim.pdf</span><span style="font-size:12px; color:var(--muted)">1,8 MB</span></span></div>
+    </div>
+    <p style="margin:16px 0 0; font-size:12px; color:var(--muted)">Düzenlendi 5 Kas, 14:20</p>
+  </div>
+
+  <div role="toolbar" aria-label="Biçimlendirme" style="display:flex; align-items:center; gap:2px; padding:6px 8px 28px; border-top:1px solid color-mix(in srgb, var(--fg) 10%, transparent); background:color-mix(in srgb, var(--surface) 35%, transparent)">
+    <button class="tb on" aria-label="Kalın"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></svg></button>
+    <button class="tb" aria-label="İtalik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 5h8M6 19h8M14 5l-4 14"/></svg></button>
+    <button class="tb" aria-label="Başlık"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5v14M13 5v14M5 12h8M17 10l2.5-1.5V19"/></svg></button>
+    <button class="tb" aria-label="Madde listesi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></button>
+    <button class="tb" aria-label="Bağlantı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
+    <span style="flex:1"></span>
+    <button class="tb" aria-label="Renk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+    <button class="tb" aria-label="Dosya ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

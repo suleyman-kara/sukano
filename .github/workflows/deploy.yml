@@ -1,0 +1,84 @@
+name: Dağıtım
+
+# CI başarıyla bittikten sonra koşar (CI geçmeden dağıtım yok).
+# - main: D1 migration'ları (uzak) + `wrangler deploy` (üretim)
+# - diğer dallar: `wrangler versions upload` ile önizleme sürümü; URL iş özetine yazılır.
+# Yalnızca push kaynaklı CI çalışmaları dağıtılır (PR'lar, özellikle fork'lar, gizli
+# değişkenlere erişemez).
+#
+# Gerekli depo gizli değişkenleri: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+env:
+  WRANGLER_SEND_METRICS: false
+
+jobs:
+  dagit:
+    name: ${{ github.event.workflow_run.head_branch == 'main' && 'Üretim' || 'Önizleme' }}
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'preview' }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      BRANCH: ${{ github.event.workflow_run.head_branch }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: D1 migration'ları (uzak)
+        if: env.BRANCH == 'main'
+        run: npx wrangler d1 migrations apply sukano --remote
+
+      - name: Üretime dağıt
+        if: env.BRANCH == 'main'
+        run: |
+          npx wrangler deploy --message "main ${SHA::7}" | tee deploy.log
+          url=$(grep -oE 'https://[a-zA-Z0-9._-]+\.workers\.dev' deploy.log | head -n1 || true)
+          {
+            echo "### Üretim dağıtımı"
+            echo ""
+            echo "- Dal: \`main\` · commit \`${SHA::7}\`"
+            if [ -n "$url" ]; then echo "- Adres: $url"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Önizleme sürümü yükle
+        if: env.BRANCH != 'main'
+        run: |
+          # Önizleme takma adı: küçük harf, harf/rakam/tire, en fazla 40 karakter.
+          alias=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' | cut -c1-40 | sed -E 's/-+$//')
+          npx wrangler versions upload --preview-alias "$alias" --message "$BRANCH ${SHA::7}" | tee upload.log
+          version_url=$(grep -oiE 'Version Preview URL: *https://[^ ]+' upload.log | grep -oE 'https://[^ ]+' | head -n1 || true)
+          alias_url=$(grep -oiE 'Version Preview Alias URL: *https://[^ ]+' upload.log | grep -oE 'https://[^ ]+' | head -n1 || true)
+          {
+            echo "### Önizleme sürümü"
+            echo ""
+            echo "- Dal: \`$BRANCH\` · commit \`${SHA::7}\`"
+            if [ -n "$alias_url" ]; then echo "- Dal adresi (kalıcı): $alias_url"; fi
+            if [ -n "$version_url" ]; then echo "- Bu sürüm: $version_url"; fi
+            if [ -z "$alias_url$version_url" ]; then
+              echo "- Önizleme adresi çıktıda bulunamadı; günlüğe bakın."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

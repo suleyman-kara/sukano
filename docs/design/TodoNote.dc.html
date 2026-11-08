@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Yapılacaklar notu açık</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--dim:rgba(28,27,25,.45);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-turuncu:#FBE2CC;--n-pembe:#F9DADA;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA;--n-yesil:#DEF0D6;--n-kahve:#EADFD3;--n-gri:#E6E6E1}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--dim:rgba(0,0,0,.6);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-turuncu:#4A3827;--n-pembe:#4A2E2E;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A;--n-yesil:#2C3F27;--n-kahve:#423831;--n-gri:#30302E}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button,:where(.sk) select{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:var(--muted);position:relative;flex:0 0 auto}
+.ib:hover{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.nav{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:10px;color:var(--fg);text-decoration:none;font-weight:500;width:100%}
+.nav.active{background:var(--accent-soft);color:var(--accent)}
+.nav svg{width:20px;height:20px;flex:0 0 auto}
+.nav-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:16px 14px 6px}
+.dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;margin:0 5px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none}
+.btn:hover{background:var(--hover)}
+.masonry{columns:4 232px;column-gap:16px}
+.card{break-inside:avoid;position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 16px 12px;margin:0 0 16px;background:var(--n-default);color:var(--fg);display:block}
+.card > * + *{margin-top:8px}
+.ct{margin:0;font-size:15px;font-weight:600}
+.cp{margin:0;white-space:pre-line}
+.cb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cb-list li{display:flex;align-items:flex-start;gap:10px}
+.cbx{width:16px;height:16px;border:1.5px solid var(--muted);border-radius:5px;flex:0 0 auto;margin-top:2px;opacity:.8}
+.cmore{color:var(--muted);font-size:13px}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+
+.rw{position:static}
+.row{display:flex;align-items:center;gap:6px;min-height:38px;padding:2px 8px 2px 4px;border-radius:8px}
+.row:hover,.row:focus-within,.row.open{background:var(--hover)}
+.row:focus-within{box-shadow:inset 2px 0 0 var(--accent)}
+.row.done .ttl{text-decoration:line-through;color:var(--muted)}
+@keyframes nodel{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.row.nodel{animation:nodel .2s 2;background:var(--danger-soft)}
+.grip{width:14px;color:var(--muted);opacity:0;display:inline-flex;justify-content:center;cursor:grab;flex:0 0 auto}
+.row:hover .grip{opacity:.7}
+.grip svg{width:14px;height:14px}
+.chev{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);visibility:hidden;flex:0 0 auto}
+.chev.show{visibility:visible}.chev:hover{background:var(--line);color:var(--fg)}
+.chev svg{width:16px;height:16px;transition:transform .15s}.chev.open svg{transform:rotate(90deg)}
+.cb{appearance:none;-webkit-appearance:none;width:18px;height:18px;border:1.5px solid var(--muted);border-radius:5px;position:relative;margin:0 2px;cursor:pointer;flex:0 0 auto;background:var(--surface)}
+.cb:checked{background:var(--accent);border-color:var(--accent)}
+.cb:checked::after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:9px;border:solid var(--accent-fg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.cb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ttl{flex:1;min-width:80px;border:0;background:transparent;height:30px;padding:0 6px;font-size:15px}
+.ttl:focus{outline:0}
+.hint{font-size:12px;color:var(--muted);padding:2px 7px;border-radius:999px;background:var(--line);white-space:nowrap;flex:0 0 auto}
+.hint.over{color:var(--danger);background:var(--danger-soft);font-weight:500}
+.hov{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);opacity:0;flex:0 0 auto}
+.row:hover .hov,.row:focus-within .hov,.hov.on{opacity:1}
+.hov:hover{background:var(--line);color:var(--fg)}.hov svg{width:17px;height:17px}
+.donehdr{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:500;padding:6px 8px;border-radius:8px;width:100%}
+.donehdr:hover{background:var(--hover)}
+.donehdr svg{width:16px;height:16px;transition:transform .15s}.donehdr.open svg{transform:rotate(90deg)}
+.pop{position:absolute;z-index:6;margin-top:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:8px;min-width:250px}
+.pop.up{margin-top:0;transform:translateY(calc(-100% - 42px))}
+.qp{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;width:100%;font-weight:500}
+.qp:hover{background:var(--hover)}.qp small{color:var(--muted);font-weight:400}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:6px}
+.cal .dh{font-size:11px;color:var(--muted);text-align:center;padding:4px 0}
+.cal button{height:30px;border-radius:7px;text-align:center;font-size:13px}
+.cal button:hover{background:var(--hover)}.cal .today{font-weight:600;color:var(--accent)}
+.cal .in-range{background:var(--accent-soft);border-radius:0}
+.cal .sel-start{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-weight:600}
+.cal .sel{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.slots{display:flex;align-items:center;gap:6px;padding:2px 2px 8px}
+.slot{flex:1 1 0;min-width:0;height:46px;border-radius:8px;border:1px solid var(--line);display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:13px;font-weight:600;color:var(--fg);text-align:center}
+.slot .sl{font-size:11px;font-weight:500;color:var(--muted);line-height:1.2}
+.slot.on .sl{color:var(--accent)}
+.slot:hover{background:var(--hover)}
+.slot.on{border:2px solid var(--accent);background:var(--accent-soft);color:var(--accent)}
+.slot .ph{display:none;width:18px;height:18px;color:var(--muted);opacity:.55}
+.slot.empty .ph{display:block}.slot.empty .sv{display:none}
+.slot.on .ph{color:var(--accent);opacity:.8}
+.sarrow{width:16px;height:16px;color:var(--muted);flex:0 0 auto}
+.tbtn{flex:0 0 auto;height:36px;min-width:36px;padding:0 8px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:5px;color:var(--muted);font-size:13px;font-weight:600}
+.tbtn:hover{background:var(--hover);color:var(--fg)}
+.tbtn svg{width:17px;height:17px;flex:0 0 auto}
+.tbtn.set{color:var(--accent)}.tbtn.open{background:var(--hover)}
+.tbtn .tl:empty{display:none}
+.nlw{padding:0 2px 8px}
+.nl{width:100%;height:34px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--surface);font-size:13px}
+.nl:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.nl.err{border-color:var(--danger);outline:2px solid var(--danger);outline-offset:-1px}
+.nle{display:block;font-size:12px;color:var(--danger);padding:4px 2px 0}
+.pwarn{font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:7px;padding:5px 8px;margin:0 2px 8px}
+.mon{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 0 10px;font-weight:600}
+.mon .ma{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.mon .ma:hover{background:var(--hover);color:var(--fg)}.mon .ma svg{width:16px;height:16px}
+.rt{display:flex;flex-direction:column;line-height:1.25}
+.rt small{font-size:12px;font-weight:400;color:var(--muted)}
+.trow{display:flex;align-items:center;gap:8px;padding:0 2px 8px}
+.trow input{flex:1;height:32px;border:1px solid var(--line);border-radius:7px;padding:0 8px;background:var(--surface)}
+.pfoot{display:flex;align-items:center;gap:8px;padding:10px 6px 2px 10px;border-top:1px solid var(--line);margin-top:8px}
+.pfoot label{display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:13px;font-weight:500}
+.pfoot label.off{opacity:.45}.pfoot label.off .sw{cursor:not-allowed}
+.chip .bell{display:none;width:14px;height:14px;margin-left:2px}
+.chip.rem .bell{display:inline-block}
+.detail{margin:0 8px 10px 0;padding:8px 12px 12px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.detail textarea{width:100%;min-height:52px;border:0;background:transparent;resize:vertical;padding:4px 0;line-height:1.5}
+.detail textarea:focus{outline:0}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 8px;border-radius:8px;border:1px solid var(--line);font-size:13px;font-weight:500}
+.chip:hover{background:var(--hover)}.chip svg{width:15px;height:15px;color:var(--muted)}
+.chip.set{border-color:transparent;background:var(--accent-soft);color:var(--accent)}.chip.set svg{color:var(--accent)}
+.chip.over{border-color:transparent;background:var(--danger-soft);color:var(--danger)}.chip.over svg{color:var(--danger)}
+.sw{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;margin:0;cursor:pointer;flex:0 0 auto}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:999px;background:#fff;transition:left .15s}
+.sw:checked{background:var(--accent)}.sw:checked::after{left:18px}
+.mi{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;width:100%}
+.mi:hover{background:var(--hover)}
+.mi .mt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.mi .mt small{font-size:12px;color:var(--muted)}
+.mi.viewer .mn{color:var(--muted)}.mi.viewer .avatar{opacity:.5}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:12px;background:#2A2926;color:#F3F1EC;box-shadow:var(--shadow);width:100%}
+.sk[data-theme="dark"] .toast{background:#ECEAE4;color:#1C1B19}
+.toast span{flex:1;min-width:0}
+.toast .ta{font-weight:600;color:#9FD8BF;padding:6px 10px;border-radius:8px;text-decoration:none}
+.sk[data-theme="dark"] .toast .ta{color:#2E6B55}
+.toast .tx{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:999px;opacity:.7}
+.toast .tx svg{width:16px;height:16px}
+.toasts{position:absolute;left:16px;bottom:68px;z-index:7;display:flex;flex-direction:column;gap:6px;max-width:440px}
+.toasts .toast{width:auto}
+.toast.old{opacity:.88}
+.toast .tk{font-size:11px;font-weight:600;opacity:.7;white-space:nowrap;flex:0 0 auto}
+.meta{font-size:12px;color:var(--muted);padding:0 24px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{font-size:12px;font-weight:500;color:var(--muted)}
+.kbd{font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.kbd b{font-weight:600;color:var(--fg);background:var(--line);border-radius:4px;padding:0 5px;font-family:inherit}
+.ib.on{background:var(--accent-soft);color:var(--accent)}
+.kc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;width:560px;max-width:calc(100% - 32px);max-height:calc(100% - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px 8px 14px 22px}
+.kc:focus{outline:0}
+.kc-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 0}
+.kc-h h2{margin:0;font-size:16px;font-weight:600}
+.kc-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;padding-right:14px}
+.kc .nav-h{padding:14px 0 4px}
+.kr{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px;font-size:13px}
+.kr > span:first-child{min-width:0}
+.kk{display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;white-space:nowrap;font-size:11px;color:var(--muted)}
+.sk kbd{font-family:inherit;font-size:11px;font-weight:600;line-height:18px;color:var(--fg);background:var(--line);border-radius:4px;padding:0 5px;min-width:18px;text-align:center;display:inline-block}
+.kc-f{margin:12px 14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.sidenav{width:248px;flex:0 0 248px;overflow:hidden;white-space:nowrap;transition:width .18s,flex-basis .18s}
+.nav-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ini{display:none;width:28px;height:28px;border-radius:999px;color:#fff;font-weight:600;font-size:12px;line-height:1;align-items:center;justify-content:center;flex:0 0 auto}
+.sk[data-nav="rail"] .sidenav{width:72px;flex-basis:72px}
+.sk[data-nav="rail"] .nav-label{display:none}
+.sk[data-nav="rail"] .nav-logo{justify-content:center;padding-left:0;padding-right:0}
+.sk[data-nav="rail"] .nav{width:44px;height:44px;padding:0;gap:0;justify-content:center;margin:0 auto;position:relative}
+.sk[data-nav="rail"] .sidenav .dot{display:none}
+.sk[data-nav="rail"] .ini{display:inline-flex}
+.sk[data-nav="rail"] .nav-h{height:1px;padding:0;margin:10px 6px;background:var(--line);font-size:0;line-height:0;color:transparent;overflow:hidden}
+.badge{margin-left:auto;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px}
+.sk[data-nav="rail"] .badge{position:absolute;top:6px;right:6px;width:8px;height:8px;padding:0;margin:0;font-size:0;line-height:0;color:transparent;border-radius:999px}
+.vs{display:inline-flex;align-items:center;flex:0 0 auto;background:var(--hover);border-radius:10px;padding:3px;gap:2px}
+.vs a{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500}
+.vs a:hover{color:var(--fg)}
+.vs a.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.vs svg{width:20px;height:20px;flex:0 0 auto}
+.vs-label{font-size:13px}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" data-nav="{{navMode}}" style="position:relative; display:flex; flex-wrap:wrap; min-height:1000px; width:100%; background:var(--bg); color:var(--fg); overflow:hidden">
+
+  <nav class="sidenav" aria-label="Ana gezinme" style="display:flex; flex-direction:column; padding:20px 12px; gap:2px; border-right:1px solid var(--line)">
+    <a class="nav-logo" href="Main.dc.html" aria-label="Sukano, ana sayfa" title="Sukano" style="display:flex; align-items:center; gap:10px; padding:6px 12px 22px; text-decoration:none; color:var(--fg)">
+      <span class="logo-mark" style="width:28px; height:28px; display:inline-flex; flex:0 0 auto; color:var(--accent)"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+      <span class="nav-label" style="font-weight:700; font-size:18px; letter-spacing:-0.01em">sukano</span>
+    </a>
+    <a class="nav" href="Main.dc.html" title="Notlarım" aria-label="Notlarım"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span class="nav-label">Notlarım</span></a>
+    <div class="nav-h">Projeler</div>
+    <a class="nav active" href="Project.dc.html" title="Web Sitesi Yenileme"><span class="dot" style="background:#AD5A34"></span><span class="ini" style="background:#AD5A34" aria-hidden="true">W</span><span class="nav-label">Web Sitesi Yenileme</span></a>
+    <a class="nav" href="Project.dc.html" title="Ev Taşınma"><span class="dot" style="background:#3F6DB5"></span><span class="ini" style="background:#3F6DB5" aria-hidden="true">E</span><span class="nav-label">Ev Taşınma</span></a>
+    <a class="nav" href="Project.dc.html" title="Kitap Kulübü"><span class="dot" style="background:#4A7D45"></span><span class="ini" style="background:#4A7D45" aria-hidden="true">K</span><span class="nav-label">Kitap Kulübü</span></a>
+    <a class="nav" href="Dialogs.dc.html" style="color:var(--muted)" title="Yeni proje" aria-label="Yeni proje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="nav-label">Yeni proje</span></a>
+    <div style="flex:1"></div>
+    <a class="nav" href="Invites.dc.html" title="Davetler" aria-label="Davetler, 1 bekleyen davet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"/><path d="M5 5h14l2 8v6H3v-6l2-8Z"/></svg><span class="nav-label">Davetler</span><span class="badge">1</span></a>
+    <a class="nav" href="Settings.dc.html" title="Ayarlar" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span class="nav-label">Ayarlar</span></a>
+  </nav>
+
+  <main style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+    <header style="display:flex; align-items:center; gap:12px; padding:14px 32px 6px">
+      <button type="button" class="ib" aria-label="Menüyü daralt/genişlet" title="Menüyü daralt/genişlet" aria-expanded="{{sidebarOpen}}" onClick="{{toggleSidebar}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <label style="flex:1; max-width:620px; position:relative; display:block"><span class="sr">Ara</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" style="position:absolute; left:14px; top:12px; color:var(--muted)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" placeholder="Notlarda ve projelerde ara" style="width:100%; height:44px; border:1px solid var(--line); border-radius:12px; padding:0 14px 0 44px; background:var(--surface)">
+      </label>
+      <nav class="vs" aria-label="Görünüm">
+        <a class="on" href="Project.dc.html" title="Notlar" aria-label="Notlar" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span class="vs-label">Notlar</span></a>
+        <a href="Archive.dc.html" title="Arşiv" aria-label="Arşiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span class="vs-label">Arşiv</span></a>
+        <a href="Trash.dc.html" title="Çöp" aria-label="Çöp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span class="vs-label">Çöp</span></a>
+      </nav>
+      <div style="flex:1"></div>
+      <a class="ib" href="Notifications.dc.html" aria-label="Bildirimler, 2 yeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span style="position:absolute; top:7px; right:8px; width:8px; height:8px; border-radius:999px; background:var(--danger); border:2px solid var(--bg)" aria-hidden="true"></span></a>
+      <button type="button" class="avatar" aria-label="Hesap menüsü" aria-haspopup="menu" aria-expanded="false" title="Süleyman Kara" style="width:34px; height:34px; background:#597895; font-size:13px">SK</button>
+    </header>
+    <section style="padding:12px 32px 40px; display:flex; flex-direction:column; gap:24px">
+      <div style="display:flex; align-items:center; gap:14px">
+        <span class="dot" style="width:14px; height:14px; background:#AD5A34"></span>
+        <h1 style="margin:0; font-size:24px; font-weight:700">Web Sitesi Yenileme</h1>
+        <div style="display:flex; margin-left:8px"><span class="avatar" style="width:28px;height:28px;font-size:11px;background:#B25D49;border:2px solid var(--bg)">AD</span><span class="avatar" style="width:28px;height:28px;font-size:11px;background:#4976B4;border:2px solid var(--bg);margin-left:-8px">MK</span><span class="avatar" style="width:28px;height:28px;font-size:11px;background:#7A5FB8;border:2px solid var(--bg);margin-left:-8px">ZA</span><span class="avatar" style="width:28px;height:28px;font-size:11px;background:#398264;border:2px solid var(--bg);margin-left:-8px">CY</span></div>
+      </div>
+      <div>
+        <h2 class="sec-h">Sabitlenmiş</h2>
+        <div class="masonry">
+          <article class="card" style="background:var(--n-turkuaz)">
+            <h3 class="ct"><button type="button" id="open-note" onClick="{{reopen}}" style="font-weight:600">Lansman hazırlığı</button></h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Tasarım onayı</li>
+              <li><span class="cbx"></span>İçerik yazımı</li>
+              <li><span class="cbx"></span>SEO kontrolleri</li>
+              <li><span class="cbx"></span>Lansman duyurusu</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3 class="ct">Karar günlüğü</h3>
+            <p class="cp">3 Kas: Barındırma için yıllık ödeme seçildi, en uygun teklif ikinci firmanın.
+5 Kas: Logo değişmiyor, yalnızca renk paleti güncellenecek.</p>
+          </article>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="sec-h">Diğerleri</h2>
+        <div class="masonry">
+          <article class="card" style="background:var(--n-sari)">
+            <h3 class="ct">Fotoğraf çekimi</h3>
+            <p class="cp">Stüdyo 18 Kasım, 10:00. Ürünler bir gün önce hazır olmalı; Can kargo ile gönderecek.</p>
+          </article>
+          <article class="card">
+            <h3 class="ct">Teklif karşılaştırması</h3>
+            <p class="cp">Üç barındırma teklifi alındı. Aylık yerine yıllık ödemede %20 indirim var; sözleşme süresi 12 ay.</p>
+          </article>
+          <article class="card" style="background:var(--n-mor)">
+            <h3 class="ct">Müşteri geri bildirimleri</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Ana sayfa görseli daha sıcak olsun</li>
+              <li><span class="cbx"></span>İletişim formuna telefon alanı</li>
+              <li><span class="cbx"></span>Referanslar bölümü</li>
+              <li><span class="cbx"></span>Alt bilgiye sosyal medya bağlantıları</li>
+              <li><span class="cbx"></span>Blog sayfası şimdilik kalksın</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3 class="ct">Renk paleti</h3>
+            <p class="cp">Koyu yeşil, kum, kömür. Vurgu olarak kiremit kırmızısı yalnızca düğmelerde.</p>
+          </article>
+          <article class="card" style="background:var(--n-mavi)">
+            <h3 class="ct">Toplantı, 4 Kasım</h3>
+            <p class="cp">Mehmet SEO raporunu çıkardı. Zeynep içerik takvimini hazırlayacak. Lansman tarihi 24 Kasım olarak kesinleşti.</p>
+          </article>
+          <article class="card">
+            <h3 class="ct">Erişilebilirlik kontrol listesi</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Kontrast oranları</li>
+              <li><span class="cbx"></span>Klavye ile gezinme</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <sc-if value="{{noteOpen}}" hint-placeholder-val="{{true}}">
+  <div style="position:absolute; inset:0; background:var(--dim)"></div>
+
+  <div role="dialog" aria-modal="true" aria-labelledby="note-title" onKeyDown="{{dlgKey}}" style="position:absolute; left:50%; top:44px; transform:translateX(-50%); width:680px; min-height:640px; max-height:912px; display:flex; flex-direction:column; background:var(--surface); border-radius:16px; box-shadow:var(--shadow); border:1px solid var(--line)">
+    <div style="display:flex; align-items:center; gap:10px; padding:18px 20px 6px 24px">
+      <label style="flex:1"><span class="sr">Not başlığı</span><input id="note-title" value="Lansman hazırlığı" style="width:100%; border:0; background:transparent; font-size:20px; font-weight:600; padding:0"></label>
+      <div style="display:flex; align-items:center; gap:4px" aria-label="Şu anda açık tutanlar: Mehmet Kaya, Zeynep Arslan">
+        <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#4976B4;border:2px solid var(--surface)" title="Mehmet Kaya">MK</span>
+        <span class="avatar" style="width:26px;height:26px;font-size:10px;background:#7A5FB8;border:2px solid var(--surface);margin-left:-10px" title="Zeynep Arslan">ZA</span>
+      </div>
+      <button class="ib" aria-label="Sabitle" title="Sabitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3-1-6Z"/><path d="M12 15v5"/></svg></button>
+      <a class="ib" href="Project.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
+    </div>
+    <div class="meta">Ayşe Demir oluşturdu · Son düzenleyen Mehmet Kaya, 2 saat önce</div>
+
+    <div style="flex:1; overflow:auto; padding:4px 12px 8px 16px; display:flex; flex-direction:column" onScroll="{{closePicker}}">
+      <sc-for list="{{rows}}" as="row" hint-placeholder-count="6">
+        <sc-if value="{{row.isHeader}}" hint-placeholder-val="{{false}}">
+          <button class="donehdr {{row.openCls}}" style="padding-left:{{row.padHdr}}px" onClick="{{row.toggleOpen}}" aria-expanded="{{row.open}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>Tamamlananlar ({{row.count}})</button>
+        </sc-if>
+        <sc-if value="{{row.isTask}}" hint-placeholder-val="{{true}}">
+          <div class="rw" style="padding-left:{{row.pad}}px">
+            <div class="row {{row.cls}}">
+              <span class="grip" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+              <button class="chev {{row.chevCls}}" aria-label="Alt görevleri aç veya kapat" onClick="{{row.toggleExpand}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+              <input type="checkbox" class="cb" checked="{{row.done}}" onChange="{{row.toggle}}" aria-label="{{row.cbLabel}}">
+              <input id="t-{{row.id}}" class="ttl" value="{{row.title}}" onChange="{{row.onInput}}" onKeyDown="{{row.onKey}}" onFocus="{{row.onFocus}}" onBlur="{{row.onBlur}}" placeholder="{{row.placeholder}}" aria-label="Görev başlığı" autocomplete="off">
+              <sc-if value="{{row.hasKids}}" hint-placeholder-val="{{false}}"><span class="hint" title="{{row.kidTitle}}">{{row.kidLabel}}<span class="sr"> alt görev tamamlandı</span></span></sc-if>
+              <sc-if value="{{row.hasDue}}" hint-placeholder-val="{{false}}"><span class="hint {{row.dueCls}}">{{row.dueLabel}}</span></sc-if>
+              <sc-for list="{{row.who}}" as="a" hint-placeholder-count="0"><span class="avatar" style="width:22px; height:22px; font-size:9px; background:{{a.color}}" title="{{a.name}}">{{a.ini}}</span></sc-for>
+              <button class="hov {{row.dateOn}}" onClick="{{row.openDate}}" aria-label="Tarih ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+              <button class="hov {{row.whoOn}}" onClick="{{row.openWho}}" aria-label="Kişiye ata"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+              <button class="hov {{row.detOn}}" onClick="{{row.openDetail}}" aria-label="Ayrıntılar" title="Ayrıntılar (Shift+Enter)" aria-expanded="{{row.showDetail}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg></button>
+            </div>
+
+            <sc-if value="{{row.showDate}}" hint-placeholder-val="{{false}}">
+              <div class="pop {{row.popCls}}" style="right:52px; width:300px" role="dialog" aria-label="Tarih" onKeyDown="{{row.popKey}}">
+                <div class="slots">
+                  <button class="slot {{row.dp.startCls}}" onClick="{{row.dp.slotStart}}" aria-label="Başlangıç tarihi" aria-pressed="{{row.dp.startOn}}"><span class="sl" aria-hidden="true">Başlangıç</span><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="sv">{{row.dp.startLabel}}</span></button>
+                  <svg class="sarrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  <button id="dp-due" class="slot {{row.dp.dueCls}}" onClick="{{row.dp.slotDue}}" aria-label="Bitiş tarihi" aria-pressed="{{row.dp.dueOn}}"><span class="sl" aria-hidden="true">Bitiş</span><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="sv">{{row.dp.dueLabel}}</span></button>
+                  <button class="tbtn {{row.dp.timeCls}}" onClick="{{row.dp.toggleTime}}" aria-label="{{row.dp.timeAria}}" aria-expanded="{{row.dp.timeOpen}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg><span class="tl">{{row.dp.time}}</span></button>
+                </div>
+                <sc-if value="{{row.dp.timeOpen}}" hint-placeholder-val="{{false}}">
+                  <div class="trow"><input type="time" value="{{row.dp.time}}" onChange="{{row.dp.setTime}}" aria-label="Bitiş saati"></div>
+                </sc-if>
+                <sc-if value="{{row.dp.hasWarn}}" hint-placeholder-val="{{false}}"><div class="pwarn" role="status">{{row.dp.warn}}</div></sc-if>
+                <div class="nlw">
+                  <label><span class="sr">{{row.dp.nlLabel}}</span><input id="dp-nl" class="nl {{row.dp.nlCls}}" value="{{row.dp.nl}}" placeholder="yarın, cuma, 15 kasım…" autocomplete="off" aria-invalid="{{row.dp.nlErr}}" onChange="{{row.dp.nlInput}}" onKeyDown="{{row.dp.nlKey}}"></label>
+                  <sc-if value="{{row.dp.nlErr}}" hint-placeholder-val="{{false}}"><span class="nle">Anlaşılmadı · ör. yarın, cuma, 15 kasım</span></sc-if>
+                </div>
+                <button class="qp" onClick="{{row.dp.today}}">Bugün <small>Cum</small></button>
+                <button class="qp" onClick="{{row.dp.tomorrow}}">Yarın <small>Cmt</small></button>
+                <button class="qp" onClick="{{row.dp.nextWeek}}">Gelecek hafta <small>Pzt, 9 Kas</small></button>
+                <div class="mon"><span>Kasım 2026</span><span style="display:inline-flex; gap:2px"><button type="button" class="ma" aria-label="Önceki ay" title="Önceki ay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button><button type="button" class="ma" aria-label="Sonraki ay" title="Sonraki ay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></span></div>
+                <div class="cal">
+                  <span class="dh">Pzt</span><span class="dh">Sal</span><span class="dh">Çar</span><span class="dh">Per</span><span class="dh">Cum</span><span class="dh">Cmt</span><span class="dh">Paz</span>
+                  <span></span><span></span><span></span><span></span><span></span><span></span>
+                  <sc-for list="{{row.dp.days}}" as="d" hint-placeholder-count="30"><button class="{{d.cls}}" onClick="{{d.pick}}" aria-label="{{d.label}}">{{d.n}}</button></sc-for>
+                </div>
+                <div class="pfoot">
+                  <label class="{{row.dp.remindCls}}"><input type="checkbox" class="sw" checked="{{row.dp.remind}}" disabled="{{row.dp.remindOff}}" onChange="{{row.dp.toggleRemind}}"><span class="rt">Hatırlat<small>{{row.dp.remindTo}}</small></span></label>
+                  <button class="btn" style="height:30px; padding:0 10px; color:var(--danger); flex:0 0 auto" onClick="{{row.dp.clear}}">Tarihleri temizle</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{row.showWho}}" hint-placeholder-val="{{false}}">
+              <div class="pop {{row.popCls}}" style="right:52px; width:280px" role="dialog" aria-label="Kişiye ata" onKeyDown="{{row.popKey}}">
+                <div class="lbl" style="padding:4px 8px 6px">Proje üyeleri</div>
+                <sc-for list="{{row.members}}" as="m" hint-placeholder-count="4">
+                  <label class="mi {{m.cls}}"><input type="checkbox" id="wm-{{m.id}}" class="cb" checked="{{m.on}}" onChange="{{m.toggle}}"><span class="avatar" style="width:24px;height:24px;font-size:10px;background:{{m.color}}">{{m.ini}}</span><span class="mt"><span class="mn">{{m.label}}</span><sc-if value="{{m.viewer}}" hint-placeholder-val="{{false}}"><small>görüntüleyici · işaretleyemez</small></sc-if></span></label>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{row.showDetail}}" hint-placeholder-val="{{false}}">
+              <div class="detail" style="margin-left:{{row.detPad}}px" onKeyDown="{{row.detKey}}">
+                <label><span class="sr">Açıklama</span><textarea id="desc-{{row.id}}" placeholder="Açıklama ekle" value="{{row.desc}}" onChange="{{row.setDesc}}"></textarea></label>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+                  <button class="chip {{row.dateChipCls}}" onClick="{{row.openDate}}" aria-label="{{row.dateChipAria}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>{{row.dateChip}}<svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
+                  <button class="chip {{row.whoChipCls}}" onClick="{{row.openWho}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>{{row.whoChip}}</button>
+                </div>
+                <button style="display:inline-flex; align-items:center; gap:6px; color:var(--accent); font-weight:500; font-size:13px" onClick="{{row.addChild}}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Alt görev ekle</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </sc-for>
+      <button id="add-top" style="display:flex; align-items:center; gap:10px; padding:8px 8px 8px 44px; color:var(--muted); border-radius:8px" onClick="{{addTop}}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Görev ekle</button>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:2px; padding:8px 14px 12px 14px; border-top:1px solid var(--line)">
+      <button class="ib" aria-label="Renk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+      <button class="ib" aria-label="Not hatırlatıcısı" title="Not hatırlatıcısı · projedeki herkese gider"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
+      <a class="ib" href="Dialogs2.dc.html" aria-label="Kopyala…" title="Kopyala…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M9 13.5h6.5M13 11l2.5 2.5L13 16"/></svg></a>
+      <a class="ib" href="Dialogs.dc.html" aria-label="Sürüm geçmişi" title="Sürüm geçmişi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></a>
+      <span style="width:1px; height:20px; background:var(--line); margin:0 6px" aria-hidden="true"></span>
+      <button class="ib" aria-label="Arşivle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg></button>
+      <button class="ib" aria-label="Çöpe at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+      <button type="button" id="kbd-btn" class="ib {{helpOn}}" aria-label="Klavye kısayolları (Ctrl+/)" title="Kısayollar (Ctrl+/)" aria-expanded="{{help}}" onClick="{{toggleHelp}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg></button>
+      <button class="ib" aria-label="Diğer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
+      <span style="flex:1"></span>
+      <a class="btn" href="Project.dc.html">Kapat</a>
+    </div>
+
+    <div class="toasts" role="status" aria-live="polite" onMouseEnter="{{toastPause}}" onMouseLeave="{{toastResume}}" onFocus="{{toastPause}}" onBlur="{{toastResume}}">
+      <sc-for list="{{toasts}}" as="tt" hint-placeholder-count="1">
+        <div class="toast {{tt.cls}}"><span>{{tt.text}}</span><sc-if value="{{tt.first}}" hint-placeholder-val="{{true}}"><span class="tk" aria-hidden="true">Ctrl+Z</span></sc-if><button type="button" class="ta" onClick="{{tt.undo}}" title="{{tt.undoTitle}}" aria-label="{{tt.undoAria}}" aria-keyshortcuts="{{tt.keys}}">Geri al</button><button type="button" class="tx" aria-label="Bildirimi kapat" onClick="{{tt.close}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{help}}" hint-placeholder-val="{{false}}">
+      <div style="position:absolute; inset:0; z-index:8; background:var(--dim); border-radius:16px" onClick="{{closeHelp}}" aria-hidden="true"></div>
+      <div id="kbd-card" class="kc" role="dialog" aria-modal="true" aria-label="Klavye kısayolları" tabIndex="-1" onKeyDown="{{cardKey}}">
+        <div class="kc-h">
+          <h2>Klavye kısayolları</h2>
+          <button type="button" class="ib" aria-label="Kısayolları kapat" title="Kapat (Esc)" onClick="{{closeHelp}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="kc-g">
+          <div>
+            <div class="nav-h">Gezinme</div>
+            <div class="kr"><span>Satırlar arasında</span><span class="kk"><kbd>↑</kbd><kbd>↓</kbd></span></div>
+            <div class="kr"><span>Alt görevleri aç</span><span class="kk"><kbd>→</kbd></span></div>
+            <div class="kr"><span>Alt görevleri kapat</span><span class="kk"><kbd>←</kbd></span></div>
+            <div class="kr"><span>Seçiciyi, ayrıntıyı kapat</span><span class="kk"><kbd>Esc</kbd></span></div>
+            <div class="kr"><span>Listeden çık</span><span class="kk"><kbd>Esc</kbd></span></div>
+            <div class="kr"><span>Notu kapat (liste dışında)</span><span class="kk"><kbd>Esc</kbd></span></div>
+            <div class="nav-h">Tarih ve atama</div>
+            <div class="kr"><span>Tarih</span><span class="kk"><kbd>Ctrl</kbd>+<kbd>D</kbd></span></div>
+            <div class="kr"><span>Kişiye ata</span><span class="kk"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>A</kbd></span></div>
+            <div class="kr"><span>Seçicide gezin</span><span class="kk"><kbd>Tab</kbd></span></div>
+            <div class="nav-h">Satırdaki işaretler</div>
+            <div class="kr"><span>3 alt görevden 1'i tamamlandı</span><span class="kk"><span class="hint">1/3</span></span></div>
+          </div>
+          <div>
+            <div class="nav-h">Düzenleme</div>
+            <div class="kr"><span>Yeni görev</span><span class="kk"><kbd>Enter</kbd></span></div>
+            <div class="kr"><span>Ayrıntılar</span><span class="kk"><kbd>Shift</kbd>+<kbd>Enter</kbd></span></div>
+            <div class="kr"><span>Alt görev</span><span class="kk"><kbd>Tab</kbd></span></div>
+            <div class="kr"><span>Üst seviye (boş alt görevde Enter da)</span><span class="kk"><kbd>Shift</kbd>+<kbd>Tab</kbd></span></div>
+            <div class="kr"><span>Boş satırı sil</span><span class="kk"><kbd>Backspace</kbd></span></div>
+            <div class="kr"><span>Taşı</span><span class="kk"><kbd>Alt</kbd>+<kbd>↑</kbd><kbd>↓</kbd></span></div>
+            <div class="kr"><span>Tamamla</span><span class="kk"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span></div>
+            <div class="kr"><span>Son tamamlamayı geri al</span><span class="kk"><kbd>Ctrl</kbd>+<kbd>Z</kbd></span></div>
+          </div>
+        </div>
+        <div class="kc-f"><kbd>Ctrl</kbd>+<kbd>/</kbd> bu kartı açar · görev başlığında hiçbir karakter kısayol değildir</div>
+      </div>
+    </sc-if>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"sidebar":{"editor":"enum","options":["open","collapsed"],"default":"open","section":"Düzen"},"state":{"editor":"enum","options":["normal","toast"],"default":"normal","section":"Önizleme"},"$preview":{"width":1440,"height":1000}}'>
+const MEMBERS = [
+  { id: 'ben',    name: 'Süleyman Kara', ini: 'SK', color: '#597895', role: 'admin' },
+  { id: 'ayse',   name: 'Ayşe Demir',    ini: 'AD', color: '#B25D49', role: 'admin' },
+  { id: 'mehmet', name: 'Mehmet Kaya',   ini: 'MK', color: '#4976B4', role: 'editor' },
+  { id: 'zeynep', name: 'Zeynep Arslan', ini: 'ZA', color: '#7A5FB8', role: 'editor' },
+  { id: 'can',    name: 'Can Yılmaz',    ini: 'CY', color: '#398264', role: 'viewer' }
+];
+const TODAY = '2026-11-06';
+const SETTLE_MS = 1200;
+const TOAST_MS = 8000;
+const TOAST_MAX = 2;      // yeni toast eskisini silmez; en çok iki satır yığılır
+const TOAST_MIN_LEFT = 2000; // üzerinden çıkınca en az bu kadar daha görünür
+const UNDO_MAX = 20;
+const MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const MONTHS_FULL = ['ocak','subat','mart','nisan','mayis','haziran','temmuz','agustos','eylul','ekim','kasim','aralik'];
+const WEEKDAYS = { pazar: 0, pazartesi: 1, sali: 2, carsamba: 3, persembe: 4, cuma: 5, cumartesi: 6 };
+function fmt(d) { if (!d) return ''; const p = d.split('-'); return parseInt(p[2], 10) + ' ' + MONTHS[parseInt(p[1], 10) - 1]; }
+function fmtRange(start, due) {
+  if (start && due && start >= due) start = null;
+  if (!start && !due) return '';
+  if (!due) return fmt(start) + ' →';
+  const end = due === TODAY ? 'Bugün' : fmt(due);
+  if (!start) return end;
+  if (due !== TODAY && start.slice(0, 7) === due.slice(0, 7)) return parseInt(start.slice(8), 10) + ' → ' + end;
+  return fmt(start) + ' → ' + end;
+}
+function fixRange(f) { if (f.start && f.due && f.start > f.due) f.start = f.due; return f; }
+function addDays(iso, n) { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function fold(s) { return String(s || '').toLocaleLowerCase('tr').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u').replace(/\s+/g, ' ').trim(); }
+// Türkçe doğal yazım: "bugün", "yarın", "gelecek hafta", gün adları, "15 kasım" (+ isteğe bağlı "17:00").
+function parseNL(raw, today) {
+  today = today || TODAY;
+  let s = fold(raw); let time = null;
+  const tm = s.match(/(?:^|\s)(?:saat\s)?(\d{1,2})[:.](\d{2})$/);
+  if (tm) { const h = +tm[1], m = +tm[2]; if (h > 23 || m > 59) return null; time = (h < 10 ? '0' : '') + h + ':' + tm[2]; s = s.slice(0, tm.index).trim(); }
+  if (!s) return null;
+  const dow = new Date(today + 'T00:00:00Z').getUTCDay();
+  let date = null;
+  if (s === 'bugun') date = today;
+  else if (s === 'yarin') date = addDays(today, 1);
+  else if (s === 'gelecek hafta' || s === 'haftaya') date = addDays(today, ((1 - dow + 7) % 7) || 7);
+  else if (s in WEEKDAYS) date = addDays(today, ((WEEKDAYS[s] - dow + 7) % 7) || 7);
+  else {
+    const m = s.match(/^(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?$/);
+    if (m) {
+      const mi = MONTHS_FULL.findIndex(x => x === m[2] || (m[2].length >= 3 && x.startsWith(m[2])));
+      const day = +m[1];
+      if (mi >= 0 && day >= 1) {
+        let y = m[3] ? +m[3] : +today.slice(0, 4);
+        const make = (yy) => yy + '-' + (mi < 9 ? '0' : '') + (mi + 1) + '-' + (day < 10 ? '0' : '') + day;
+        let c = make(y);
+        if (addDays(c, 0) !== c) return null;
+        if (!m[3] && c < today) { y += 1; c = make(y); if (addDays(c, 0) !== c) return null; }
+        date = c;
+      }
+    }
+  }
+  return date ? { date, time } : null;
+}
+// "da/de" ünlü uyumu: "Tasarım onayı da", "SEO kontrolleri de"
+function daDe(w) { const v = String(w).toLocaleLowerCase('tr').match(/[aıoueiöü](?=[^aıoueiöü]*$)/); return v && 'aıou'.includes(v[0]) ? 'da' : 'de'; }
+function task(id, parent, title, extra) {
+  return Object.assign({ id, parent, title, done: false, due: null, time: null, start: null, who: [], desc: '', remind: false }, extra || {});
+}
+const INITIAL = [
+  task('t1',  null, 'Tasarım onayı'),
+  task('t11', 't1', 'Ana sayfa taslağı', { done: true }),
+  task('t12', 't1', 'Ürün sayfası', { due: '2026-11-06', who: ['zeynep', 'ben'] }),
+  task('t13', 't1', 'Mobil görünüm'),
+  task('t2',  null, 'İçerik yazımı', { due: '2026-11-12', time: '17:00', start: '2026-11-03', who: ['zeynep', 'mehmet'], remind: true, desc: 'Ürün açıklamaları ve hakkımızda sayfası. Eski siteden alınacak metinler Drive klasöründe.' }),
+  task('t21', 't2', 'Hakkımızda metni', { done: true }),
+  task('t22', 't2', 'Ürün açıklamaları'),
+  task('t23', 't2', 'SSS'),
+  task('t231','t23','Kargo soruları'),
+  task('t232','t23','İade soruları'),
+  task('t3',  null, 'SEO kontrolleri', { due: '2026-11-04', who: ['mehmet'] }),
+  task('t6',  null, 'Lansman duyurusu', { due: '2026-11-20' }),
+  task('t4',  null, 'Barındırma kurulumu', { done: true, who: ['mehmet'] }),
+  task('t41', 't4', 'Teklifi onaylat ve sözleşmeyi imzala', { done: true, who: ['mehmet'] }),
+  task('t5',  null, 'Alan adı yönlendirmesi', { done: true })
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tasks: INITIAL, expanded: { t1: true }, doneOpen: {}, detail: 't2', picker: null, focusId: null, help: false, settling: {}, toasts: [], closed: false, sidebar: this.props.sidebar === 'collapsed' ? 'rail' : 'open' };
+    this.seq = 0; this.focusNext = null; this._rows = []; this.focusCard = false; this.helpReturn = null;
+    this.settleTimer = null; this.blockTimer = null;
+    // Geri al: her tamamlama yığına girer (Ctrl+Z en sonuncuyu açar). Toast'lar ayrı tutulur; süreleri üzerine gelince ya da odakta durur.
+    this.undo = []; this.toastSeq = 0; this.toastTimers = {}; this.toastLeft = {}; this.toastStart = {}; this.toastPaused = false;
+    if (this.props.state === 'toast') {
+      // Önizleme: "Ürün sayfası" biraz önce tamamlandı (ikinci satır), ardından "Mobil görünüm" işaretlendi; üst görev zincirle tamamlandı ve satırlar henüz yerinde.
+      this.state.tasks = INITIAL.map(t => (t.id === 't1' || t.id === 't12' || t.id === 't13') ? Object.assign({}, t, { done: true }) : t);
+      this.state.settling = { t13: true, t1: true };
+      this.undo = [{ key: 'p1', ids: ['t12'] }, { key: 'p2', ids: ['t13', 't1'] }];
+      this.state.toasts = [{ key: 'p2', text: 'Tasarım onayı da tamamlandı', ids: ['t13', 't1'] }, { key: 'p1', text: 'Ürün sayfası tamamlandı', ids: ['t12'] }];
+      this.state.detail = null;
+    }
+  }
+  componentWillUnmount() {
+    clearTimeout(this.settleTimer); clearTimeout(this.blockTimer); this.settleTimer = null; this.blockTimer = null;
+    Object.keys(this.toastTimers).forEach(k => clearTimeout(this.toastTimers[k])); this.toastTimers = {};
+  }
+  // --- toast yığını
+  armToast(key, ms) {
+    clearTimeout(this.toastTimers[key]); delete this.toastTimers[key];
+    this.toastLeft[key] = ms; this.toastStart[key] = Date.now();
+    if (!this.toastPaused) this.toastTimers[key] = setTimeout(() => this.dropToast(key), ms);
+  }
+  dropToast(key) {
+    clearTimeout(this.toastTimers[key]); delete this.toastTimers[key]; delete this.toastLeft[key]; delete this.toastStart[key];
+    if (this.state.toasts.some(t => t.key === key)) this.setState({ toasts: this.state.toasts.filter(t => t.key !== key) });
+  }
+  pushToast(text, ids) {
+    this.toastSeq += 1; const key = 'k' + this.toastSeq;
+    const list = [{ key, text, ids }].concat(this.state.toasts);
+    list.slice(TOAST_MAX).forEach(t => { clearTimeout(this.toastTimers[t.key]); delete this.toastTimers[t.key]; });
+    this.armToast(key, TOAST_MS);
+    return { key, toasts: list.slice(0, TOAST_MAX) };
+  }
+  pauseToasts() {
+    if (this.toastPaused) return; this.toastPaused = true;
+    Object.keys(this.toastTimers).forEach(k => { clearTimeout(this.toastTimers[k]); this.toastLeft[k] = Math.max(0, this.toastLeft[k] - (Date.now() - this.toastStart[k])); });
+    this.toastTimers = {};
+  }
+  resumeToasts() {
+    if (!this.toastPaused) return; this.toastPaused = false;
+    this.state.toasts.forEach(t => this.armToast(t.key, Math.max(TOAST_MIN_LEFT, this.toastLeft[t.key] == null ? TOAST_MS : this.toastLeft[t.key])));
+  }
+  // ids'i yeniden açar; ilgili toast ve yığın kaydı kalkar, odak ilk satıra döner.
+  undoIds(ids) {
+    const settling = Object.assign({}, this.state.settling); ids.forEach(c => { delete settling[c]; });
+    this.undo = this.undo.filter(u => !u.ids.some(x => ids.includes(x)));
+    const gone = this.state.toasts.filter(t => t.ids.some(x => ids.includes(x)));
+    gone.forEach(t => { clearTimeout(this.toastTimers[t.key]); delete this.toastTimers[t.key]; });
+    if (ids.length) this.focusNext = { id: ids[0], caret: 'end' };
+    this.setState({ tasks: this.state.tasks.map(x => ids.includes(x.id) ? Object.assign({}, x, { done: false }) : x), settling, toasts: this.state.toasts.filter(t => !gone.includes(t)) });
+  }
+  undoToast(key) { const t = this.state.toasts.find(x => x.key === key); if (t) this.undoIds(t.ids); }
+  // Ctrl+Z: son tamamlamayı geri alır. Yığın boşsa false döner ve tuş tarayıcının metin geri almasına kalır.
+  undoLast() { const u = this.undo[this.undo.length - 1]; if (!u) return false; this.undoIds(u.ids); return true; }
+  componentDidUpdate() {
+    if (this.focusCard) {
+      this.focusCard = false;
+      const card = document.getElementById('kbd-card');
+      if (card) card.focus();
+      return;
+    }
+    if (!this.focusNext) return;
+    const f = this.focusNext; this.focusNext = null;
+    if (f.raw) { const r = document.getElementById(f.raw); if (r) r.focus(); return; }
+    const el = document.getElementById(f.id === '#btn' ? 'kbd-btn' : 't-' + f.id);
+    if (!el) return;
+    el.focus();
+    if (f.id === '#btn') return;
+    const n = f.caret === 'end' ? el.value.length : (f.caret || 0);
+    try { el.setSelectionRange(n, n); } catch (e) {}
+  }
+  isDesc(list, x, id) { let p = x.parent; while (p) { if (p === id) return true; const q = list.find(y => y.id === p); p = q ? q.parent : null; } return false; }
+  subtreeEnd(list, id) { const i = list.findIndex(t => t.id === id); let j = i + 1; while (j < list.length && this.isDesc(list, list[j], id)) j++; return j; }
+  subtree(list, id) { const i = list.findIndex(t => t.id === id); return list.slice(i, this.subtreeEnd(list, id)); }
+  patch(id, fields) { this.setState({ tasks: this.state.tasks.map(t => t.id === id ? Object.assign({}, t, fields) : t) }); }
+  newTask(parent, title) { this.seq += 1; return task('n' + this.seq, parent, title || ''); }
+
+  // Tamamlama: alt ağaç birlikte; son alt görev bitince üst görev zincirle tamamlanır (ürün kararı).
+  // Tamamlanan satırlar SETTLE_MS boyunca yerinde, üstü çizili kalır; sonra Tamamlananlar grubuna iner.
+  // Her tamamlamada "Geri al" toast'ı çıkar; geri al tam olarak bu işlemle değişen satırları açar.
+  toggleDone(id, fromKey) {
+    const list = this.state.tasks.map(x => Object.assign({}, x));
+    const t = list.find(x => x.id === id); const making = !t.done;
+    const changed = [];
+    list.forEach(x => { if ((x.id === id || this.isDesc(list, x, id)) && x.done !== making) { x.done = making; changed.push(x.id); } });
+    let p = t.parent; let top = null;
+    while (p) {
+      const pt = list.find(x => x.id === p); const kids = list.filter(x => x.parent === p);
+      if (making) { if (kids.every(k => k.done)) { if (!pt.done) { pt.done = true; changed.push(pt.id); top = pt; } } else break; }
+      else if (pt.done) { pt.done = false; changed.push(pt.id); }
+      p = pt.parent;
+    }
+    const settling = Object.assign({}, this.state.settling);
+    if (!making) {
+      changed.forEach(c => { delete settling[c]; });
+      const gone = this.state.toasts.filter(x => x.ids.some(i => changed.includes(i)));
+      gone.forEach(x => { clearTimeout(this.toastTimers[x.key]); delete this.toastTimers[x.key]; });
+      this.undo = this.undo.filter(u => !u.ids.some(i => changed.includes(i)));
+      return this.setState({ tasks: list, settling, toasts: this.state.toasts.filter(x => !gone.includes(x)) });
+    }
+    changed.forEach(c => { settling[c] = true; });
+    if (fromKey) {
+      const vis = this.visibleIds(); const vi = vis.indexOf(id);
+      const leaving = (x) => changed.includes(x) || changed.some(c => { const n = list.find(y => y.id === x); return n && this.isDesc(list, n, c); });
+      let next = null;
+      for (let j = vi + 1; j < vis.length && !next; j++) if (!leaving(vis[j])) next = vis[j];
+      for (let j = vi - 1; j >= 0 && !next; j--) if (!leaving(vis[j])) next = vis[j];
+      this.focusNext = next ? { id: next, caret: 'end' } : { raw: 'add-top' };
+    }
+    clearTimeout(this.settleTimer);
+    this.settleTimer = setTimeout(() => { this.settleTimer = null; this.setState({ settling: {} }); }, SETTLE_MS);
+    // Toast metni görev adını söyler: "Mobil görünüm tamamlandı"; zincirde üst görev: "Tasarım onayı da tamamlandı".
+    const text = top ? top.title + ' ' + daDe(top.title) + ' tamamlandı' : (t.title.trim() || 'Adsız görev') + ' tamamlandı';
+    const pt = this.pushToast(text, changed);
+    this.undo = this.undo.concat({ key: pt.key, ids: changed }).slice(-UNDO_MAX);
+    this.setState({ tasks: list, settling, toasts: pt.toasts });
+  }
+  closePickerTo(id) { this.focusNext = { id, caret: 'end' }; this.setState({ picker: null }); }
+  indent(id) {
+    const list = this.state.tasks; const t = list.find(x => x.id === id);
+    const sibs = list.filter(x => x.parent === t.parent && !x.done); const si = sibs.indexOf(t);
+    if (si <= 0) return;
+    const prev = sibs[si - 1];
+    this.focusNext = { id, caret: 'end' };
+    this.setState({ tasks: list.map(x => x.id === id ? Object.assign({}, x, { parent: prev.id }) : x), expanded: Object.assign({}, this.state.expanded, { [prev.id]: true }) });
+  }
+  outdent(id) {
+    const list = this.state.tasks; const t = list.find(x => x.id === id);
+    if (!t.parent) return;
+    const P = list.find(x => x.id === t.parent);
+    const sub = this.subtree(list, id).map(x => x.id === id ? Object.assign({}, x, { parent: P.parent }) : x);
+    const rest = list.filter(x => !sub.some(s => s.id === x.id));
+    const at = this.subtreeEnd(rest, P.id);
+    rest.splice(at, 0, ...sub);
+    this.focusNext = { id, caret: 'end' };
+    this.setState({ tasks: rest });
+  }
+  move(id, dir) {
+    const list = this.state.tasks; const t = list.find(x => x.id === id);
+    const sibs = list.filter(x => x.parent === t.parent && x.done === t.done); const si = sibs.indexOf(t);
+    const target = sibs[si + dir]; if (!target) return;
+    const sub = this.subtree(list, id);
+    const rest = list.filter(x => !sub.some(s => s.id === x.id));
+    const at = dir < 0 ? rest.findIndex(x => x.id === target.id) : this.subtreeEnd(rest, target.id);
+    rest.splice(at, 0, ...sub);
+    this.focusNext = { id, caret: 'end' };
+    this.setState({ tasks: rest });
+  }
+  addChild(id) {
+    const list = this.state.tasks.slice(); const n = this.newTask(id, '');
+    list.splice(this.subtreeEnd(list, id), 0, n);
+    this.focusNext = { id: n.id, caret: 0 };
+    this.setState({ tasks: list, expanded: Object.assign({}, this.state.expanded, { [id]: true }), detail: null });
+  }
+  visibleIds() { return this._rows.filter(r => r.isTask).map(r => r.id); }
+  focusEl(id, caret) { const el = document.getElementById('t-' + id); if (!el) return; el.focus(); const n = caret === 'end' ? el.value.length : (caret || 0); try { el.setSelectionRange(n, n); } catch (e) {} }
+
+  openHelp(from) { this.helpReturn = from || null; this.focusCard = true; this.setState({ help: true, picker: null }); }
+  closeHelp() {
+    const from = this.helpReturn; this.helpReturn = null;
+    if (from && (from === '#btn' || this.state.tasks.some(x => x.id === from))) this.focusNext = { id: from, caret: 'end' };
+    this.setState({ help: false });
+  }
+  cardKey(e) {
+    if (e.key === 'Escape' || ((e.ctrlKey || e.metaKey) && e.key === '/')) { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); this.closeHelp(); }
+  }
+
+  key(e, id) {
+    const list = this.state.tasks; const t = list.find(x => x.id === id); const k = e.key; const el = e.target;
+    const exp = this.state.expanded; const hasKids = list.some(x => x.parent === id);
+    if ((e.ctrlKey || e.metaKey) && k === '/') { e.preventDefault(); return this.state.help ? this.closeHelp() : this.openHelp(id); }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (k === 'z' || k === 'Z')) {
+      if (this.undo.length) { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); this.undoLast(); }
+      return;
+    }
+    if (k === 'Enter') {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) return this.toggleDone(id, true);
+      // Boş alt görevde Enter yeni satır açmaz, girintiyi azaltır.
+      if (!e.shiftKey && el.value === '' && t.parent) return this.outdent(id);
+      if (e.shiftKey) {
+        const opening = this.state.detail !== id;
+        if (opening) this.focusNext = { raw: 'desc-' + id };
+        return this.setState({ detail: opening ? id : null, picker: null });
+      }
+      const pos = el.selectionStart == null ? el.value.length : el.selectionStart;
+      if (pos === 0 && el.value !== '') {
+        // İmleç baştaysa yeni boş satır üste eklenir; metin, tarih ve atamalar bu satırda kalır.
+        const up = list.slice(); up.splice(list.findIndex(x => x.id === id), 0, this.newTask(t.parent, ''));
+        this.focusNext = { id, caret: 0 };
+        return this.setState({ tasks: up });
+      }
+      const before = el.value.slice(0, pos), after = el.value.slice(pos);
+      const n = this.newTask(t.parent, after);
+      const next = list.map(x => x.id === id ? Object.assign({}, x, { title: before }) : x);
+      next.splice(this.subtreeEnd(next, id), 0, n);
+      this.focusNext = { id: n.id, caret: 0 };
+      return this.setState({ tasks: next });
+    }
+    if (k === 'Tab') { e.preventDefault(); return e.shiftKey ? this.outdent(id) : this.indent(id); }
+    if (k === 'Backspace' && el.value === '') {
+      if (hasKids) {
+        // Alt görevi olan satır silinmez; kısa bir sallanma ile geri bildirim verilir.
+        e.preventDefault(); clearTimeout(this.blockTimer);
+        this.blockTimer = setTimeout(() => { this.blockTimer = null; this.setState({ blocked: null }); }, 600);
+        return this.setState({ blocked: id });
+      }
+      e.preventDefault();
+      const vis = this.visibleIds(); const vi = vis.indexOf(id); const prev = vis[vi - 1];
+      if (prev) this.focusNext = { id: prev, caret: 'end' };
+      return this.setState({ tasks: list.filter(x => x.id !== id), picker: null, detail: this.state.detail === id ? null : this.state.detail });
+    }
+    if (k === 'ArrowUp' || k === 'ArrowDown') {
+      e.preventDefault();
+      if (e.altKey) return this.move(id, k === 'ArrowUp' ? -1 : 1);
+      const vis = this.visibleIds(); const j = vis.indexOf(id) + (k === 'ArrowUp' ? -1 : 1);
+      if (vis[j]) this.focusEl(vis[j], el.selectionStart);
+      return;
+    }
+    if (k === 'ArrowRight' && el.selectionStart === el.value.length && hasKids && !exp[id]) { e.preventDefault(); return this.setState({ expanded: Object.assign({}, exp, { [id]: true }) }); }
+    if (k === 'ArrowLeft' && el.selectionStart === 0 && exp[id]) { e.preventDefault(); return this.setState({ expanded: Object.assign({}, exp, { [id]: false }) }); }
+    if ((e.ctrlKey || e.metaKey) && (k === 'd' || k === 'D')) { e.preventDefault(); this.focusNext = { raw: 'dp-nl' }; return this.setState({ picker: { type: 'date', id, slot: 'due', timeOpen: false, up: this.popUp(e, 560) } }); }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (k === 'a' || k === 'A')) { e.preventDefault(); this.focusNext = { raw: 'wm-' + MEMBERS[0].id }; return this.setState({ picker: { type: 'who', id, up: this.popUp(e, 300) } }); }
+    if (k === 'Escape') {
+      e.preventDefault();
+      if (this.state.help) return this.closeHelp();
+      if (this.state.picker) return this.setState({ picker: null });
+      if (this.state.detail === id) return this.setState({ detail: null });
+      // Listeden çık: odak listenin sonundaki "Görev ekle" düğmesine; sonraki Tab alt araç çubuğuna gider.
+      this.focusNext = { raw: 'add-top' }; return this.setState({ focusId: null });
+    }
+  }
+
+  row(t, depth) {
+    const S = this.state; const list = S.tasks; const id = t.id;
+    const kids = list.filter(x => x.parent === id); const doneN = kids.filter(x => x.done).length;
+    const pk = S.picker; const showDate = !!pk && pk.type === 'date' && pk.id === id; const showWho = !!pk && pk.type === 'who' && pk.id === id;
+    const showDetail = S.detail === id; const overdue = !!t.due && t.due < TODAY && !t.done;
+    const who = t.who.map(w => MEMBERS.find(m => m.id === w)).filter(Boolean);
+    const slot = showDate && pk.slot === 'start' ? 'start' : 'due';
+    const timeOpen = showDate && !!pk.timeOpen;
+    const setPicker = (f) => this.setState({ picker: Object.assign({}, this.state.picker, f) });
+    const pickDate = (d, extra, pextra) => {
+      const f = fixRange({ start: t.start, due: t.due });
+      let warn = null;
+      if (slot === 'start' && f.due && d > f.due) warn = 'Başlangıç bitişten sonra olamaz; bitişe eşitlendi.';
+      if (slot === 'due' && f.start && d < f.start) warn = 'Bitiş başlangıçtan önce; başlangıç bitişe eşitlendi.';
+      f[slot] = d; fixRange(f);
+      if (!f.due) f.remind = false;
+      Object.assign(f, extra || {});
+      this.setState({ tasks: list.map(x => x.id === id ? Object.assign({}, x, f) : x), picker: pk ? Object.assign({}, pk, { slot: 'due', warn }, pextra || {}) : null });
+    };
+    const nlSubmit = (e) => {
+      const v = e && e.target ? e.target.value : '';
+      const r = parseNL(v);
+      if (!r) return setPicker({ nl: v, nlErr: true });
+      pickDate(r.date, r.time && (slot === 'due') ? { time: r.time } : null, { nl: '', nlErr: false });
+      // Bitiş yazıldıysa ve uyarı yoksa seçici kapanır, odak satıra döner. Başlangıç yazıldıysa seçici açık kalır ve bitiş yuvasına geçer.
+      const np = this.state.picker;
+      if (slot === 'due' && np && !np.warn) this.closePickerTo(id);
+    };
+    const rs = t.start && t.due && t.start < t.due ? t.start : null;
+    const days = []; for (let n = 1; n <= 30; n++) { const d = '2026-11-' + (n < 10 ? '0' : '') + n;
+      const c = d === t.due ? 'sel' : (d === t.start ? 'sel-start' : (rs && d > rs && d < t.due ? 'in-range' : ''));
+      days.push({ n, label: n + ' Kasım', cls: (d === TODAY ? 'today ' : '') + c, pick: () => pickDate(d) }); }
+    const range = fmtRange(t.start, t.due);
+    const toggleWho = (m) => { const w = t.who.includes(m.id) ? t.who.filter(x => x !== m.id) : t.who.concat(m.id); this.patch(id, { who: w }); };
+    return {
+      key: id, id, isTask: true, isHeader: false, title: t.title, done: t.done, depth,
+      placeholder: S.focusId === id && !t.title ? 'Görev yaz \u00b7 Enter yeni görev \u00b7 Tab alt görev' : 'Görev',
+      pad: depth * 28, detPad: 36,
+      cbLabel: (t.done ? 'Tamamlanmadı olarak işaretle: ' : 'Görevi tamamla: ') + (t.title.trim() || 'adsız görev'),
+      cls: (t.done ? 'done ' : '') + (showDetail ? 'open ' : '') + (S.blocked === id ? 'nodel' : ''),
+      hasKids: kids.length > 0, kidLabel: doneN + '/' + kids.length, kidTitle: doneN + '/' + kids.length + ' alt görev tamamlandı',
+      chevCls: (kids.length ? 'show ' : '') + (S.expanded[id] ? 'open' : ''),
+      hasDue: !!range, dueLabel: range, dueCls: overdue ? 'over' : '',
+      who, dateOn: showDate ? 'on' : '', whoOn: showWho ? 'on' : '', detOn: showDetail ? 'on' : '',
+      showDate, showWho, showDetail, popCls: (showDate || showWho) && pk.up ? 'up' : '',
+      desc: t.desc, remind: t.remind,
+      dateChip: range ? range + (t.due && t.time ? ', ' + t.time : '') : 'Tarih',
+      dateChipAria: range ? 'Tarih: ' + range + (t.due && t.time ? ', ' + t.time : '') + (t.remind && t.due ? ', hatırlatıcı açık' : '') : 'Tarih ver',
+      dateChipCls: (overdue ? 'over' : (range ? 'set' : '')) + (t.remind && t.due ? ' rem' : ''),
+      whoChip: who.length ? who.map(w => w.id === 'ben' ? 'Sen' : w.name.split(' ')[0]).join(', ') : 'Kişiye ata', whoChipCls: who.length ? 'set' : '',
+      members: MEMBERS.map(m => ({ id: m.id, name: m.name, label: m.id === 'ben' ? m.name + ' (sen)' : m.name, ini: m.ini, color: m.color, viewer: m.role === 'viewer', cls: m.role === 'viewer' ? 'viewer' : '', on: t.who.includes(m.id), toggle: () => toggleWho(m) })),
+      dp: { days, slot, timeOpen,
+            startLabel: fmt(t.start), dueLabel: fmt(t.due),
+            startCls: (t.start ? '' : 'empty ') + (slot === 'start' ? 'on' : ''), dueCls: (t.due ? '' : 'empty ') + (slot === 'due' ? 'on' : ''),
+            startOn: slot === 'start', dueOn: slot === 'due',
+            slotStart: () => setPicker({ slot: 'start' }), slotDue: () => setPicker({ slot: 'due' }),
+            time: t.time || '', timeCls: (t.time ? 'set ' : '') + (timeOpen ? 'open' : ''), timeAria: t.time ? 'Saat ' + t.time : 'Saat ekle',
+            toggleTime: () => setPicker({ timeOpen: !timeOpen }),
+            setTime: (e) => { const v = e.target.value || null; const auto = !!v && !t.due;
+              this.setState({ tasks: list.map(x => x.id === id ? Object.assign({}, x, auto ? fixRange({ time: v, due: TODAY, start: t.start }) : { time: v }) : x),
+                picker: Object.assign({}, this.state.picker, { warn: auto ? 'Saat için bitiş tarihi bugün olarak ayarlandı.' : null }) }); },
+            warn: (showDate && pk.warn) || '', hasWarn: !!(showDate && pk.warn),
+            nl: (showDate && pk.nl) || '', nlErr: !!(showDate && pk.nlErr), nlCls: showDate && pk.nlErr ? 'err' : '',
+            nlLabel: slot === 'start' ? 'Başlangıç tarihini yaz' : 'Bitiş tarihini yaz',
+            nlInput: (e) => setPicker({ nl: e.target.value, nlErr: false }),
+            nlKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); nlSubmit(e); } },
+            remind: !!t.due && t.remind, remindOff: !t.due, remindCls: t.due ? '' : 'off',
+            remindTo: t.who.length ? 'Atananlara gider' : 'Sana gider',
+            toggleRemind: () => { if (t.due) this.patch(id, { remind: !t.remind }); },
+            today: () => pickDate(TODAY), tomorrow: () => pickDate('2026-11-07'), nextWeek: () => pickDate('2026-11-09'),
+            clear: () => this.setState({ tasks: list.map(x => x.id === id ? Object.assign({}, x, { start: null, due: null, time: null, remind: false }) : x), picker: null }) },
+      toggle: () => this.toggleDone(id, false),
+      popKey: (e) => { if (e.key === 'Escape') { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); this.closePickerTo(id); } },
+      detKey: (e) => { if (e.key === 'Escape') { e.preventDefault(); if (e.stopPropagation) e.stopPropagation(); this.focusNext = { id, caret: 'end' }; this.setState({ detail: null, picker: null }); } },
+      toggleExpand: () => this.setState({ expanded: Object.assign({}, S.expanded, { [id]: !S.expanded[id] }) }),
+      // Başlık yazılınca Ctrl+Z önce metne aittir: tamamlama yığını boşalır (toast'taki Geri al çalışmaya devam eder).
+      onInput: (e) => { this.undo = []; this.patch(id, { title: e.target.value }); },
+      onKey: (e) => this.key(e, id),
+      onFocus: () => { if (this.state.focusId !== id) this.setState({ focusId: id }); },
+      onBlur: () => { if (this.state.focusId === id) this.setState({ focusId: null }); },
+      openDate: (e) => this.setState({ picker: showDate ? null : { type: 'date', id, slot: 'due', timeOpen: false, up: this.popUp(e, 500) } }),
+      openWho: (e) => this.setState({ picker: showWho ? null : { type: 'who', id, up: this.popUp(e, 220) } }),
+      openDetail: () => this.setState({ detail: showDetail ? null : id, picker: null }),
+      setDesc: (e) => this.patch(id, { desc: e.target.value }),
+      addChild: () => this.addChild(id)
+    };
+  }
+  build(parent, depth, out) {
+    const S = this.state; const kids = S.tasks.filter(t => t.parent === parent);
+    const st = S.settling || {};
+    const open = kids.filter(t => !t.done || st[t.id]), done = kids.filter(t => t.done && !st[t.id]);
+    open.forEach(t => { out.push(this.row(t, depth)); if (S.expanded[t.id]) this.build(t.id, depth + 1, out); });
+    if (done.length) {
+      const key = parent || 'root'; const isOpen = !!S.doneOpen[key];
+      out.push({ key: 'h-' + key, id: null, isTask: false, isHeader: true, padHdr: 8 + depth * 28 + 36, count: done.length, open: isOpen, openCls: isOpen ? 'open' : '',
+        toggleOpen: () => this.setState({ doneOpen: Object.assign({}, S.doneOpen, { [key]: !isOpen }) }) });
+      if (isOpen) done.forEach(t => { out.push(this.row(t, depth)); if (S.expanded[t.id]) this.build(t.id, depth + 1, out); });
+    }
+  }
+  popUp(e, need) {
+    const el = e && e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget : (e && e.target);
+    if (!el || !el.getBoundingClientRect) return false;
+    const root = el.closest('.sk') || document.documentElement;
+    const r = el.getBoundingClientRect(); const box = root.getBoundingClientRect();
+    const below = box.bottom - r.bottom; const above = r.top - box.top;
+    return below < need && above > below;
+  }
+  toggleSidebar() { this.setState({ sidebar: this.state.sidebar === 'rail' ? 'open' : 'rail' }); }
+  renderVals() {
+    const rows = []; this.build(null, 0, rows); this._rows = rows;
+    const railOn = this.state.sidebar === 'rail';
+    return {
+      theme: this.props.theme ?? 'light',
+      navMode: railOn ? 'rail' : 'open',
+      sidebarOpen: !railOn,
+      toggleSidebar: () => this.toggleSidebar(),
+      help: !!this.state.help,
+      helpOn: this.state.help ? 'on' : '',
+      toggleHelp: () => (this.state.help ? this.closeHelp() : this.openHelp('#btn')),
+      closeHelp: () => this.closeHelp(),
+      cardKey: (e) => this.cardKey(e),
+      rows,
+      toasts: this.state.toasts.map((t, i) => ({ key: t.key, text: t.text, first: i === 0, cls: i === 0 ? '' : 'old',
+        undoTitle: i === 0 ? 'Geri al (Ctrl+Z)' : 'Geri al', undoAria: 'Geri al: ' + t.text, keys: i === 0 ? 'Control+Z' : '',
+        undo: () => this.undoToast(t.key), close: () => this.dropToast(t.key) })),
+      toastPause: () => this.pauseToasts(),
+      toastResume: () => this.resumeToasts(),
+      noteOpen: !this.state.closed,
+      reopen: () => { this.focusNext = { raw: 'note-title' }; this.setState({ closed: false }); },
+      // Diyalog düzeyi: liste dışındaki odakta (Görev ekle, araç çubuğu, toast) Esc notu kapatır; Ctrl+Z son tamamlamayı geri alır.
+      dlgKey: (e) => {
+        if (e.defaultPrevented) return;
+        const tag = e.target && e.target.tagName; const typing = (tag === 'TEXTAREA') || (tag === 'INPUT' && e.target.type !== 'checkbox');
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z') && !typing && this.undo.length) { e.preventDefault(); this.undoLast(); return; }
+        if (e.key === 'Escape' && !typing && !this.state.help && !this.state.picker) { e.preventDefault(); this.focusNext = { raw: 'open-note' }; this.setState({ closed: true, detail: null }); }
+      },
+      closePicker: () => { if (this.state.picker) this.setState({ picker: null }); },
+      addTop: () => { const n = this.newTask(null, ''); this.focusNext = { id: n.id, caret: 0 }; this.setState({ tasks: this.state.tasks.concat(n) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

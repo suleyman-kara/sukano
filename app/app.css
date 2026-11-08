@@ -1,0 +1,747 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ------------------------------------------------------------------ */
+/* Yazı tipi: Onest (self-host, değişken font; 400–700)                */
+/* ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/onest-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: "Onest";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/onest-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ------------------------------------------------------------------ */
+/* Varyantlar                                                          */
+/* ------------------------------------------------------------------ */
+/* Koyu tema: <html data-theme="dark"> (app/lib/theme.ts ayarlar). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Sol panel ray hali: tablette (768–1023) her zaman, masaüstünde
+   <html data-nav="rail"> iken. Çekmecedeki (Sheet) gezinme bu varyantı
+   kullanmaz. */
+@custom-variant railed {
+  @media (width >= 48rem) and (width < 64rem) {
+    @slot;
+  }
+  @media (width >= 64rem) {
+    &:where([data-nav="rail"] *) {
+      @slot;
+    }
+  }
+}
+
+/* Hareketi azalt: sistem tercihi (Ayarlar "Kapalı" — <html data-motion="full"> — değilse)
+   ya da Ayarlar "Açık" (<html data-motion="reduced">). Bkz. app/lib/motion.ts. */
+@custom-variant reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    &:where(:root:not([data-motion="full"]) *) {
+      @slot;
+    }
+  }
+  &:where([data-motion="reduced"] *) {
+    @slot;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tasarım belirteçleri (PLAN §10, docs/design/Main.dc.html .sk)       */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --fg: #1c1b19;
+  --muted: #5f5d57;
+  --line: #e4e2dc;
+  --hover: #ecebe6;
+  --accent: #2e6b55;
+  --accent-fg: #ffffff;
+  --accent-soft: #e2eee8;
+  --danger: #a8423a;
+  --danger-soft: #f8e4e1;
+  --warn: #8a5a0b;
+  --warn-soft: #fbefd6;
+  --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 8px 24px rgba(28, 27, 25, 0.08);
+  /* Giriş ekranı sol paneli ve mobil karartma */
+  --panel: #e8efe9;
+  --dim: rgba(28, 27, 25, 0.45);
+  /* Arama eşleşme vurgusu */
+  --mark: #f3e7a6;
+
+  /* Not renkleri: varsayılan + 9 pastel */
+  --n-default: #ffffff;
+  --n-sari: #fbf0bf;
+  --n-turuncu: #fbe2cc;
+  --n-pembe: #f9dada;
+  --n-mor: #e9e0f7;
+  --n-mavi: #dce9f7;
+  --n-turkuaz: #d4eeea;
+  --n-yesil: #def0d6;
+  --n-kahve: #eadfd3;
+  --n-gri: #e6e6e1;
+
+  /* Proje renkleri (iki temada aynı; üzerinde beyaz metin ≥ 4,5:1) */
+  --p-turuncu: #ad5a34;
+  --p-mavi: #3f6db5;
+  --p-yesil: #4a7d45;
+  --p-pembe: #9e4f72;
+  --p-mor: #6f5dae;
+  --p-sari: #87691a;
+  --p-grimavi: #4f6c7a;
+
+  /* Hareket ölçeği (MotionSpec; JS karşılığı app/lib/motion.ts) */
+  --dur-micro: 120ms; /* basma, hover, kutucuk, tik */
+  --dur-small: 180ms; /* popover, menü, tooltip, çıkışlar */
+  --dur-medium: 240ms; /* toast, kart girişi, panel, alt görev */
+  --dur-large: 320ms; /* kart → modal, satırın inişi */
+  --dur-ambient: 11s; /* yalnızca giriş ekranı arka planı (8–14 s) */
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1); /* giriş */
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0); /* çıkış; süre girişin ~%75'i */
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1); /* büyüyen yüzey, bırakma */
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1); /* ekranda kalan öğe kayar */
+  --ease-ambient: cubic-bezier(0.45, 0, 0.55, 1);
+  /* Eski adlar (geriye uyum) */
+  --ease-out-quart: var(--ease-out);
+  --ease-in-quart: var(--ease-in);
+
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* JS çalışmadığında (data-theme yokken) sistem tercihine uy. */
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #141413;
+    --surface: #1e1e1c;
+    --fg: #eceae4;
+    --muted: #afada6;
+    --line: #2f2f2c;
+    --hover: #2a2a27;
+    --accent: #7fc2a6;
+    --accent-fg: #0f1f19;
+    --accent-soft: #233a30;
+    --danger: #e58a7d;
+    --danger-soft: #3e2622;
+    --warn: #ddaf55;
+    --warn-soft: #3a2f17;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+    --panel: #1b2420;
+    --dim: rgba(0, 0, 0, 0.6);
+    --mark: #5a4f1c;
+    --n-default: #1e1e1c;
+    --n-sari: #45401f;
+    --n-turuncu: #4a3827;
+    --n-pembe: #4a2e2e;
+    --n-mor: #38304c;
+    --n-mavi: #27374a;
+    --n-turkuaz: #223e3a;
+    --n-yesil: #2c3f27;
+    --n-kahve: #423831;
+    --n-gri: #30302e;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413;
+  --surface: #1e1e1c;
+  --fg: #eceae4;
+  --muted: #afada6;
+  --line: #2f2f2c;
+  --hover: #2a2a27;
+  --accent: #7fc2a6;
+  --accent-fg: #0f1f19;
+  --accent-soft: #233a30;
+  --danger: #e58a7d;
+  --danger-soft: #3e2622;
+  --warn: #ddaf55;
+  --warn-soft: #3a2f17;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --panel: #1b2420;
+  --dim: rgba(0, 0, 0, 0.6);
+  --mark: #5a4f1c;
+  --n-default: #1e1e1c;
+  --n-sari: #45401f;
+  --n-turuncu: #4a3827;
+  --n-pembe: #4a2e2e;
+  --n-mor: #38304c;
+  --n-mavi: #27374a;
+  --n-turkuaz: #223e3a;
+  --n-yesil: #2c3f27;
+  --n-kahve: #423831;
+  --n-gri: #30302e;
+}
+
+/* shadcn/ui tema değişkenleri → Sukano belirteçleri.
+   Not: shadcn'in kendi --muted/--accent (arka plan) değişkenleri bizim
+   --muted (soluk metin) ve --accent (vurgu yeşili) adlarıyla çakıştığı için
+   tanımlanmaz; Tailwind renkleri aşağıdaki @theme bloğunda doğrudan eşlenir. */
+:root,
+[data-theme="dark"] {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--hover);
+  --secondary-foreground: var(--fg);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+}
+
+@theme inline {
+  --font-sans: "Onest", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-sans);
+
+  /* shadcn renkleri */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--accent-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--hover);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sukano renkleri (bg-surface, text-fg, border-line, bg-hover …) */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-line: var(--line);
+  --color-hover: var(--hover);
+  --color-panel: var(--panel);
+  --color-dim: var(--dim);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --color-note-default: var(--n-default);
+  --color-note-sari: var(--n-sari);
+  --color-note-turuncu: var(--n-turuncu);
+  --color-note-pembe: var(--n-pembe);
+  --color-note-mor: var(--n-mor);
+  --color-note-mavi: var(--n-mavi);
+  --color-note-turkuaz: var(--n-turkuaz);
+  --color-note-yesil: var(--n-yesil);
+  --color-note-kahve: var(--n-kahve);
+  --color-note-gri: var(--n-gri);
+
+  --color-project-turuncu: var(--p-turuncu);
+  --color-project-mavi: var(--p-mavi);
+  --color-project-yesil: var(--p-yesil);
+  --color-project-pembe: var(--p-pembe);
+  --color-project-mor: var(--p-mor);
+  --color-project-sari: var(--p-sari);
+  --color-project-grimavi: var(--p-grimavi);
+
+  --shadow-elevated: var(--shadow);
+
+  /* Radius: düğme 10, mobil kart 12, kart 14 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: var(--radius);
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
+
+  --ease-spring: var(--ease-spring);
+}
+
+/* ------------------------------------------------------------------ */
+/* Temel                                                               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  @media (width >= 48rem) {
+    body {
+      font-size: 14px;
+    }
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Giriş ekranı arka planı: "Yükselen ızgara" (yalnızca transform +     */
+/* opacity; app/components/rising-grid.tsx)                            */
+/* ------------------------------------------------------------------ */
+@keyframes rising-grid {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: var(--rg-o0);
+  }
+  to {
+    transform: translate3d(0, var(--rg-amp, -24px), 0);
+    opacity: var(--rg-o1);
+  }
+}
+
+@layer components {
+  .rising-grid-mark {
+    --rg-o0: 0.085;
+    --rg-o1: 0.13;
+    position: absolute;
+    opacity: var(--rg-o0);
+    will-change: transform, opacity;
+    animation: rising-grid var(--rg-dur, var(--dur-ambient)) var(--ease-ambient) var(--rg-delay, 0s)
+      infinite alternate both;
+  }
+  [data-theme="dark"] .rising-grid-mark {
+    --rg-o0: 0.11;
+    --rg-o1: 0.16;
+  }
+  [data-motion="reduced"] .rising-grid-mark {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .rising-grid-mark {
+      animation: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Not gövdesi (Tiptap): paragraf, H2, madde listesi, bağlantı          */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .note-prose > * + * {
+    margin-top: 0.5em;
+  }
+  .note-prose p {
+    margin: 0;
+  }
+  .note-prose h2 {
+    margin: 0.9em 0 0.3em;
+    font-size: 1.15em;
+    font-weight: 600;
+  }
+  .note-prose h2:first-child {
+    margin-top: 0;
+  }
+  .note-prose ul {
+    margin: 0.25em 0;
+    padding-left: 1.4em;
+    list-style: disc;
+  }
+  .note-prose li > p {
+    margin: 0;
+  }
+  .note-prose a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .note-prose p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  /*
+   * Ortak düzenleme: diğerlerinin imleci ve seçimi (CollaborationCaret, `collab.ts`).
+   * Renk kişinin avatar rengidir (`--caret`, `--sel`); etiket beyaz metinle ≥ 4,5:1.
+   * Seçim yalnızca zemini renklendirir, metin rengi değişmez (iki temada okunur).
+   */
+  .note-prose .collab-caret {
+    position: relative;
+    margin-inline: -1px;
+    border-left: 2px solid var(--caret);
+    word-break: normal;
+    pointer-events: none;
+  }
+  .note-prose .collab-caret__label {
+    position: absolute;
+    bottom: 100%;
+    left: -2px;
+    z-index: 1;
+    max-width: 16ch;
+    overflow: hidden;
+    padding: 1px 6px;
+    border-radius: 6px 6px 6px 0;
+    background: var(--caret);
+    font-size: 11px;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 1.4;
+    color: #fff;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+    animation: collab-label-in var(--dur-small) var(--ease-out-quart);
+  }
+  .note-prose .collab-selection {
+    background-color: color-mix(in srgb, var(--sel) 24%, transparent);
+    border-radius: 2px;
+  }
+  /* Koyu temada çizgi açılır (koyu zeminde ≥ 3:1); etiket zemini aynı kalır (beyaz metin). */
+  :root[data-theme="dark"] .note-prose .collab-caret {
+    border-left-color: color-mix(in srgb, var(--caret) 60%, #fff);
+  }
+  :root[data-theme="dark"] .note-prose .collab-selection {
+    background-color: color-mix(in srgb, var(--sel) 45%, transparent);
+  }
+  @keyframes collab-label-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+  }
+  [data-motion="reduced"] .note-prose .collab-caret__label {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .note-prose .collab-caret__label {
+      animation: none;
+    }
+  }
+  /* Çevrimdışı: düzenleme kapalı, içerik soluk (PLAN §5; MOffline). */
+  [data-canli="cevrimdisi"] :is(.note-prose, .task-title, .task-cb) {
+    opacity: 0.72;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Yapılacaklar notu: kutucuk, tamamlama, satır giriş/çıkış, toast      */
+/* (MicroMotion: dolma 180 ms, 1,2 sn sonra gruba süzülme)             */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .task-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0 2px;
+    border: 1.5px solid var(--muted);
+    border-radius: 5px;
+    background: var(--surface);
+    cursor: pointer;
+    /* Kutucuk dolar: micro, ease-out (MicroMotion 1). */
+    transition:
+      background-color var(--dur-micro) var(--ease-out),
+      border-color var(--dur-micro) var(--ease-out),
+      transform var(--dur-micro) var(--ease-out);
+  }
+  .task-cb:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+  .task-cb::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1.5px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--accent-fg);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    /* Tik dolgudan hemen sonra çizilir: small, ease-out. */
+    transition: transform var(--dur-small) var(--ease-out) 40ms;
+  }
+  .task-cb:not(:checked)::after {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+  .task-cb:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .task-cb:checked::after {
+    transform: rotate(45deg) scale(1);
+  }
+  .task-cb:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .task-cb:disabled {
+    cursor: default;
+  }
+  @media (pointer: coarse) {
+    .task-cb {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+    }
+    .task-cb::after {
+      left: 6px;
+      top: 2px;
+    }
+  }
+
+  /* Üstü çizilme: çizgi rengi saydamdan belirir. */
+  .task-title {
+    text-decoration: line-through;
+    text-decoration-color: transparent;
+    transition:
+      color var(--dur-small) var(--ease-out-quart),
+      text-decoration-color var(--dur-small) var(--ease-out-quart);
+  }
+  [data-done] > .task-line .task-title {
+    color: var(--muted);
+    text-decoration-color: currentColor;
+  }
+
+  /* Alt görev açılınca alt satırlar 60 ms gecikmeli belirir (MicroMotion 7). */
+  .task-enter {
+    animation: task-enter var(--dur-medium) var(--ease-out) 60ms both;
+  }
+  /* Tamamlanan satır 1,2 sn bekledikten sonra Tamamlananlar'a iner: large, ease-in-out. */
+  .task-leave {
+    overflow: hidden;
+    pointer-events: none;
+    animation: task-leave var(--dur-large) var(--ease-inout) forwards;
+  }
+  /* Tamamlananlar grubuna inen satır yukarıdan gelir. */
+  .task-landed {
+    animation: task-landed var(--dur-large) var(--ease-inout) both;
+  }
+  @keyframes task-landed {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes task-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  @keyframes task-leave {
+    from {
+      max-height: 64px;
+    }
+    to {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(12px);
+    }
+  }
+  @keyframes task-nodel {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-4px);
+    }
+    75% {
+      transform: translateX(4px);
+    }
+  }
+  .task-nodel {
+    animation: task-nodel 0.2s 2;
+    background: var(--danger-soft) !important;
+  }
+
+  [data-motion="reduced"] :is(.task-enter, .task-leave, .task-landed, .task-nodel) {
+    animation: none;
+  }
+  [data-motion="reduced"] :is(.task-cb, .task-cb::after, .task-title) {
+    transition: none;
+  }
+  [data-motion="reduced"] .task-cb:active {
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.task-enter, .task-leave, .task-landed, .task-nodel) {
+      animation: none;
+    }
+    :root:not([data-motion="full"]) :is(.task-cb, .task-cb::after, .task-title) {
+      transition: none;
+    }
+    :root:not([data-motion="full"]) .task-cb:active {
+      transform: none;
+    }
+  }
+}
+
+/* Hareketi azalt (sistem tercihi ya da Ayarlar "Açık"; Ayarlar "Kapalı" sistemi geçersiz
+   kılar): giriş/çıkış animasyonları ve geçişler anında biter (Radix Presence animationend'i
+   yine alır). Kayma, ölçek, ortam döngüsü ve ışıltı yukarıdaki kurallarla tümden kapanır. */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) *,
+    :root:not([data-motion="full"]) ::before,
+    :root:not([data-motion="full"]) ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  [data-motion="reduced"] *,
+  [data-motion="reduced"] ::before,
+  [data-motion="reduced"] ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Karttaki görev kutucuğu: görünür 16 px kutu, 24 px dokunma hedefi (WCAG 2.5.8). */
+@layer components {
+  .card-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    margin: -2px -4px -4px;
+    border: 4px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--muted);
+    opacity: 0.8;
+    cursor: pointer;
+  }
+  .card-cb:hover {
+    opacity: 1;
+  }
+  .card-cb:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mikro etkileşimler (MicroMotion): toast, sürükleme, iskelet, boş     */
+/* durum logosu. Azaltılmış harekette kayma/ölçek/ışıltı kapanır.        */
+/* ------------------------------------------------------------------ */
+@layer components {
+  /* Uygulama toast'ı (sonner): giriş medium ease-out, çıkış small ease-in (MicroMotion 2). */
+  :root [data-sonner-toast] {
+    transition-duration: var(--dur-medium);
+    transition-timing-function: var(--ease-out);
+  }
+  :root [data-sonner-toast][data-removed="true"] {
+    transition-duration: var(--dur-small);
+    transition-timing-function: var(--ease-in);
+  }
+
+  /* Sürükleme: kaldırma micro, 1,03 ölçek + gölge (MicroMotion 9). */
+  .drag-lift {
+    box-shadow: var(--shadow);
+    animation: drag-lift var(--dur-micro) var(--ease-out) forwards;
+  }
+  @keyframes drag-lift {
+    to {
+      transform: rotate(1.5deg) scale(1.03);
+    }
+  }
+
+  /* İskelet: durağan gri yüzey + ışıltı bandı 1,6 sn + 0,8 sn ara (yalnızca transform).
+     `.skeleton-late`: 300 ms'den kısa yüklemede hiç görünmez (MicroMotion 6). */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--hover);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--surface) 55%, transparent),
+      transparent
+    );
+    animation: skeleton-shimmer 2.4s linear infinite;
+  }
+  @keyframes skeleton-shimmer {
+    66.666%,
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .skeleton-late {
+    animation: skeleton-late 0s linear 300ms both;
+  }
+  @keyframes skeleton-late {
+    from {
+      visibility: hidden;
+    }
+    to {
+      visibility: visible;
+    }
+  }
+
+  /* Boş durum simgesi: belirir ve yerine oturur; metin 160 ms sonra (MicroMotion 10). */
+  .empty-in {
+    animation: empty-in var(--dur-medium) var(--ease-out) both;
+  }
+  .empty-in-late {
+    animation: empty-in var(--dur-medium) var(--ease-out) 160ms both;
+  }
+  @keyframes empty-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px) scale(0.96);
+    }
+  }
+
+  [data-motion="reduced"] :is(.drag-lift, .empty-in, .empty-in-late),
+  [data-motion="reduced"] .skeleton::after {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.drag-lift, .empty-in, .empty-in-late),
+    :root:not([data-motion="full"]) .skeleton::after {
+      animation: none;
+    }
+  }
+}

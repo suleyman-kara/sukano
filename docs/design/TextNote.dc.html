@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Metin notu açık</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-soft:#F8E4E1;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--dim:rgba(28,27,25,.45);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-turuncu:#FBE2CC;--n-pembe:#F9DADA;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA;--n-yesil:#DEF0D6;--n-kahve:#EADFD3;--n-gri:#E6E6E1}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-soft:#3E2622;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--dim:rgba(0,0,0,.6);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-turuncu:#4A3827;--n-pembe:#4A2E2E;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A;--n-yesil:#2C3F27;--n-kahve:#423831;--n-gri:#30302E}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) textarea,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;color:var(--muted);position:relative;flex:0 0 auto}
+.ib:hover{background:var(--hover);color:var(--fg)}
+.ib svg{width:20px;height:20px}
+.nav{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:10px;color:var(--fg);text-decoration:none;font-weight:500;width:100%}
+.nav.active{background:var(--accent-soft);color:var(--accent)}
+.nav svg{width:20px;height:20px;flex:0 0 auto}
+.nav-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:16px 14px 6px}
+.dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;margin:0 5px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:10px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none}
+.btn:hover{background:var(--hover)}
+.masonry{columns:4 232px;column-gap:16px}
+.card{break-inside:avoid;position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 16px 12px;margin:0 0 16px;background:var(--n-default);color:var(--fg);display:block}
+.card > * + *{margin-top:8px}
+.ct{margin:0;font-size:15px;font-weight:600}
+.cp{margin:0;white-space:pre-line}
+.cb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cb-list li{display:flex;align-items:flex-start;gap:10px}
+.cbx{width:16px;height:16px;border:1.5px solid var(--muted);border-radius:5px;flex:0 0 auto;margin-top:2px;opacity:.8}
+.cmore{color:var(--muted);font-size:13px}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.tb{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;color:var(--muted)}
+.tb:hover{background:color-mix(in srgb, var(--fg) 7%, transparent);color:var(--fg)}
+.tb.on{background:color-mix(in srgb, var(--fg) 12%, transparent);color:var(--fg)}
+.tb svg{width:18px;height:18px}
+.body{font-size:15px;line-height:1.65}
+.body p{margin:0 0 10px}
+.body ul{margin:0 0 10px;padding-left:22px}
+.body h2{font-size:17px;margin:0 0 8px}
+.att{display:flex;align-items:center;gap:10px;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 12px 8px 8px;background:rgba(255,255,255,.5)}
+.sk[data-theme="dark"] .att{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:999px;background:rgba(0,0,0,.07);font-size:13px;font-weight:500}
+.sk[data-theme="dark"] .chip{background:rgba(255,255,255,.08)}
+.chip svg{width:14px;height:14px}
+.pop{position:absolute;z-index:6;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px}
+.sw{width:30px;height:30px;border-radius:999px;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center}
+.sw:hover{border-color:var(--muted)}
+.sw.on{border-color:var(--accent)}
+.sw svg{width:16px;height:16px;color:var(--accent)}
+.sidenav{width:248px;flex:0 0 248px;overflow:hidden;white-space:nowrap;transition:width .18s,flex-basis .18s}
+.nav-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ini{display:none;width:28px;height:28px;border-radius:999px;color:#fff;font-weight:600;font-size:12px;line-height:1;align-items:center;justify-content:center;flex:0 0 auto}
+.sk[data-nav="rail"] .sidenav{width:72px;flex-basis:72px}
+.sk[data-nav="rail"] .nav-label{display:none}
+.sk[data-nav="rail"] .nav-logo{justify-content:center;padding-left:0;padding-right:0}
+.sk[data-nav="rail"] .nav{width:44px;height:44px;padding:0;gap:0;justify-content:center;margin:0 auto;position:relative}
+.sk[data-nav="rail"] .sidenav .dot{display:none}
+.sk[data-nav="rail"] .ini{display:inline-flex}
+.sk[data-nav="rail"] .nav-h{height:1px;padding:0;margin:10px 6px;background:var(--line);font-size:0;line-height:0;color:transparent;overflow:hidden}
+.badge{margin-left:auto;background:var(--accent);color:var(--accent-fg);font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px}
+.sk[data-nav="rail"] .badge{position:absolute;top:6px;right:6px;width:8px;height:8px;padding:0;margin:0;font-size:0;line-height:0;color:transparent;border-radius:999px}
+.vs{display:inline-flex;align-items:center;flex:0 0 auto;background:var(--hover);border-radius:10px;padding:3px;gap:2px}
+.vs a{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500}
+.vs a:hover{color:var(--fg)}
+.vs a.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.vs svg{width:20px;height:20px;flex:0 0 auto}
+.vs-label{font-size:13px}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" data-nav="{{navMode}}" style="position:relative; display:flex; flex-wrap:wrap; min-height:960px; width:100%; background:var(--bg); color:var(--fg); overflow:hidden">
+
+  <nav class="sidenav" aria-label="Ana gezinme" style="display:flex; flex-direction:column; padding:20px 12px; gap:2px; border-right:1px solid var(--line)">
+    <a class="nav-logo" href="Main.dc.html" aria-label="Sukano, ana sayfa" title="Sukano" style="display:flex; align-items:center; gap:10px; padding:6px 12px 22px; text-decoration:none; color:var(--fg)">
+      <span class="logo-mark" style="width:28px; height:28px; display:inline-flex; flex:0 0 auto; color:var(--accent)"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+      <span class="nav-label" style="font-weight:700; font-size:18px; letter-spacing:-0.01em">sukano</span>
+    </a>
+    <a class="nav active" href="Main.dc.html" title="Notlarım" aria-label="Notlarım"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span class="nav-label">Notlarım</span></a>
+    <div class="nav-h">Projeler</div>
+    <a class="nav" href="Project.dc.html" title="Web Sitesi Yenileme"><span class="dot" style="background:#AD5A34"></span><span class="ini" style="background:#AD5A34" aria-hidden="true">W</span><span class="nav-label">Web Sitesi Yenileme</span></a>
+    <a class="nav" href="Project.dc.html" title="Ev Taşınma"><span class="dot" style="background:#3F6DB5"></span><span class="ini" style="background:#3F6DB5" aria-hidden="true">E</span><span class="nav-label">Ev Taşınma</span></a>
+    <a class="nav" href="Project.dc.html" title="Kitap Kulübü"><span class="dot" style="background:#4A7D45"></span><span class="ini" style="background:#4A7D45" aria-hidden="true">K</span><span class="nav-label">Kitap Kulübü</span></a>
+    <a class="nav" href="Dialogs.dc.html" style="color:var(--muted)" title="Yeni proje" aria-label="Yeni proje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="nav-label">Yeni proje</span></a>
+    <div style="flex:1"></div>
+    <a class="nav" href="Invites.dc.html" title="Davetler" aria-label="Davetler, 1 bekleyen davet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"/><path d="M5 5h14l2 8v6H3v-6l2-8Z"/></svg><span class="nav-label">Davetler</span><span class="badge">1</span></a>
+    <a class="nav" href="Settings.dc.html" title="Ayarlar" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span class="nav-label">Ayarlar</span></a>
+  </nav>
+
+  <main style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+    <header style="display:flex; align-items:center; gap:12px; padding:14px 32px 6px">
+      <button type="button" class="ib" aria-label="Menüyü daralt/genişlet" title="Menüyü daralt/genişlet" aria-expanded="{{sidebarOpen}}" onClick="{{toggleSidebar}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <label style="flex:1; max-width:620px; position:relative; display:block"><span class="sr">Ara</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true" style="position:absolute; left:14px; top:12px; color:var(--muted)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" placeholder="Notlarda ve projelerde ara" style="width:100%; height:44px; border:1px solid var(--line); border-radius:12px; padding:0 14px 0 44px; background:var(--surface)">
+      </label>
+      <nav class="vs" aria-label="Görünüm">
+        <a class="on" href="Main.dc.html" title="Notlar" aria-label="Notlar" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg><span class="vs-label">Notlar</span></a>
+        <a href="Archive.dc.html" title="Arşiv" aria-label="Arşiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg><span class="vs-label">Arşiv</span></a>
+        <a href="Trash.dc.html" title="Çöp" aria-label="Çöp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span class="vs-label">Çöp</span></a>
+      </nav>
+      <div style="flex:1"></div>
+      <a class="ib" href="Notifications.dc.html" aria-label="Bildirimler, 2 yeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span style="position:absolute; top:7px; right:8px; width:8px; height:8px; border-radius:999px; background:var(--danger); border:2px solid var(--bg)" aria-hidden="true"></span></a>
+      <button type="button" class="avatar" aria-label="Hesap menüsü" aria-haspopup="menu" aria-expanded="false" title="Süleyman Kara" style="width:34px; height:34px; background:#597895; font-size:13px">SK</button>
+    </header>
+    <section style="padding:12px 32px 40px; display:flex; flex-direction:column; gap:24px">
+      <h1 style="margin:0; font-size:24px; font-weight:700">Notlarım</h1>
+      <div>
+        <h2 class="sec-h">Sabitlenmiş</h2>
+        <div class="masonry">
+          <article class="card" style="background:var(--n-sari)">
+            <h3 class="ct">Haftalık plan</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Spor salonu üyeliğini yenile</li>
+              <li><span class="cbx"></span>Diş hekimi randevusu al</li>
+              <li><span class="cbx"></span>Annemi ara</li>
+              <li><span class="cbx"></span>Elektrik faturası</li>
+              <li><span class="cbx"></span>Kütüphane kitaplarını iade et</li>
+            </ul>
+            <div class="cmore">+3 görev daha</div>
+          </article>
+          <article class="card" style="background:var(--n-yesil)">
+            <h3 class="ct">Market</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Süt, yumurta</li>
+              <li><span class="cbx"></span>Zeytinyağı</li>
+              <li><span class="cbx"></span>Kedi maması</li>
+              <li><span class="cbx"></span>Mercimek</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="sec-h">Diğerleri</h2>
+        <div class="masonry">
+          <article class="card">
+            <h3 class="ct">Kitap listesi</h3>
+            <p class="cp">Tutunamayanlar
+Kürk Mantolu Madonna
+Saatleri Ayarlama Enstitüsü
+Beyaz Kale</p>
+          </article>
+          <article class="card" style="background:var(--n-mor)">
+            <h3 class="ct">Hediye fikirleri</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Babam için termos</li>
+              <li><span class="cbx"></span>Elif için kulaklık</li>
+              <li><span class="cbx"></span>Ofis için kahve seti</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3 class="ct">Toplantı notları, 5 Kasım</h3>
+            <p class="cp">Bütçe revizyonu aralık başına kaldı. Yeni tedarikçi için üç teklif toplanacak. Deniz pazartesi sunum taslağını paylaşacak.</p>
+          </article>
+          <article class="card" style="background:var(--n-mavi)">
+            <h3 class="ct">Yürüyüş rotaları</h3>
+            <p class="cp">Belgrad Ormanı uzun parkur, yaklaşık 12 km. Polonezköy çevre yolu. Şile sahil hattı, gün batımına denk getir.</p>
+          </article>
+          <article class="card">
+            <h3 class="ct">Pazartesi aramalar</h3>
+            <ul class="cb-list">
+              <li><span class="cbx"></span>Sigorta şirketi, poliçe yenileme</li>
+              <li><span class="cbx"></span>Apartman yöneticisi</li>
+            </ul>
+          </article>
+          <article class="card" style="background:var(--n-gri)">
+            <p class="cp">Wifi şifresi: Modemin altındaki etiket, misafirler için ayrı ağ aç.</p>
+          </article>
+          <article class="card" style="background:var(--n-turkuaz)">
+            <h3 class="ct">Film önerileri</h3>
+            <p class="cp">Kış Uykusu, Bir Zamanlar Anadolu'da, Ahlat Ağacı. Ayşe'nin önerdiği Koreli yönetmenin yeni filmi.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div style="position:absolute; inset:0; background:var(--dim)"></div>
+
+  <div role="dialog" aria-labelledby="note-title" style="position:absolute; left:50%; top:60px; transform:translateX(-50%); width:680px; max-height:860px; display:flex; flex-direction:column; background:var(--n-turuncu); color:var(--fg); border-radius:16px; box-shadow:var(--shadow)">
+    <div style="display:flex; align-items:center; gap:10px; padding:18px 20px 4px 28px">
+      <label style="flex:1"><span class="sr">Not başlığı</span><input id="note-title" value="Ev tadilatı fikirleri" style="width:100%; border:0; background:transparent; font-size:20px; font-weight:600; padding:0"></label>
+      <button class="ib" aria-label="Sabitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3-1-6Z"/><path d="M12 15v5"/></svg></button>
+      <a class="ib" href="Main.dc.html" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
+    </div>
+
+    <div role="toolbar" aria-label="Biçimlendirme" style="display:flex; align-items:center; gap:2px; padding:0 22px 6px">
+      <button class="tb on" aria-label="Kalın" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></svg></button>
+      <button class="tb" aria-label="İtalik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 5h8M6 19h8M14 5l-4 14"/></svg></button>
+      <button class="tb" aria-label="Başlık"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5v14M13 5v14M5 12h8M17 10l2.5-1.5V19"/></svg></button>
+      <button class="tb" aria-label="Madde listesi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></button>
+      <button class="tb" aria-label="Bağlantı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
+      <span style="flex:1"></span>
+      <span class="chip" title="Hatırlatıcı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>Yarın, 09:00</span>
+    </div>
+
+    <div class="body" style="flex:1; overflow:auto; padding:6px 28px 12px">
+      <p><strong>Salon:</strong> duvar için sıcak gri tonları; pencere kenarına uzun perde yerine stor.</p>
+      <h2>Mutfak</h2>
+      <ul>
+        <li>Dolapları boyamak yerine kapakları değiştirmek daha ucuz olabilir.</li>
+        <li>Tezgâh altı aydınlatma şeridi.</li>
+        <li>Ustadan iki ayrı teklif al, <a href="#teklif">teklif karşılaştırması</a> notunda topla.</li>
+      </ul>
+      <p>Balkona katlanır masa ve iki tabure. Bitkiler için duvara askılı raf.</p>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px">
+        <div class="att" style="padding:0; overflow:hidden; width:200px; height:132px; align-items:stretch">
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); background:color-mix(in srgb, var(--fg) 6%, transparent)"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-6-6-9 9"/></svg></div>
+        </div>
+        <div class="att" style="width:260px">
+          <span style="width:36px; height:36px; border-radius:8px; background:var(--danger-soft); color:var(--danger); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700">PDF</span>
+          <span style="flex:1; min-width:0; display:flex; flex-direction:column"><span style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">usta-teklifi-kasim.pdf</span><span style="font-size:12px; color:var(--muted)">1,8 MB</span></span>
+          <button class="ib" style="width:30px; height:30px" aria-label="Eki kaldır"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative; display:flex; align-items:center; gap:2px; padding:8px 14px 12px 18px">
+      <button class="ib" aria-label="Renk" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+      <div class="pop" style="left:14px; bottom:54px; display:flex; gap:6px" role="group" aria-label="Not rengi">
+        <button class="sw" style="background:var(--n-default); border-color:var(--line)" aria-label="Varsayılan"></button>
+        <button class="sw" style="background:var(--n-sari)" aria-label="Sarı"></button>
+        <button class="sw on" style="background:var(--n-turuncu)" aria-label="Turuncu, seçili"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button>
+        <button class="sw" style="background:var(--n-pembe)" aria-label="Pembe"></button>
+        <button class="sw" style="background:var(--n-mor)" aria-label="Mor"></button>
+        <button class="sw" style="background:var(--n-mavi)" aria-label="Mavi"></button>
+        <button class="sw" style="background:var(--n-turkuaz)" aria-label="Turkuaz"></button>
+        <button class="sw" style="background:var(--n-yesil)" aria-label="Yeşil"></button>
+        <button class="sw" style="background:var(--n-kahve)" aria-label="Kahve"></button>
+        <button class="sw" style="background:var(--n-gri)" aria-label="Gri"></button>
+      </div>
+      <button class="ib" aria-label="Not hatırlatıcısı" title="Not hatırlatıcısı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
+      <button class="ib" aria-label="Dosya ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg></button>
+      <a class="ib" href="Dialogs.dc.html" aria-label="Taşı veya kopyala…" title="Taşı veya kopyala…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M9 13.5h6.5M13 11l2.5 2.5L13 16"/></svg></a>
+      <button class="ib" aria-label="Kopyasını oluştur" title="Kopyasını oluştur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
+      <a class="ib" href="Dialogs.dc.html" aria-label="Sürüm geçmişi" title="Sürüm geçmişi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg></a>
+      <a class="ib" href="Dialogs2.dc.html" aria-label="Yapılacaklar notuna dönüştür…" title="Yapılacaklar notuna dönüştür…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-4-4"/><path d="M19 16H5l4 4"/></svg></a>
+      <span style="width:1px; height:20px; background:color-mix(in srgb, var(--fg) 16%, transparent); margin:0 6px" aria-hidden="true"></span>
+      <button class="ib" aria-label="Arşivle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg></button>
+      <button class="ib" aria-label="Çöpe at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+      <span style="flex:1; text-align:right; font-size:12px; color:var(--muted); padding:0 12px">Düzenlendi 5 Kas, 14:20</span>
+      <a class="btn" href="Main.dc.html" style="background:transparent; border-color:color-mix(in srgb, var(--fg) 20%, transparent)">Kapat</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"sidebar":{"editor":"enum","options":["open","collapsed"],"default":"open","section":"Düzen"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sidebar: this.props.sidebar === 'collapsed' ? 'rail' : 'open' };
+  }
+  toggleSidebar() { this.setState({ sidebar: this.state.sidebar === 'rail' ? 'open' : 'rail' }); }
+  renderVals() {
+    const railOn = this.state.sidebar === 'rail';
+    return {
+      theme: this.props.theme ?? 'light',
+      navMode: railOn ? 'rail' : 'open',
+      sidebarOpen: !railOn,
+      toggleSidebar: () => this.toggleSidebar()
+    };
+  }
+}
+</script>
+</body>
+</html>

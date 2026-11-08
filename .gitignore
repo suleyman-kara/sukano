@@ -1,0 +1,36 @@
+# Bağımlılıklar
+node_modules/
+
+# Derleme çıktıları
+/build/
+/.react-router/
+dist/
+
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Ortam
+.env
+.env.*
+!.env.example
+
+# Araçlar
+.DS_Store
+*.log
+.eslintcache
+*.tsbuildinfo
+coverage/
+
+# Testler
+playwright-report/
+test-results/
+blob-report/
+tests/e2e/.auth/
+/build-*/
+/test-results-*/
+
+# Lighthouse raporları
+lighthouse-report/

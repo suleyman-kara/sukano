@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Hareket: giriş arka planı</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;width:1440px;height:900px;overflow:hidden;padding:18px 36px 0;display:flex;flex-direction:column;gap:12px;background:var(--bg);color:var(--fg);
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--accent:#2E6B55;--accent-soft:#E2EEE8;--panel:#E8EFE9;--o-st:.085;--o-wk:.03;--fn-card:rgba(255,255,255,.55);--fn-line:rgba(46,107,85,.10);
+--ease-out:cubic-bezier(.25,1,.5,1);--ease-in:cubic-bezier(.5,0,.75,0);--ease-amb:cubic-bezier(.45,0,.55,1)}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--accent:#7FC2A6;--accent-soft:#233A30;--panel:#1B2420;--o-st:.095;--o-wk:.035;--fn-card:rgba(255,255,255,.035);--fn-line:rgba(127,194,166,.10)}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) h1,:where(.sk) h2,:where(.sk) p{margin:0}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;height:40px}
+.hd h1{font-size:18px;font-weight:700;letter-spacing:-0.01em}
+.hd .sub{font-size:13px;color:var(--muted)}
+.hd .note{font-size:12px;color:var(--muted);text-align:right;line-height:1.5}
+.hd code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:var(--accent-soft);color:var(--fg);padding:1px 6px;border-radius:6px}
+.row{display:flex;gap:24px}
+.col{width:440px;display:flex;flex-direction:column;gap:6px}
+.pv{position:relative;width:440px;height:760px;border-radius:14px;overflow:hidden;background:var(--panel);border:1px solid var(--line);isolation:isolate}
+.col[data-sel="yes"] .pv{outline:2px solid var(--accent);outline-offset:3px}
+.pv-bg{position:absolute;inset:0;z-index:0;pointer-events:none;color:var(--accent)}
+.pv-fg{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:36px 36px 32px}
+.pv-brand{display:flex;align-items:center;gap:8px}
+.mk{display:inline-flex;color:var(--accent)}
+.wm{font-weight:700;font-size:18px;letter-spacing:-0.01em}
+.pv-copy{display:flex;flex-direction:column;gap:12px}
+.pv-copy h2{font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-0.02em}
+.pv-copy p{font-size:14px;line-height:1.6;color:var(--muted)}
+.pv-foot{font-size:12px;color:var(--muted)}
+.lbl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lbl b{color:var(--accent);font-weight:700}
+.pill{font-size:10.5px;letter-spacing:.04em;text-transform:none;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.rec{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.pill.sel{display:none;background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.col[data-sel="yes"] .pill.sel{display:inline-block}
+.desc{font-size:12.5px;color:var(--muted);line-height:1.4}
+
+/* A — yükselen ızgara: her 2×2 logo işareti bütün halde, kendi 7–11 sn döngüsünde yükselip alçalır */
+.ga-g{position:absolute;color:currentColor;opacity:var(--o-st);--o0:var(--o-st);--o1:calc(var(--o-st) * 1.5);will-change:transform,opacity;animation:ga-rise 9s var(--ease-amb) infinite alternate both}
+.ga-g svg{display:block;width:100%;height:100%}
+@keyframes ga-rise{from{transform:translate3d(0,0,0);opacity:var(--o0)}to{transform:translate3d(0,var(--amp,-42px),0);opacity:var(--o1)}}
+.ga1{animation-duration:9s;animation-delay:-3s;--amp:-48px}.ga2{animation-duration:11s;animation-delay:-6.5s;--amp:-60px}.ga3{animation-duration:7s;animation-delay:-1.5s;--amp:-36px}.ga4{animation-duration:8s;animation-delay:-5s;--amp:-42px}
+
+/* B — nefes alan logo: diyagonal vurgu sırayla dolaşır, grup çok hafif ölçeklenir */
+.gb-wrap{position:absolute;right:-96px;top:404px;width:380px;height:380px;opacity:.2;animation:gb-scale 8s var(--ease-amb) infinite alternate both}
+.sk[data-theme="dark"] .gb-wrap{opacity:.22}
+.gb{display:block}
+.gb-s{opacity:1;animation:gb-breathe 6s var(--ease-amb) infinite both}
+.gb2,.gb4{opacity:.35}
+.gb1{animation-delay:0s}.gb2{animation-delay:-4.5s}.gb3{animation-delay:-3s}.gb4{animation-delay:-1.5s}
+@keyframes gb-breathe{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes gb-scale{from{transform:scale(1)}to{transform:scale(1.06)}}
+
+/* C — akan notlar: üç derinlik katmanı yukarı süzülür; imleçle hafif kayar (JS, yalnızca transform) */
+.fn-mask{position:absolute;inset:0;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 82%,transparent 100%)}
+.fn-par{position:absolute;inset:0;will-change:transform}
+.fn-track{position:absolute;left:0;top:0;width:440px;height:1520px;will-change:transform;animation:fn-up 80s linear infinite both}
+.fn-far{animation-duration:60s;opacity:.55;animation-delay:-40s}
+.fn-mid{animation-duration:42s;opacity:.8;animation-delay:-30s}
+.fn-near{animation-duration:28s;animation-delay:-12s}
+@keyframes fn-up{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,-760px,0)}}
+.fn-card{position:absolute;display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:12px;background:var(--fn-card);border:1px solid var(--fn-line);overflow:hidden}
+.fn-t{height:7px;width:54%;border-radius:4px;background:var(--fn-line);flex:0 0 auto;filter:saturate(1.1)}
+.fn-ln{display:block;height:5px;border-radius:3px;background:var(--fn-line);flex:0 0 auto}
+.fn-row{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.fn-row .fn-ln{flex:0 1 auto}
+.fn-box{width:9px;height:9px;border-radius:3px;border:1.25px solid var(--fn-line);flex:0 0 auto}
+
+/* Azaltılmış hareket: her şey ilk karede durur, imleç paralaksı kapanır */
+@media (prefers-reduced-motion: reduce){
+  .sk[data-motion="auto"] *,.sk[data-motion="auto"] *::before,.sk[data-motion="auto"] *::after{animation:none !important;transition:none !important}
+  .sk[data-motion="auto"] .fn-par{transform:none !important}
+}
+.sysnote{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 14px;border-radius:10px;background:var(--warn-soft,#FBEFD6);color:var(--warn,#8A5A0B);font-size:13px;font-weight:500}
+.sk[data-motion="reduced"] *,.sk[data-motion="reduced"] *::before,.sk[data-motion="reduced"] *::after{animation:none !important;transition:none !important}
+.sk[data-motion="reduced"] .fn-par{transform:none !important}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}" data-motion="{{motion}}">
+  <header class="hd">
+    <div>
+      <h1>Giriş ekranı sol paneli: üç arka plan hareketi</h1>
+      <p class="sub">Düşük kontrastlı, yalnızca transform ve opacity; metnin okunurluğu değişmez. Hareket önizlemesi “auto” iken sistemin “Hareketi Azalt” ayarına uyar.</p>
+    </div>
+    <p class="note">Auth.dc.html’e <code>variant</code> prop’u (A / B / C) olarak eklenecek, bu tuvalde sağdaki ayardan seçilir.<br>Önerimiz <strong style="color:var(--fg)">A · Yükselen ızgara</strong>: logonun dilinden doğuyor, en sakin olanı.</p>
+  </header>
+  <sc-if value="{{sysReduced}}" hint-placeholder-val="{{false}}">
+    <p class="sysnote">Bu cihazda sistem ayarı “Hareketi Azalt” açık. Önizleme için hareket zorlandı (Hareket önizlemesi: full). Uygulamada bu ayara uyulur; “auto” seçersen burada da durur.</p>
+  </sc-if>
+
+  <div class="row">
+    <section class="col" data-sel="{{selA}}" aria-label="A, Yükselen ızgara">
+      <div class="pv">
+      <div class="pv-bg" aria-hidden="true">
+        <span class="ga-g ga1" style="left:262px; top:-26px; width:213px; height:213px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga2" style="left:-58px; top:548px; width:266px; height:266px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga3" style="left:318px; top:452px; width:160px; height:160px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+        <span class="ga-g ga4" style="left:36px; top:150px; width:160px; height:160px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span>
+      </div>
+      <div class="pv-fg">
+        <div class="pv-brand"><span class="mk"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span class="wm">sukano</span></div>
+        <div class="pv-copy">
+          <h2>Kişisel notların ve ekip projelerin, tek yerde.</h2>
+          <p>Notlarını kendine sakla, projeye taşıdığında ekiple paylaş. Yapılacaklar listelerin alt görevlerle, tarihlerle ve klavyeyle akar.</p>
+        </div>
+        <p class="pv-foot">© 2026 Sukano</p>
+      </div>
+      </div>
+      <p class="lbl"><b>A</b> Yükselen ızgara <span class="pill rec">Önerilen</span><span class="pill sel">Auth’a uygulanacak</span></p>
+      <p class="desc">Logo işareti dört boyutta, kendi 2×2 düzeni bozulmadan; her işaret bütün halde 7–11 sn’lik kendi döngüsünde 36–60 px yükselip alçalıyor ve hafifçe parlıyor. Önizlemede genlik büyütüldü; uygulamada yaklaşık yarısı kullanılacak.</p>
+    </section>
+
+    <section class="col" data-sel="{{selB}}" aria-label="B, Nefes alan logo">
+      <div class="pv">
+      <div class="pv-bg" aria-hidden="true">
+        <div class="gb-wrap"><svg class="gb" viewBox="0 0 24 24" width="380" height="380" fill="currentColor"><rect class="gb-s gb1" x="2" y="2" width="9" height="9" rx="2.5"/><rect class="gb-s gb2" x="13" y="2" width="9" height="9" rx="2.5"/><rect class="gb-s gb4" x="2" y="13" width="9" height="9" rx="2.5"/><rect class="gb-s gb3" x="13" y="13" width="9" height="9" rx="2.5"/></svg></div>
+      </div>
+      <div class="pv-fg">
+        <div class="pv-brand"><span class="mk"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span class="wm">sukano</span></div>
+        <div class="pv-copy">
+          <h2>Kişisel notların ve ekip projelerin, tek yerde.</h2>
+          <p>Notlarını kendine sakla, projeye taşıdığında ekiple paylaş. Yapılacaklar listelerin alt görevlerle, tarihlerle ve klavyeyle akar.</p>
+        </div>
+        <p class="pv-foot">© 2026 Sukano</p>
+      </div>
+      </div>
+      <p class="lbl"><b>B</b> Nefes alan logo <span class="pill sel">Auth’a uygulanacak</span></p>
+      <p class="desc">Tek büyük işaret; diyagonal vurgu 6 sn’de kareden kareye dolaşıyor, işaret 8 sn’de %6 büyüyüp küçülüyor.</p>
+    </section>
+
+    <section class="col" data-sel="{{selC}}" aria-label="C, Akan notlar">
+      <div class="pv" onPointerMove="{{onMove}}" onPointerLeave="{{onLeave}}">
+      <div class="pv-bg" aria-hidden="true">
+        <div class="fn-mask"><div class="fn-par" data-depth="14"><div class="fn-track fn-far"><span class="fn-card" style="left:30px; top:40px; width:110px; height:92px"><span class="fn-t"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:92%"></span></span><span class="fn-card" style="left:300px; top:170px; width:110px; height:120px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span></span><span class="fn-card" style="left:170px; top:330px; width:104px; height:84px"><span class="fn-t"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-card" style="left:320px; top:520px; width:110px; height:96px"><span class="fn-t"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:92%"></span></span><span class="fn-card" style="left:60px; top:600px; width:104px; height:120px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span></span><span class="fn-card" style="left:30px; top:800px; width:110px; height:92px"><span class="fn-t"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:60%"></span></span><span class="fn-card" style="left:300px; top:930px; width:110px; height:120px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span></span><span class="fn-card" style="left:170px; top:1090px; width:104px; height:84px"><span class="fn-t"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-card" style="left:320px; top:1280px; width:110px; height:96px"><span class="fn-t"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:84%"></span></span><span class="fn-card" style="left:60px; top:1360px; width:104px; height:120px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span></span></div></div>
+        <div class="fn-par" data-depth="26"><div class="fn-track fn-mid"><span class="fn-card" style="left:250px; top:60px; width:150px; height:150px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span></span><span class="fn-card" style="left:-20px; top:250px; width:140px; height:110px"><span class="fn-t"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-card" style="left:290px; top:380px; width:150px; height:124px"><span class="fn-t"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span></span><span class="fn-card" style="left:40px; top:520px; width:140px; height:160px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span></span><span class="fn-card" style="left:250px; top:820px; width:150px; height:150px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span></span><span class="fn-card" style="left:-20px; top:1010px; width:140px; height:110px"><span class="fn-t"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:92%"></span></span><span class="fn-card" style="left:290px; top:1140px; width:150px; height:124px"><span class="fn-t"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span></span><span class="fn-card" style="left:40px; top:1280px; width:140px; height:160px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span></span></div></div>
+        <div class="fn-par" data-depth="44"><div class="fn-track fn-near"><span class="fn-card" style="left:330px; top:240px; width:170px; height:190px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span></span><span class="fn-card" style="left:-60px; top:40px; width:150px; height:130px"><span class="fn-t"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span></span><span class="fn-card" style="left:-40px; top:560px; width:170px; height:150px"><span class="fn-t"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:60%"></span></span><span class="fn-card" style="left:330px; top:1000px; width:170px; height:190px"><span class="fn-t"></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:80%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:56%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span><span class="fn-row"><span class="fn-box"></span><span class="fn-ln" style="width:64%"></span></span></span><span class="fn-card" style="left:-60px; top:800px; width:150px; height:130px"><span class="fn-t"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:60%"></span><span class="fn-ln" style="width:72%"></span></span><span class="fn-card" style="left:-40px; top:1320px; width:170px; height:150px"><span class="fn-t"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:72%"></span><span class="fn-ln" style="width:92%"></span><span class="fn-ln" style="width:84%"></span><span class="fn-ln" style="width:92%"></span></span></div></div></div>
+      </div>
+      <div class="pv-fg">
+        <div class="pv-brand"><span class="mk"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2.5"/><rect x="13" y="2" width="9" height="9" rx="2.5" opacity=".35"/><rect x="2" y="13" width="9" height="9" rx="2.5" opacity=".35"/><rect x="13" y="13" width="9" height="9" rx="2.5"/></svg></span><span class="wm">sukano</span></div>
+        <div class="pv-copy">
+          <h2>Kişisel notların ve ekip projelerin, tek yerde.</h2>
+          <p>Notlarını kendine sakla, projeye taşıdığında ekiple paylaş. Yapılacaklar listelerin alt görevlerle, tarihlerle ve klavyeyle akar.</p>
+        </div>
+        <p class="pv-foot">© 2026 Sukano</p>
+      </div>
+      </div>
+      <p class="lbl"><b>C</b> Akan notlar <span class="pill sel">Auth’a uygulanacak</span></p>
+      <p class="desc">Soluk not ve liste silüetleri üç derinlikte 28–60 sn’de yukarı süzülüyor; imleç paneli gezerken katmanlar 14–44 px kayıyor.</p>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"variant":{"editor":"enum","options":["A","B","C"],"default":"A","section":"Auth sayfasına uygulanacak"},"motion":{"editor":"enum","options":["full","auto","reduced"],"default":"full","section":"Hareket önizlemesi"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sysReduced: false };
+    this.tx = 0; this.ty = 0; this.cx = 0; this.cy = 0; this.raf = 0; this.layers = [];
+    this.reduce = false; this.mq = null;
+    this.tick = this.tick.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onLeave = this.onLeave.bind(this);
+    this.onMq = this.onMq.bind(this);
+  }
+  componentDidMount() {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.reduce = this.mq.matches;
+      if (this.reduce) this.setState({ sysReduced: true });
+      if (this.mq.addEventListener) this.mq.addEventListener('change', this.onMq);
+    }
+  }
+  componentWillUnmount() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    if (this.mq && this.mq.removeEventListener) this.mq.removeEventListener('change', this.onMq);
+  }
+  onMq(e) {
+    this.reduce = e.matches; this.setState({ sysReduced: e.matches });
+    if (this.reduce) { this.tx = 0; this.ty = 0; this.cx = 0; this.cy = 0; this.apply(); }
+  }
+  blocked() { const m = this.props.motion ?? 'full'; return m === 'reduced' || (m === 'auto' && this.reduce); }
+  onMove(e) {
+    if (this.blocked()) return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    this.layers = Array.prototype.slice.call(el.querySelectorAll('[data-depth]'));
+    this.tx = (e.clientX - r.left) / r.width - 0.5;
+    this.ty = (e.clientY - r.top) / r.height - 0.5;
+    if (!this.raf) this.raf = requestAnimationFrame(this.tick);
+  }
+  onLeave() {
+    this.tx = 0; this.ty = 0;
+    if (!this.raf && this.layers.length) this.raf = requestAnimationFrame(this.tick);
+  }
+  apply() {
+    for (const l of this.layers) {
+      const d = Number(l.getAttribute('data-depth')) || 0;
+      l.style.transform = 'translate3d(' + (-this.cx * d).toFixed(2) + 'px,' + (-this.cy * d).toFixed(2) + 'px,0)';
+    }
+  }
+  tick() {
+    this.cx += (this.tx - this.cx) * 0.08;
+    this.cy += (this.ty - this.cy) * 0.08;
+    this.apply();
+    if (Math.abs(this.tx - this.cx) < 0.001 && Math.abs(this.ty - this.cy) < 0.001) { this.raf = 0; return; }
+    this.raf = requestAnimationFrame(this.tick);
+  }
+  renderVals() {
+    const v = this.props.variant ?? 'A';
+    return {
+      theme: this.props.theme ?? 'light',
+      motion: this.props.motion ?? 'full',
+      sysReduced: !!this.state.sysReduced,
+      selA: v === 'A' ? 'yes' : 'no', selB: v === 'B' ? 'yes' : 'no', selC: v === 'C' ? 'yes' : 'no',
+      onMove: this.onMove, onLeave: this.onLeave
+    };
+  }
+}
+</script>
+</body>
+</html>

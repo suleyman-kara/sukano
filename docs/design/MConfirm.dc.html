@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil onay</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8;--danger:#A8423A;--danger-fg:#FFFFFF;--danger-soft:#F8E4E1;--warn:#8A5A0B;--warn-soft:#FBEFD6;--mark:#F3E7A6;--grab:#CFCCC4;--shadow:0 1px 2px rgba(28,27,25,.06),0 8px 24px rgba(28,27,25,.08);--sheet-shadow:0 -8px 32px rgba(28,27,25,.16);
+--n-default:#FFFFFF;--n-sari:#FBF0BF;--n-turuncu:#FBE2CC;--n-pembe:#F9DADA;--n-mor:#E9E0F7;--n-mavi:#DCE9F7;--n-turkuaz:#D4EEEA;--n-yesil:#DEF0D6;--n-kahve:#EADFD3;--n-gri:#E6E6E1}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30;--danger:#E58A7D;--danger-fg:#2A1210;--danger-soft:#3E2622;--warn:#DDAF55;--warn-soft:#3A2F17;--mark:#5A4F1C;--grab:#4A4A46;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);--sheet-shadow:0 -8px 32px rgba(0,0,0,.5);
+--n-default:#1E1E1C;--n-sari:#45401F;--n-turuncu:#4A3827;--n-pembe:#4A2E2E;--n-mor:#38304C;--n-mavi:#27374A;--n-turkuaz:#223E3A;--n-yesil:#2C3F27;--n-kahve:#423831;--n-gri:#30302E}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) input,:where(.sk) button{font:inherit;color:inherit}
+:where(.sk) button{cursor:pointer;background:none;border:0;padding:0;text-align:left}
+:where(.sk) h1,:where(.sk) h2,:where(.sk) h3,:where(.sk) h4,:where(.sk) p{margin:0}
+:where(.sk) a{color:inherit;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px;color:var(--muted);flex:0 0 auto;position:relative}
+.ib svg{width:22px;height:22px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:600;color:#fff;flex:0 0 auto}
+.hdr{display:flex;align-items:center;gap:4px;padding:56px 8px 8px 8px}
+.srch{flex:1;position:relative;display:block}
+.srch input{width:100%;height:44px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--surface);font-size:15px}
+.ndot{position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:999px;background:var(--danger);border:2px solid var(--bg)}
+.subh{display:flex;align-items:center;gap:4px;padding:50px 8px 4px}
+.subh h1{margin:0;font-size:20px;font-weight:700;flex:1;min-width:0}
+.col{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--n-default);color:var(--fg);display:block;position:relative}
+.card > * + *{margin-top:6px}
+.ct{margin:0;font-size:14px;font-weight:600}
+.cp{margin:0;font-size:13px;white-space:pre-line;color:var(--fg)}
+.cb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-size:13px}
+.cb-list li{display:flex;align-items:flex-start;gap:8px}
+.cbx{width:18px;height:18px;border:1.5px solid var(--muted);border-radius:5px;flex:0 0 auto;background:var(--surface);display:inline-block}
+.cmore{color:var(--muted);font-size:12px}
+.clamp3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.clamp4{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.cmeta{font-size:12px;color:var(--muted)}
+.sec-h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.vs{display:inline-flex;align-items:center;flex:0 0 auto;background:var(--hover);border-radius:10px;padding:3px;gap:2px}
+.vs a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:8px;color:var(--muted)}
+.vs a.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.vs svg{width:20px;height:20px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field > span{font-size:13px;font-weight:500}
+.input{height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--surface);width:100%;font-size:16px;display:flex;align-items:center}
+.input.focus{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:-1px}
+.help{font-size:13px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 16px;border-radius:12px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:16px;white-space:nowrap;flex:0 0 auto}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.danger.fill{background:var(--danger);color:var(--danger-fg);border-color:var(--danger)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{height:44px;font-size:15px;padding:0 14px}
+.btn.full{width:100%}
+.lnk{color:var(--accent);font-weight:500}
+.grp{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:52px;border-top:1px solid var(--line);color:var(--fg);width:100%}
+.row:first-child{border-top:0}
+.row .t{flex:1;display:flex;flex-direction:column;min-width:0}
+.row .t b{font-weight:500}
+.row .t small{color:var(--muted);font-size:13px}
+.sw{width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;flex:0 0 auto;display:inline-block}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:999px;background:#fff}
+.sw.on{background:var(--accent)}.sw.on::after{left:20px}
+.sk[data-theme="dark"] .sw.on::after{background:var(--accent-fg)}
+.cb{width:22px;height:22px;border:1.5px solid var(--muted);border-radius:6px;flex:0 0 auto;position:relative;background:var(--surface);display:inline-block}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.cb.on::after{content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;border:solid var(--accent-fg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.hint{font-size:12px;color:var(--muted);padding:2px 8px;border-radius:999px;background:var(--hover);white-space:nowrap}
+.role{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:999px;flex:0 0 auto;display:inline-block}
+.scrim{position:absolute;inset:0;background:rgba(28,27,25,.28);z-index:2}
+.sk[data-theme="dark"] .scrim{background:rgba(0,0,0,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:3;background:var(--surface);color:var(--fg);border-radius:20px 20px 0 0;box-shadow:var(--sheet-shadow);padding:8px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.sk[data-theme="dark"] .sheet{border-top:1px solid var(--line)}
+.grab{width:36px;height:4px;border-radius:999px;background:var(--grab);margin:0 auto;flex:0 0 auto;display:block}
+.grabb{align-self:center;width:96px;height:24px;margin:-8px 0 -8px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:999px}
+.bitti{display:inline-flex;align-items:center;height:44px;padding:0 12px;margin-right:-8px;border-radius:10px;color:var(--accent);font-weight:600;font-size:16px;flex:0 0 auto}
+.vb{width:8px;height:8px;border:1.5px solid var(--muted);border-radius:999px;flex:0 0 auto;margin:6px 5px 0;display:inline-block}
+.vchk{width:18px;height:18px;flex:0 0 auto;color:var(--muted);display:inline-flex}
+.vchk svg{width:18px;height:18px}
+.sh{display:flex;align-items:center;gap:10px;min-height:44px}
+.sh h2{margin:0;font-size:18px;font-weight:600;flex:1;min-width:0}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13px}
+.note svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px}
+.note.w{background:var(--warn-soft);color:var(--warn)}
+.note.m{background:var(--hover);color:var(--muted)}
+.note.ok{background:var(--accent-soft);color:var(--accent);font-weight:500;align-items:center}
+.note.ok svg{margin-top:0}
+.toast{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 16px;min-height:52px;border-radius:12px;background:#2A2926;color:#F3F1EC;box-shadow:var(--shadow)}
+.sk[data-theme="dark"] .toast{background:#ECEAE4;color:#1C1B19}
+.toast span{flex:1;min-width:0;font-size:14px}
+.toast .ta{font-weight:600;color:#9FD8BF;height:44px;padding:0 12px;border-radius:8px;display:inline-flex;align-items:center;flex:0 0 auto}
+.sk[data-theme="dark"] .toast .ta{color:#2E6B55}
+.toast .tx{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;opacity:.7;flex:0 0 auto}
+.toast .tx svg{width:18px;height:18px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);font-weight:500;color:var(--fg);background:var(--surface);white-space:nowrap;flex:0 0 auto}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.fab{width:56px;height:56px;border-radius:18px;background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.bbar{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 28px;background:linear-gradient(to top, var(--bg) 70%, transparent);display:flex;align-items:center;gap:10px}
+.addf{flex:1;height:48px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;align-items:center;padding:0 16px;color:var(--muted);font-size:15px}
+.opt{display:flex;align-items:center;gap:12px;padding:0 14px;min-height:52px;border-radius:12px;border:1px solid var(--line);width:100%;color:var(--fg)}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt .on-ic{width:18px;height:18px;color:var(--accent);flex:0 0 auto}
+.seg{display:flex;background:var(--hover);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;height:40px;text-align:center;border-radius:9px;color:var(--muted);font-weight:500}
+.seg .on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.swatches{display:flex;gap:2px;flex-wrap:wrap}
+.swb{width:44px;height:44px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.swb i{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;border:2px solid transparent;color:var(--fg)}
+.swb.on i{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--fg)}
+.swb i svg{width:16px;height:16px}
+.mrow{display:flex;align-items:center;gap:14px;min-height:52px;padding:0 6px;border-radius:10px;width:100%;color:var(--fg);font-weight:500}
+.mrow svg{width:22px;height:22px;color:var(--muted);flex:0 0 auto}
+.mrow small{margin-left:auto;font-weight:400;font-size:13px;color:var(--muted)}
+.banner{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;font-size:13px}
+.banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.panel h2{margin:0;font-size:16px;font-weight:600}
+.panel p{margin:0;font-size:13px;color:var(--muted)}
+.sel{display:inline-flex;align-items:center;gap:2px;height:44px;padding:0 2px 0 6px;border-radius:10px;font-size:14px;font-weight:500;flex:0 0 auto;white-space:nowrap;color:var(--fg)}
+.sel.box{border:1px solid var(--line);background:var(--surface);padding:0 10px 0 12px}
+.sel svg{width:16px;height:16px;color:var(--muted);transform:rotate(90deg)}
+.mem{display:flex;align-items:center;gap:8px;min-height:60px;border-top:1px solid var(--line)}
+.mem:first-child{border-top:0}
+.mem .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.mem .t b{font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mem .t small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dz{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.dz:first-of-type{border-top:0;padding-top:0}
+.dz b{font-weight:600}
+.cfoot{display:flex;align-items:flex-end;gap:2px}
+.cfoot .cmeta{flex:1;min-width:0;padding-bottom:2px}
+.cmenu{margin:-8px -10px -10px 0}
+.pop{position:absolute;z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;min-width:208px}
+.pop .mrow{min-height:48px;padding:0 10px;font-size:15px}
+.cico{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--danger-soft);color:var(--danger)}
+.cico svg{width:20px;height:20px}
+.chipline{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
+.chipline b{font-weight:600}
+.chipline small{color:var(--muted);font-size:12px;white-space:nowrap}
+.cfp{color:var(--muted)}
+</style>
+</helmet>
+<div class="sk" data-theme="{{theme}}" style="width:390px; height:844px; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; position:relative; overflow:hidden">
+<sc-if value="{{hDel}}" hint-placeholder-val="{{true}}">
+  <header class="subh">
+    <a class="ib" href="MProject.dc.html" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></a>
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25">
+      <span style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px"><span class="dot" style="background:#AD5A34; width:8px; height:8px"></span>Web Sitesi Yenileme</span>
+      <h1 style="font-size:20px; font-weight:700">Ayarlar</h1>
+    </div>
+    <button type="button" class="btn sm primary" style="margin-right:4px">Kaydet</button>
+  </header>
+  <div style="flex:1; overflow:auto; padding:10px 16px 32px; display:flex; flex-direction:column; gap:14px">
+    <section class="panel">
+      <h2>Genel</h2>
+      <label class="field"><span>Proje adı</span><input class="input" value="Web Sitesi Yenileme" /></label>
+      <div class="field"><span>Renk</span><div class="swatches" role="group" aria-label="Proje rengi"><button class="swb on" aria-label="Turuncu, seçili"><i style="background:#AD5A34"></i></button><button class="swb" aria-label="Mavi"><i style="background:#3F6DB5"></i></button><button class="swb" aria-label="Yeşil"><i style="background:#4A7D45"></i></button><button class="swb" aria-label="Pembe"><i style="background:#9E4F72"></i></button><button class="swb" aria-label="Mor"><i style="background:#6F5DAE"></i></button><button class="swb" aria-label="Sarı"><i style="background:#87691A"></i></button><button class="swb" aria-label="Gri mavi"><i style="background:#4F6C7A"></i></button></div></div>
+      <label class="field"><span>Açıklama <span style="color:var(--muted); font-weight:400">(isteğe bağlı)</span></span><span class="input" role="textbox" aria-multiline="true" style="height:auto; padding:12px 14px; line-height:1.4">Kurumsal sitenin yeni tasarımı ve içerik taşıması. Lansman 24 Kasım.</span></label>
+    </section>
+    <section class="panel" style="gap:6px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px"><h2>Üyeler</h2><span style="font-size:13px; color:var(--muted)">5 üye · 2 yönetici</span></div>
+      <div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#597895">SK</span><span class="t"><b>Süleyman Kara <span style="color:var(--muted); font-weight:400">(sen)</span></b><small>karasuleyman@ornek.com</small></span><button type="button" class="sel" aria-label="Süleyman Kara rolü">Yönetici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#B25D49">AD</span><span class="t"><b>Ayşe Demir</b><small>ayse.demir@ornek.com</small></span><button type="button" class="sel" aria-label="Ayşe Demir rolü">Yönetici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Ayşe Demir'i çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#4976B4">MK</span><span class="t"><b>Mehmet Kaya</b><small>mehmet@ornek.com</small></span><button type="button" class="sel" aria-label="Mehmet Kaya rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Mehmet Kaya'yı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#7A5FB8">ZA</span><span class="t"><b>Zeynep Arslan</b><small>zeynep.a@ornek.com</small></span><button type="button" class="sel" aria-label="Zeynep Arslan rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Zeynep Arslan'ı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#398264">CY</span><span class="t"><b>Can Yılmaz</b><small>can.yilmaz@ornek.com</small></span><button type="button" class="sel" aria-label="Can Yılmaz rolü">Görüntüleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Can Yılmaz'ı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      </div>
+      <p style="padding-top:8px; border-top:1px solid var(--line)">Yönetici: notlarda tam yetki, davet, rol verme, üye çıkarma, proje silme. Düzenleyici: notlarda tam yetki. Görüntüleyici: okur ve arar; not ekleyemez, görev işaretleyemez.</p>
+    </section>
+    <section class="panel">
+      <h2>Davet gönder</h2>
+      <p>Yalnızca Sukano hesabı olan kişiler davet edilebilir. E-posta adresini tam yaz.</p>
+      <label class="field"><span>E-posta</span><input class="input" type="email" value="deniz.ozturk@ornek.com" /></label>
+      <div style="display:flex; gap:8px; align-items:flex-end">
+        <div class="field" style="flex:0 0 auto"><span>Rol</span><button type="button" class="sel box" style="height:48px" aria-label="Davet rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <button type="button" class="btn primary" style="flex:1">Davet gönder</button>
+      </div>
+      <div class="note ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Bu adresle bir Sukano hesabı var.</div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <div class="sec-h" style="margin:4px 0 0">Bekleyen davetler</div>
+        <div style="display:flex; align-items:center; gap:12px"><span class="avatar" style="width:36px; height:36px; font-size:13px; background:var(--hover); color:var(--muted)">EK</span><span style="flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.3"><span style="font-weight:500">elif.kaya@ornek.com</span><span style="font-size:12px; color:var(--muted)">Görüntüleyici · 2 gün önce gönderildi · 12 gün sonra geçersiz</span></span><button type="button" class="btn sm">Geri çek</button></div>
+      </div>
+    </section>
+    <section class="panel" style="border-color:color-mix(in srgb, var(--danger) 35%, var(--line))">
+      <h2 style="color:var(--danger)">Tehlikeli bölge</h2>
+      <div class="dz"><b>Projeden ayrıl</b><p>Notlar projede kalır. Ayrıldıktan sonra yalnızca davetle geri dönebilirsin.</p><a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-start">Ayrıl</a></div>
+      <div class="dz"><b>Projeyi sil</b><p>Proje 7 gün boyunca yöneticiler tarafından geri getirilebilir; sonra notlar, dosyalar ve sürümler kalıcı olarak silinir. Üyelere bildirim gider.</p><a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-start">Projeyi sil</a></div>
+    </section>
+  </div>
+  <button type="button" class="scrim" aria-label="Kapat" tabIndex="-1"></button>
+  <div class="sheet" role="alertdialog" aria-labelledby="c1" aria-describedby="c1d" style="gap:16px">
+    <button type="button" class="grabb" aria-label="Kapat"><span class="grab"></span></button>
+    <div class="sh"><span class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c1">Proje silinsin mi?</h2></div>
+    <div class="chipline"><span class="dot" style="background:#AD5A34; width:12px; height:12px"></span><b style="flex:1">Web Sitesi Yenileme</b><small>14 not · 5 üye</small></div>
+    <p class="cfp" id="c1d">Proje 7 gün boyunca silinmiş olarak bekler; bu sürede yöneticiler projeyi geri getirebilir. Sonra notlar, dosyalar ve sürümler kalıcı olarak silinir. Üyelere bildirim gider.</p>
+    <div style="display:flex; gap:8px"><a class="btn" href="MProjectSettings.dc.html" style="flex:1">Vazgeç</a><button type="button" class="btn danger fill" style="flex:1">Projeyi sil</button></div>
+  </div>
+</sc-if>
+<sc-if value="{{hLeave}}" hint-placeholder-val="{{false}}">
+  <header class="subh">
+    <a class="ib" href="MProject.dc.html" aria-label="Geri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></a>
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25">
+      <span style="font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px"><span class="dot" style="background:#AD5A34; width:8px; height:8px"></span>Web Sitesi Yenileme</span>
+      <h1 style="font-size:20px; font-weight:700">Ayarlar</h1>
+    </div>
+    <button type="button" class="btn sm primary" style="margin-right:4px">Kaydet</button>
+  </header>
+  <div style="flex:1; overflow:auto; padding:10px 16px 32px; display:flex; flex-direction:column; gap:14px">
+    <section class="panel">
+      <h2>Genel</h2>
+      <label class="field"><span>Proje adı</span><input class="input" value="Web Sitesi Yenileme" /></label>
+      <div class="field"><span>Renk</span><div class="swatches" role="group" aria-label="Proje rengi"><button class="swb on" aria-label="Turuncu, seçili"><i style="background:#AD5A34"></i></button><button class="swb" aria-label="Mavi"><i style="background:#3F6DB5"></i></button><button class="swb" aria-label="Yeşil"><i style="background:#4A7D45"></i></button><button class="swb" aria-label="Pembe"><i style="background:#9E4F72"></i></button><button class="swb" aria-label="Mor"><i style="background:#6F5DAE"></i></button><button class="swb" aria-label="Sarı"><i style="background:#87691A"></i></button><button class="swb" aria-label="Gri mavi"><i style="background:#4F6C7A"></i></button></div></div>
+      <label class="field"><span>Açıklama <span style="color:var(--muted); font-weight:400">(isteğe bağlı)</span></span><span class="input" role="textbox" aria-multiline="true" style="height:auto; padding:12px 14px; line-height:1.4">Kurumsal sitenin yeni tasarımı ve içerik taşıması. Lansman 24 Kasım.</span></label>
+    </section>
+    <section class="panel" style="gap:6px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px"><h2>Üyeler</h2><span style="font-size:13px; color:var(--muted)">5 üye · 2 yönetici</span></div>
+      <div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#597895">SK</span><span class="t"><b>Süleyman Kara <span style="color:var(--muted); font-weight:400">(sen)</span></b><small>karasuleyman@ornek.com</small></span><button type="button" class="sel" aria-label="Süleyman Kara rolü">Yönetici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#B25D49">AD</span><span class="t"><b>Ayşe Demir</b><small>ayse.demir@ornek.com</small></span><button type="button" class="sel" aria-label="Ayşe Demir rolü">Yönetici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Ayşe Demir'i çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#4976B4">MK</span><span class="t"><b>Mehmet Kaya</b><small>mehmet@ornek.com</small></span><button type="button" class="sel" aria-label="Mehmet Kaya rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Mehmet Kaya'yı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#7A5FB8">ZA</span><span class="t"><b>Zeynep Arslan</b><small>zeynep.a@ornek.com</small></span><button type="button" class="sel" aria-label="Zeynep Arslan rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Zeynep Arslan'ı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mem"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#398264">CY</span><span class="t"><b>Can Yılmaz</b><small>can.yilmaz@ornek.com</small></span><button type="button" class="sel" aria-label="Can Yılmaz rolü">Görüntüleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button class="ib" aria-label="Can Yılmaz'ı çıkar" style="width:44px; margin-left:-12px; margin-right:-12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      </div>
+      <p style="padding-top:8px; border-top:1px solid var(--line)">Yönetici: notlarda tam yetki, davet, rol verme, üye çıkarma, proje silme. Düzenleyici: notlarda tam yetki. Görüntüleyici: okur ve arar; not ekleyemez, görev işaretleyemez.</p>
+    </section>
+    <section class="panel">
+      <h2>Davet gönder</h2>
+      <p>Yalnızca Sukano hesabı olan kişiler davet edilebilir. E-posta adresini tam yaz.</p>
+      <label class="field"><span>E-posta</span><input class="input" type="email" value="deniz.ozturk@ornek.com" /></label>
+      <div style="display:flex; gap:8px; align-items:flex-end">
+        <div class="field" style="flex:0 0 auto"><span>Rol</span><button type="button" class="sel box" style="height:48px" aria-label="Davet rolü">Düzenleyici<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <button type="button" class="btn primary" style="flex:1">Davet gönder</button>
+      </div>
+      <div class="note ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>Bu adresle bir Sukano hesabı var.</div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <div class="sec-h" style="margin:4px 0 0">Bekleyen davetler</div>
+        <div style="display:flex; align-items:center; gap:12px"><span class="avatar" style="width:36px; height:36px; font-size:13px; background:var(--hover); color:var(--muted)">EK</span><span style="flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.3"><span style="font-weight:500">elif.kaya@ornek.com</span><span style="font-size:12px; color:var(--muted)">Görüntüleyici · 2 gün önce gönderildi · 12 gün sonra geçersiz</span></span><button type="button" class="btn sm">Geri çek</button></div>
+      </div>
+    </section>
+    <section class="panel" style="border-color:color-mix(in srgb, var(--danger) 35%, var(--line))">
+      <h2 style="color:var(--danger)">Tehlikeli bölge</h2>
+      <div class="dz"><b>Projeden ayrıl</b><p>Notlar projede kalır. Ayrıldıktan sonra yalnızca davetle geri dönebilirsin.</p><a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-start">Ayrıl</a></div>
+      <div class="dz"><b>Projeyi sil</b><p>Proje 7 gün boyunca yöneticiler tarafından geri getirilebilir; sonra notlar, dosyalar ve sürümler kalıcı olarak silinir. Üyelere bildirim gider.</p><a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-start">Projeyi sil</a></div>
+    </section>
+  </div>
+  <button type="button" class="scrim" aria-label="Kapat" tabIndex="-1"></button>
+  <div class="sheet" role="alertdialog" aria-labelledby="c3" aria-describedby="c3d" style="gap:16px">
+    <button type="button" class="grabb" aria-label="Kapat"><span class="grab"></span></button>
+    <div class="sh"><span class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/><path d="M10 12h10"/><path d="m16 8 4 4-4 4"/></svg></span><h2 id="c3">Projeden ayrılıyor musun?</h2></div>
+    <div class="chipline"><span class="dot" style="background:#AD5A34; width:12px; height:12px"></span><b style="flex:1">Web Sitesi Yenileme</b><small>Yönetici</small></div>
+    <p class="cfp" id="c3d">Notlar projede kalır ve sana atanan görevlerden çıkarılırsın. Geri dönmek için bir yöneticinin seni yeniden davet etmesi gerekir.</p>
+    <div style="display:flex; gap:8px"><a class="btn" href="MProjectSettings.dc.html" style="flex:1">Vazgeç</a><button type="button" class="btn danger fill" style="flex:1">Projeden ayrıl</button></div>
+  </div>
+</sc-if>
+<sc-if value="{{hEmpty}}" hint-placeholder-val="{{false}}">
+  <header class="hdr">
+    <a class="ib" href="MDrawer.dc.html" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></a>
+    <label class="srch"><span class="sr">Ara</span><input type="search" placeholder="Notlarda ve projelerde ara" /></label>
+    <a class="ib" href="MNotifications.dc.html" aria-label="Bildirimler, 2 yeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="ndot" aria-hidden="true"></span></a>
+    <a href="MSettings.dc.html" aria-label="Ayarlar" style="padding:6px"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#597895">SK</span></a>
+  </header>
+  <div style="flex:1; overflow:hidden; padding:8px 16px 32px; display:flex; flex-direction:column; gap:14px">
+    <div style="display:flex; align-items:flex-start; gap:10px">
+      <span style="width:12px; height:12px; border-radius:999px; background:#AD5A34; flex:0 0 auto; margin-top:14px"></span>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding-top:6px">
+        <h1 style="font-size:21px; line-height:1.3; font-weight:700; letter-spacing:-0.01em">Web Sitesi Yenileme</h1>
+        <p style="font-size:13px; color:var(--muted)">Çöp · 7 gün sonra kalıcı silinir</p>
+      </div>
+      <nav class="vs" aria-label="Görünüm"><a href="MProject.dc.html" title="Notlar" aria-label="Notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg></a><a href="MArchive.dc.html" title="Arşiv" aria-label="Arşiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg></a><a class="on" href="MTrash.dc.html" title="Çöp" aria-label="Çöp" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></a></nav>
+    </div>
+    <div class="banner" style="background:var(--warn-soft); color:var(--warn); flex-direction:column; gap:10px">
+      <div style="display:flex; gap:10px; align-items:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg><span>Çöpteki notlar 7 gün sonra kalıcı olarak silinir. Bu projenin çöpünü yönetici ve düzenleyiciler görür.</span></div>
+      <a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-end; background:var(--surface)">Çöpü boşalt</a>
+    </div>
+    <div style="display:flex; gap:10px">
+      <div class="col">
+        <article class="card has-menu" style="background:var(--n-sari)">
+          <h3 class="ct">Eski ana sayfa metni</h3>
+          <p class="cp">"20 yıllık tecrübemizle…" ile başlayan paragraf. Yeni metin yazıldı, bu sürüm artık kullanılmayacak.</p>
+          <div class="cfoot"><p class="cmeta">Mehmet Kaya çöpe attı · 2 gün sonra silinir</p><button class="ib cmenu" aria-label="Eski ana sayfa metni: işlemler" aria-haspopup="menu" aria-expanded="true" style="background:color-mix(in srgb, var(--fg) 10%, transparent); color:var(--fg)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+        <article class="card has-menu" style="background:var(--n-gri)">
+          <ul class="cb-list"><li><span class="cbx"></span>Stok fotoğraf sitesi üyeliği</li><li><span class="cbx"></span>Yazı tipi lisansı</li></ul>
+          <div class="cfoot"><p class="cmeta">Sen çöpe attın · 4 gün sonra silinir</p><button class="ib cmenu" aria-label="Yapılacaklar notu: işlemler" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+      </div>
+      <div class="col">
+        <article class="card has-menu">
+          <h3 class="ct">İlk logo denemeleri</h3>
+          <p class="cp">Müşteri logonun değişmeyeceğini söyledi; bu not gereksiz.</p>
+          <div class="cfoot"><p class="cmeta">Ayşe Demir çöpe attı · 6 gün sonra silinir</p><button class="ib cmenu" aria-label="İlk logo denemeleri: işlemler" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="scrim" aria-label="Kapat" tabIndex="-1"></button>
+  <div class="sheet" role="alertdialog" aria-labelledby="c4" aria-describedby="c4d" style="gap:16px">
+    <button type="button" class="grabb" aria-label="Kapat"><span class="grab"></span></button>
+    <div class="sh"><span class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c4">Çöp boşaltılsın mı?</h2></div>
+    <p class="cfp" id="c4d">Web Sitesi Yenileme çöpündeki 4 not, sürümleri ve ekleriyle birlikte kalıcı olarak silinir. Bu işlem geri alınamaz.</p>
+    <div class="note m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span>Yalnızca bu projenin çöpü boşalır. Notlarım ve diğer projeler etkilenmez.</span></div>
+    <div style="display:flex; gap:8px"><a class="btn" href="MTrash.dc.html" style="flex:1">Vazgeç</a><button type="button" class="btn danger fill" style="flex:1">Çöpü boşalt</button></div>
+  </div>
+</sc-if>
+<sc-if value="{{hPerm}}" hint-placeholder-val="{{false}}">
+  <header class="hdr">
+    <a class="ib" href="MDrawer.dc.html" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></a>
+    <label class="srch"><span class="sr">Ara</span><input type="search" placeholder="Notlarda ve projelerde ara" /></label>
+    <a class="ib" href="MNotifications.dc.html" aria-label="Bildirimler, 2 yeni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="ndot" aria-hidden="true"></span></a>
+    <a href="MSettings.dc.html" aria-label="Ayarlar" style="padding:6px"><span class="avatar" style="width:32px; height:32px; font-size:12px; background:#597895">SK</span></a>
+  </header>
+  <div style="flex:1; overflow:hidden; padding:8px 16px 32px; display:flex; flex-direction:column; gap:14px">
+    <div style="display:flex; align-items:flex-start; gap:10px">
+      <span style="width:12px; height:12px; border-radius:999px; background:#AD5A34; flex:0 0 auto; margin-top:14px"></span>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding-top:6px">
+        <h1 style="font-size:21px; line-height:1.3; font-weight:700; letter-spacing:-0.01em">Web Sitesi Yenileme</h1>
+        <p style="font-size:13px; color:var(--muted)">Çöp · 7 gün sonra kalıcı silinir</p>
+      </div>
+      <nav class="vs" aria-label="Görünüm"><a href="MProject.dc.html" title="Notlar" aria-label="Notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><path d="M8 13h8M8 17h5"/></svg></a><a href="MArchive.dc.html" title="Arşiv" aria-label="Arşiv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg></a><a class="on" href="MTrash.dc.html" title="Çöp" aria-label="Çöp" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></a></nav>
+    </div>
+    <div class="banner" style="background:var(--warn-soft); color:var(--warn); flex-direction:column; gap:10px">
+      <div style="display:flex; gap:10px; align-items:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg><span>Çöpteki notlar 7 gün sonra kalıcı olarak silinir. Bu projenin çöpünü yönetici ve düzenleyiciler görür.</span></div>
+      <a class="btn sm danger" href="MConfirm.dc.html" style="align-self:flex-end; background:var(--surface)">Çöpü boşalt</a>
+    </div>
+    <div style="display:flex; gap:10px">
+      <div class="col">
+        <article class="card has-menu" style="background:var(--n-sari)">
+          <h3 class="ct">Eski ana sayfa metni</h3>
+          <p class="cp">"20 yıllık tecrübemizle…" ile başlayan paragraf. Yeni metin yazıldı, bu sürüm artık kullanılmayacak.</p>
+          <div class="cfoot"><p class="cmeta">Mehmet Kaya çöpe attı · 2 gün sonra silinir</p><button class="ib cmenu" aria-label="Eski ana sayfa metni: işlemler" aria-haspopup="menu" aria-expanded="true" style="background:color-mix(in srgb, var(--fg) 10%, transparent); color:var(--fg)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+        <article class="card has-menu" style="background:var(--n-gri)">
+          <ul class="cb-list"><li><span class="cbx"></span>Stok fotoğraf sitesi üyeliği</li><li><span class="cbx"></span>Yazı tipi lisansı</li></ul>
+          <div class="cfoot"><p class="cmeta">Sen çöpe attın · 4 gün sonra silinir</p><button class="ib cmenu" aria-label="Yapılacaklar notu: işlemler" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+      </div>
+      <div class="col">
+        <article class="card has-menu">
+          <h3 class="ct">İlk logo denemeleri</h3>
+          <p class="cp">Müşteri logonun değişmeyeceğini söyledi; bu not gereksiz.</p>
+          <div class="cfoot"><p class="cmeta">Ayşe Demir çöpe attı · 6 gün sonra silinir</p><button class="ib cmenu" aria-label="İlk logo denemeleri: işlemler" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button></div>
+        </article>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="scrim" aria-label="Kapat" tabIndex="-1"></button>
+  <div class="sheet" role="alertdialog" aria-labelledby="c5" aria-describedby="c5d" style="gap:16px">
+    <button type="button" class="grabb" aria-label="Kapat"><span class="grab"></span></button>
+    <div class="sh"><span class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></span><h2 id="c5">Not kalıcı olarak silinsin mi?</h2></div>
+    <div class="chipline" style="background:var(--n-sari); border-color:transparent"><b style="flex:1">Eski ana sayfa metni</b><small>Çöpte · 2 gün kaldı</small></div>
+    <p class="cfp" id="c5d">Not, sürüm geçmişi ve ekleri silinir. Bu işlem geri alınamaz.</p>
+    <div style="display:flex; gap:8px"><a class="btn" href="MTrash.dc.html" style="flex:1">Vazgeç</a><button type="button" class="btn danger fill" style="flex:1">Kalıcı olarak sil</button></div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"hal":{"editor":"enum","options":["Projeyi sil","Projeden ayrıl","Çöpü boşalt","Kalıcı silme"],"default":"Projeyi sil","section":"Hal"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light', ...(h => ({ hDel: h === 'Projeyi sil', hLeave: h === 'Projeden ayrıl', hEmpty: h === 'Çöpü boşalt', hPerm: h === 'Kalıcı silme' }))(this.props.hal ?? 'Projeyi sil') }; }
+}
+</script>
+</body>
+</html>

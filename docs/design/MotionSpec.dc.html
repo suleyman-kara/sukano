@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Hareket sistemi</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sk{font-family:Onest,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;width:1440px;min-height:1210px;padding:32px 40px 40px;display:flex;flex-direction:column;gap:20px;background:var(--bg);color:var(--fg);
+--bg:#F7F6F2;--surface:#FFFFFF;--fg:#1C1B19;--muted:#5F5D57;--line:#E4E2DC;--hover:#ECEBE6;--accent:#2E6B55;--accent-fg:#FFFFFF;--accent-soft:#E2EEE8}
+.sk[data-theme="dark"]{--bg:#141413;--surface:#1E1E1C;--fg:#ECEAE4;--muted:#AFADA6;--line:#2F2F2C;--hover:#2A2A27;--accent:#7FC2A6;--accent-fg:#0F1F19;--accent-soft:#233A30}
+.sk,.sk *{box-sizing:border-box}
+:where(.sk) h1,:where(.sk) h2,:where(.sk) h3,:where(.sk) p,:where(.sk) ul,:where(.sk) ol,:where(.sk) figure{margin:0}
+code,.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.hd h1{font-size:22px;font-weight:700;letter-spacing:-0.015em}
+.hd p{font-size:13.5px;color:var(--muted);margin-top:4px}
+.cols{display:grid;grid-template-columns:repeat(4,325px);gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:20px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.box h2{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dr{display:grid;grid-template-columns:64px 1fr 56px;align-items:center;gap:4px 12px}
+.dn{font-weight:600;font-size:13px}
+.db{height:8px;border-radius:4px;background:var(--hover);overflow:hidden}
+.dbf{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.dbf.dash{width:100%;background:repeating-linear-gradient(90deg,var(--accent) 0 6px,transparent 6px 10px);opacity:.45}
+.dms{font-size:12.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.du{grid-column:2 / 4;font-size:12px;color:var(--muted);margin-top:-2px}
+.drs{display:flex;flex-direction:column;gap:10px}
+.cvs{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.cv{display:flex;flex-direction:column;gap:6px}
+.cv svg{display:block;width:100%;height:auto}
+.cv figcaption{display:flex;flex-direction:column;gap:1px;font-size:12px}
+.cv figcaption b{font-size:13px;font-weight:600}
+.cv figcaption code{font-size:11.5px;color:var(--accent)}
+.cv figcaption span{color:var(--muted);font-size:11.5px}
+.cv figcaption .u{color:var(--fg);font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 8px 8px 0;border-bottom:1px solid var(--line)}
+td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.35}
+tr:last-child td{border-bottom:0}
+td code{font-size:11.5px;background:var(--accent-soft);padding:1px 5px;border-radius:5px;white-space:nowrap}
+td.mu{color:var(--muted)}
+.pl{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.pl li{display:flex;gap:12px;align-items:flex-start}
+.pn{flex:0 0 auto;width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.pl p{font-size:13px;line-height:1.5;color:var(--muted)}
+.pl b{color:var(--fg);font-weight:600}
+.txt{font-size:13px;line-height:1.55;color:var(--muted)}
+.txt b{color:var(--fg);font-weight:600}
+.txt code{font-size:11.5px;background:var(--accent-soft);color:var(--fg);padding:1px 5px;border-radius:5px}
+.bul{padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:13px;line-height:1.5;color:var(--muted)}
+.bul b{color:var(--fg);font-weight:600}
+.bul code{font-size:11.5px;background:var(--accent-soft);color:var(--fg);padding:1px 5px;border-radius:5px}
+.rec{display:flex;align-items:center;gap:10px}
+.rec .big{font-size:20px;font-weight:700;letter-spacing:-0.01em}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-fg)}
+.codebox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;display:grid;grid-template-columns:325px 345px 1fr;gap:20px}
+.codebox .code{display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.55}
+.ln{display:block;white-space:pre}
+.code .c{color:var(--muted)}
+</style>
+</helmet>
+
+<div class="sk" data-theme="{{theme}}">
+  <header class="hd">
+    <h1>Hareket sistemi</h1>
+    <p>Sukano’da hareket sessizdir: durumu açıklar, beklettirmez. Mikro etkileşimler ve giriş ekranı arka planı bu ölçeği kullanır.</p>
+  </header>
+
+  <div class="cols">
+    <div class="col">
+      <section class="box">
+        <h2>Süre ölçeği</h2>
+        <div class="drs"><div class="dr"><span class="dn">micro</span><span class="db"><span class="dbf" style="width:37.5%"></span></span><span class="dms">120 ms</span><span class="du">Basma, hover, kutucuk, tik</span></div><div class="dr"><span class="dn">small</span><span class="db"><span class="dbf" style="width:56.2%"></span></span><span class="dms">180 ms</span><span class="du">Popover, menü, tooltip, çıkışlar</span></div><div class="dr"><span class="dn">medium</span><span class="db"><span class="dbf" style="width:75.0%"></span></span><span class="dms">240 ms</span><span class="du">Toast, kart girişi, panel, alt görev</span></div><div class="dr"><span class="dn">large</span><span class="db"><span class="dbf" style="width:100.0%"></span></span><span class="dms">320 ms</span><span class="du">Kart → modal, satırın inişi</span></div><div class="dr amb"><span class="dn">ambient</span><span class="db"><span class="dbf dash"></span></span><span class="dms">8–14 s</span><span class="du">Yalnızca giriş ekranı arka planı</span></div></div>
+      </section>
+      <section class="box">
+        <h2>Eğriler</h2>
+        <div class="cvs"><figure class="cv">
+            <svg viewBox="0 0 176 96" width="176" height="96" aria-hidden="true"><rect x="8" y="8" width="160" height="80" rx="4" fill="none" stroke="var(--line)"/><path d="M8.0 88.0 L168.0 8.0" stroke="var(--line)" stroke-dasharray="3 3" fill="none"/><path d="M8.0 88.0 L48.0 8.0 M168.0 8.0 L88.0 8.0" stroke="var(--muted)" stroke-opacity=".45" fill="none"/><circle cx="48.0" cy="8.0" r="2.5" fill="var(--muted)"/><circle cx="88.0" cy="8.0" r="2.5" fill="var(--muted)"/><path d="M8.0 88.0 C48.0 8.0 88.0 8.0 168.0 8.0" stroke="var(--accent)" stroke-width="2.25" fill="none" stroke-linecap="round"/></svg>
+            <figcaption><b>Giriş</b><code>--ease-out</code><span>cubic-bezier(.25,1,.5,1)</span><span class="u">Ekrana gelen her şey</span></figcaption>
+          </figure><figure class="cv">
+            <svg viewBox="0 0 176 96" width="176" height="96" aria-hidden="true"><rect x="8" y="8" width="160" height="80" rx="4" fill="none" stroke="var(--line)"/><path d="M8.0 88.0 L168.0 8.0" stroke="var(--line)" stroke-dasharray="3 3" fill="none"/><path d="M8.0 88.0 L88.0 88.0 M168.0 8.0 L128.0 88.0" stroke="var(--muted)" stroke-opacity=".45" fill="none"/><circle cx="88.0" cy="88.0" r="2.5" fill="var(--muted)"/><circle cx="128.0" cy="88.0" r="2.5" fill="var(--muted)"/><path d="M8.0 88.0 C88.0 88.0 128.0 88.0 168.0 8.0" stroke="var(--accent)" stroke-width="2.25" fill="none" stroke-linecap="round"/></svg>
+            <figcaption><b>Çıkış</b><code>--ease-in</code><span>cubic-bezier(.5,0,.75,0)</span><span class="u">Ekrandan giden; süre %75</span></figcaption>
+          </figure><figure class="cv">
+            <svg viewBox="0 0 176 96" width="176" height="96" aria-hidden="true"><rect x="8" y="8" width="160" height="80" rx="4" fill="none" stroke="var(--line)"/><path d="M8.0 88.0 L168.0 8.0" stroke="var(--line)" stroke-dasharray="3 3" fill="none"/><path d="M8.0 88.0 L40.0 24.0 M168.0 8.0 L40.0 8.0" stroke="var(--muted)" stroke-opacity=".45" fill="none"/><circle cx="40.0" cy="24.0" r="2.5" fill="var(--muted)"/><circle cx="40.0" cy="8.0" r="2.5" fill="var(--muted)"/><path d="M8.0 88.0 C40.0 24.0 40.0 8.0 168.0 8.0" stroke="var(--accent)" stroke-width="2.25" fill="none" stroke-linecap="round"/></svg>
+            <figcaption><b>Yaylı his</b><code>--ease-spring</code><span>cubic-bezier(.2,.8,.2,1)</span><span class="u">Büyüyen yüzey, bırakma</span></figcaption>
+          </figure><figure class="cv">
+            <svg viewBox="0 0 176 96" width="176" height="96" aria-hidden="true"><rect x="8" y="8" width="160" height="80" rx="4" fill="none" stroke="var(--line)"/><path d="M8.0 88.0 L168.0 8.0" stroke="var(--line)" stroke-dasharray="3 3" fill="none"/><path d="M8.0 88.0 L112.0 88.0 M168.0 8.0 L64.0 8.0" stroke="var(--muted)" stroke-opacity=".45" fill="none"/><circle cx="112.0" cy="88.0" r="2.5" fill="var(--muted)"/><circle cx="64.0" cy="8.0" r="2.5" fill="var(--muted)"/><path d="M8.0 88.0 C112.0 88.0 64.0 8.0 168.0 8.0" stroke="var(--accent)" stroke-width="2.25" fill="none" stroke-linecap="round"/></svg>
+            <figcaption><b>Yer değiştirme</b><code>--ease-inout</code><span>cubic-bezier(.65,0,.35,1)</span><span class="u">Ekranda kalan öğe kayar</span></figcaption>
+          </figure></div>
+      </section>
+    </div>
+
+    <div class="col" style="grid-column:span 2">
+      <section class="box">
+        <h2>Hangi öğe hangi süre</h2>
+        <table>
+          <thead><tr><th>Öğe</th><th>Giriş</th><th>Eğri</th><th>Çıkış</th></tr></thead>
+          <tbody><tr><td>Basma / hover</td><td><code>micro</code></td><td>ease-out</td><td class="mu">—</td></tr><tr><td>Kutucuk dolma ve tik</td><td><code>micro → small</code></td><td>ease-out</td><td class="mu">anında</td></tr><tr><td>Tooltip</td><td><code>small</code></td><td>ease-out</td><td class="mu">micro · ease-in</td></tr><tr><td>Menü, popover, tarih seçici</td><td><code>small</code></td><td>ease-out</td><td class="mu">micro · ease-in</td></tr><tr><td>Toast</td><td><code>medium</code></td><td>ease-out</td><td class="mu">small · ease-in</td></tr><tr><td>Izgaraya kart girişi / silme</td><td><code>medium</code></td><td>ease-out</td><td class="mu">small · ease-in</td></tr><tr><td>Alt görev aç / kapa</td><td><code>medium</code></td><td>ease-out</td><td class="mu">small · ease-in</td></tr><tr><td>Sol panel ray ↔ açık</td><td><code>medium</code></td><td>ease-out</td><td class="mu">small · ease-in</td></tr><tr><td>Tamamlanan satırın inişi</td><td><code>large</code></td><td>ease-inout</td><td class="mu">1,2 sn bekledikten sonra</td></tr><tr><td>Sürükleme: kaldır / bırak</td><td><code>micro / small</code></td><td>ease-out · spring</td><td class="mu">—</td></tr><tr><td>Kart → modal (paylaşılan öğe)</td><td><code>large</code></td><td>spring</td><td class="mu">medium · ease-in</td></tr><tr><td>Rota geçişi</td><td><code>small</code></td><td>ease-out</td><td class="mu">yalnızca saydamlık</td></tr><tr><td>İskelet ışıltısı</td><td><code>1,6 s + 0,8 s</code></td><td>linear</td><td class="mu">300 ms altı yüklemede yok</td></tr><tr><td>Giriş ekranı arka planı</td><td><code>ambient</code></td><td>ease-ambient</td><td class="mu">—</td></tr></tbody>
+        </table>
+      </section>
+      <section class="box">
+        <h2>Uygulama kütüphanesi önerisi</h2>
+        <div class="rec"><span class="big">Motion</span><code style="font-size:12.5px;color:var(--muted)">motion/react</code><span class="tag">Önerilen</span></div>
+        <p class="txt">Basit geçişler (hover, popover, toast, kutucuk) <b>yalnızca CSS</b> ile, aşağıdaki değişkenlerle yazılır. Motion yalnızca CSS’in zorlandığı üç yerde devreye girer: <b>çıkış animasyonu</b> (<code>AnimatePresence</code>: toast, silinen kart, kapanan modal), <b>yerleşim ve paylaşılan öğe</b> (<code>layout</code>, <code>layoutId</code>: kart → modal, satırın Tamamlananlar’a inişi, ızgarada komşuların kayması) ve <b>azaltılmış hareketin tek noktadan yönetimi</b> (<code>MotionConfig reducedMotion="user"</code>).</p>
+        <p class="txt">React Router v7 + Vite ile doğrudan çalışır; MIT lisanslı, ağaç sallanabilir, uygun animasyonları Web Animations API ile ana iş parçacığı dışında oynatır. GSAP daha ağır, emirsel (ref + hook) ve kapalı lisanslı; ayrı Motion One paketi artık <code>motion</code> içinde.</p>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="box">
+        <h2>Hareket ilkeleri</h2>
+        <ol class="pl"><li><span class="pn">1</span><p><b>Hareket anlam taşır.</b> Nereden gelip nereye gittiğini gösterir: biten görev Tamamlananlar’a iner, kart yerinden modala büyür. Süs için hareket yok.</p></li><li><span class="pn">2</span><p><b>Kısa olan iyidir.</b> Uygulama içinde 320 ms üst sınır. Ne kadar sık görülürse o kadar kısa; klavyeyle tetiklenen eylem neredeyse anlık.</p></li><li><span class="pn">3</span><p><b>Giriş ease-out, çıkış ease-in.</b> Çıkış girişin yaklaşık %75’i. Linear yalnızca ilerleme çizgisi ve ışıltıda.</p></li><li><span class="pn">4</span><p><b>Yalnızca transform ve opacity.</b> Layout tetiklemeyen iki özellik 60 fps’i korur. Yükseklik gereken tek yer alt görev listesi.</p></li><li><span class="pn">5</span><p><b>Her hareket kesilebilir.</b> Animasyon girdiyi kilitlemez; yarıda kesilirse bulunduğu yerden geri döner, baştan başlamaz.</p></li><li><span class="pn">6</span><p><b>Zemin sakin kalır.</b> Ortam hareketi yalnızca giriş ekranında, düşük kontrastlı ve 8 sn’den yavaş. Uygulama içinde ortam hareketi yok.</p></li></ol>
+      </section>
+      <section class="box">
+        <h2>Azaltılmış hareket kuralı</h2>
+        <ul class="bul">
+          <li><b>Kapanır:</b> kayma, ölçek, paralaks, ortam döngüleri, ışıltı.</li>
+          <li><b>Kalır:</b> anlam taşıyan durum değişimi, 120 ms saydamlıkla; ilerleme çizgisi durağan.</li>
+          <li><b>Kaynak:</b> sistemdeki <code>prefers-reduced-motion</code> ve Ayarlar’daki “Hareketi azalt” (Sistem / Açık / Kapalı).</li>
+          <li><b>JS:</b> <code>matchMedia</code> değişimi dinlenir; süren animasyon anında durur.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <section class="codebox" aria-label="CSS değişkenleri">
+    <div class="code"><span class="ln"><span class="c">/* :root içinde — süreler */</span></span><span class="ln">--dur-micro: 120ms;</span><span class="ln">--dur-small: 180ms;</span><span class="ln">--dur-medium: 240ms;</span><span class="ln">--dur-large: 320ms;</span><span class="ln">--dur-ambient: 11s; <span class="c">/* 8–14 s */</span></span></div>
+    <div class="code"><span class="ln"><span class="c">/* :root içinde — eğriler */</span></span><span class="ln">--ease-out: cubic-bezier(.25, 1, .5, 1);</span><span class="ln">--ease-in: cubic-bezier(.5, 0, .75, 0);</span><span class="ln">--ease-spring: cubic-bezier(.2, .8, .2, 1);</span><span class="ln">--ease-inout: cubic-bezier(.65, 0, .35, 1);</span><span class="ln">--ease-ambient: cubic-bezier(.45, 0, .55, 1);</span></div>
+    <div class="code"><span class="ln"><span class="c">/* azaltılmış hareket: sistem ayarı veya uygulama ayarı */</span></span><span class="ln">@media (prefers-reduced-motion: reduce)</span><span class="ln">[data-motion="reduced"]  <span class="c">/* Ayarlar › Hareketi azalt */</span></span><span class="ln">  → kayma, ölçek, paralaks, ortam: kapalı</span><span class="ln">  → durum değişimi: opacity 120ms ease-out</span><span class="ln">  → JS: matchMedia(…).addEventListener("change")</span></div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light","section":"Tema"},"$preview":{"width":1440,"height":1210}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

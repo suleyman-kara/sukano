@@ -1,0 +1,119 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sukano",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-11-01",
+  // Better Auth ve bağımlılıkları node:crypto, node:async_hooks vb. kullanır.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./build/client",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  // Gizli olmayan yapılandırma. Gizli değerler: yerelde `.dev.vars`
+  // (bkz. `.dev.vars.example`), üretimde `wrangler secret put <AD>`.
+  "vars": {
+    "APP_NAME": "Sukano",
+    "EMAIL_FROM": "Sukano <info@sukano.suleymankara.com>",
+    // Üretim Turnstile site anahtarı. Yerel geliştirme ve uçtan uca testler `.dev.vars`
+    // içindeki her zaman geçen test anahtarıyla bunu geçersiz kılar.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAF4wMQ4nklTnTLRr",
+    // Web Push VAPID iletişim adresi (`mailto:` ya da `https:`); push hizmetleri sorun
+    // olursa buraya ulaşır.
+    "VAPID_SUBJECT": "mailto:suleymankara600@gmail.com",
+  },
+  // Gizli değişken adları: `Env` tipi bunlardan üretilir (CI'da `.dev.vars` olmasa da)
+  // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. README.
+  "secrets": {
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "BETTER_AUTH_URL",
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "RESEND_API_KEY",
+      "TURNSTILE_SECRET_KEY",
+      "VAPID_PUBLIC_KEY",
+      "VAPID_PRIVATE_KEY",
+    ],
+  },
+  // D1. `database_id`, `wrangler d1 create sukano` çıktısıyla değiştirilmeli.
+  // Yerel geliştirme kimliğe bakmaz; `.wrangler/state` altında SQLite kullanır.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sukano",
+      "database_id": "2c9984fd-0de1-4a5b-bb69-11ad11969ea0",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // R2: not ekleri ve avatarlar. Panelde R2 etkinleştirilip
+  // `wrangler r2 bucket create sukano-files` ile oluşturulmalı.
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "sukano-files",
+    },
+  ],
+  // Kimlik uçlarına hız sınırı (PLAN §6): giriş, kayıt, şifre sıfırlama isteği ve
+  // doğrulama e-postası. Anahtarlar `app/domain/auth/rate-limit.ts`'te üretilir.
+  // IP başına dakikada 20, e-posta adresi başına dakikada 5 deneme (eylem başına).
+  // `namespace_id` hesap içinde tekil herhangi bir tam sayı olabilir.
+  "ratelimits": [
+    {
+      "name": "AUTH_IP_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 },
+    },
+    {
+      "name": "AUTH_EMAIL_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 5, "period": 60 },
+    },
+    // Kimlik dışı uçlar, kullanıcı başına (app/domain/security/api-limits.ts): dosya
+    // yükleme dakikada 30, davet dakikada 20, push aboneliği dakikada 10.
+    {
+      "name": "UPLOAD_LIMITER",
+      "namespace_id": "1003",
+      "simple": { "limit": 30, "period": 60 },
+    },
+    {
+      "name": "INVITE_LIMITER",
+      "namespace_id": "1004",
+      "simple": { "limit": 20, "period": 60 },
+    },
+    {
+      "name": "PUSH_LIMITER",
+      "namespace_id": "1005",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // Not başına bir oda (ortak düzenleme, varlık, görev sırası) ve proje / kişisel alan
+  // başına bir yayın kanalı (canlı ızgara). Bkz. README → Gerçek zamanlı.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NOTE_ROOM",
+        "class_name": "NoteRoom",
+      },
+      {
+        "name": "PROJECT_ROOM",
+        "class_name": "ProjectRoom",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["NoteRoom"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["ProjectRoom"],
+    },
+  ],
+  // Dakikada bir: hatırlatıcı gönderimi, çöp / silinmiş proje / davet temizliği.
+  "triggers": {
+    "crons": ["* * * * *"],
+  },
+}

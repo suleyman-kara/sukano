@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794057898107,
+      "tag": "0000_ilk_sema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794080694152,
+      "tag": "0001_proje_tasima_geri_alma",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794099698172,
+      "tag": "0003_hatirlatici_bildirim",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794101147885,
+      "tag": "0004_hareket",
+      "breakpoints": true
+    }
+  ]
+}

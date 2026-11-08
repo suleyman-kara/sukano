@@ -1,0 +1,31 @@
+# Yerel gizli değişkenler. Bu dosyayı `.dev.vars` olarak kopyala ve doldur:
+#   cp .dev.vars.example .dev.vars
+# `.dev.vars` git'e girmez. Üretimde her biri için: npx wrangler secret put <AD>
+
+# Better Auth: en az 32 karakter rastgele değer (ör. `openssl rand -base64 32`).
+BETTER_AUTH_SECRET=yerel-gelistirme-icin-en-az-32-karakterlik-gizli-deger
+# Uygulamanın kök adresi (OAuth geri dönüşleri ve e-posta bağlantıları için).
+BETTER_AUTH_URL=http://localhost:5173
+
+# Google OAuth (Google Cloud Console → Credentials → OAuth client ID, Web).
+# Yetkili yönlendirme URI'si: <BETTER_AUTH_URL>/api/auth/callback/google
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# E-posta (Resend). Boşsa e-postalar konsola yazılır ve yerel posta kutusuna düşer;
+# BETTER_AUTH_URL yerel adresken GET /__test/outbox ile okunabilir (uçtan uca testler).
+RESEND_API_KEY=
+
+# Cloudflare Turnstile gizli anahtarı. Aşağıdaki değer her zaman geçen test anahtarıdır.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+# Site anahtarı gizli değildir; üretim değeri wrangler.jsonc → vars içindedir. Yerelde
+# her zaman geçen test site anahtarı kullanılır (gerçek anahtar localhost'ta çalışmaz).
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+
+# Web Push (VAPID). Aşağıdaki çift YALNIZCA yerel geliştirme ve testler içindir (herkese
+# açık); üretimde kendi çiftini üret ve `wrangler secret put` ile yaz:
+#   npx web-push generate-vapid-keys
+# Boş bırakılırsa push kapalıdır (uygulama içi bildirimler yine çalışır).
+# İletişim adresi gizli değildir: wrangler.jsonc → vars.VAPID_SUBJECT.
+VAPID_PUBLIC_KEY=BHzRFatmnMCE8yZma0Hqe2pnc5YSVYYkt117QNbqC2AL0xeaz7vHyTDr7XX_X05VCSQB8lE9ao3YhoiMc6WkIlg
+VAPID_PRIVATE_KEY=sus2EkCSy8NOF2bejjs49IAU4O5UVQiWmsKT3Zcs-Kc
