@@ -30,6 +30,15 @@ export function currentServerTiming(): string | null {
   return t ? serverTimingValue(t, Date.now()) : null;
 }
 
+/**
+ * Yerel ölçüm: kapsamdaki yapay gecikmeyle bekler (D1 dışındaki gidişler, ör. Durable
+ * Object çağrısı, üretimdeki gibi sürsün). Üretimde ve kapsam dışında hemen döner.
+ */
+export async function simulatedTrip(factor = 1): Promise<void> {
+  const t = storage.getStore();
+  if (t && t.delayMs > 0) await new Promise((r) => setTimeout(r, t.delayMs * factor));
+}
+
 async function timed<T>(run: () => Promise<T>): Promise<T> {
   const t = storage.getStore();
   if (!t) return run();

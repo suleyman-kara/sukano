@@ -49,9 +49,9 @@ export function NotificationList({
             aria-label="Bildirim ayarları"
             title="Bildirim ayarları"
             onClick={onNavigate}
-            className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 lg:size-[30px]"
+            className="ib inline-flex items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            <Settings className="size-5" strokeWidth={1.75} aria-hidden="true" />
+            <Settings strokeWidth={1.75} aria-hidden="true" />
           </Link>
         </div>
       )}

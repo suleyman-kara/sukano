@@ -9,7 +9,8 @@
  *   çerezde de saklanır. Sunucu `<html data-motion="reduced|full">` yazar, ilk boyamada
  *   titreme olmaz.
  * - Azaltılmış harekette kayma, ölçek, ortam döngüleri ve ışıltı kapanır; anlam taşıyan
- *   durum değişimi anında olur (`motionTransition` süresiz döner).
+ *   durum değişimi 120 ms saydamlıkla kalır (`REDUCED_FADE`; Motion `MotionConfig
+ *   reducedMotion="always"` ile dönüşümleri zaten atlar, saydamlığı oynatır).
  */
 
 export const MOTION_PREFERENCES = ["system", "reduced", "full"] as const;
@@ -42,6 +43,12 @@ export type MotionTransition = {
 /** Hareket yok: anında. */
 export const INSTANT: MotionTransition = { duration: 0 };
 
+/** Azaltılmış hareket: anlam taşıyan durum değişimi 120 ms saydamlık (MotionSpec "Kalır"). */
+export const REDUCED_FADE: MotionTransition = { duration: DURATION.micro, ease: EASE.out };
+
+/** Uygulamanın tüm toast'ları (Geri al dahil) ekranda bu kadar kalır (tasarım v2.1: 6 sn). */
+export const TOAST_MS = 6000;
+
 export function isMotionPreference(value: unknown): value is MotionPreference {
   return typeof value === "string" && (MOTION_PREFERENCES as readonly string[]).includes(value);
 }
@@ -65,7 +72,7 @@ export function isReducedMotion(pref: MotionPreference, systemReduced: boolean):
 
 /**
  * Giriş geçişi: ölçekteki süre ve eğri (giriş varsayılanı ease-out). Azaltılmış harekette
- * anında.
+ * 120 ms saydamlık (`REDUCED_FADE`; dönüşüm içeren değerleri çağıran atlar).
  */
 export function motionTransition(
   size: MotionSize,
@@ -73,7 +80,7 @@ export function motionTransition(
   ease: MotionEase = "out",
   delay = 0,
 ): MotionTransition {
-  if (reduced) return INSTANT;
+  if (reduced) return REDUCED_FADE;
   return delay
     ? { duration: DURATION[size], ease: EASE[ease], delay }
     : { duration: DURATION[size], ease: EASE[ease] };
@@ -81,7 +88,7 @@ export function motionTransition(
 
 /** Çıkış geçişi: girişin bir basamak kısası (240 → 180, 180 → 120), ease-in. */
 export function exitTransition(size: MotionSize, reduced: boolean): MotionTransition {
-  if (reduced) return INSTANT;
+  if (reduced) return { duration: DURATION.micro, ease: EASE.in };
   const shorter: Record<MotionSize, MotionSize> = {
     micro: "micro",
     small: "micro",

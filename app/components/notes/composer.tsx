@@ -19,7 +19,8 @@ import { isBlankHtml } from "~/domain/notes/html";
 import { textToTaskLines } from "~/domain/tasks/convert";
 import { ColorPalette } from "./color-palette";
 import { noteBg } from "./colors";
-import { FormattingToolbar, NoteEditorContent, useNoteEditor } from "./note-editor";
+import { FormatPanel, FormatToggleButton, useFormatToggle } from "./formatting-toolbar";
+import { NoteEditorContent, useNoteEditor } from "./note-editor";
 
 export type ComposerMode = "text" | "todo";
 
@@ -57,7 +58,7 @@ export type ComposerProps = {
 };
 
 const IB =
-  "inline-flex size-[34px] shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 pointer-coarse:size-11";
+  "ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-[color-mix(in_srgb,var(--fg)_7%,transparent)] hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-expanded:bg-[color-mix(in_srgb,var(--fg)_12%,transparent)] aria-expanded:text-fg";
 
 /**
  * "Not al" alanı. Kapalıyken tek satır; tıklanınca başlık, gövde ve araç
@@ -85,6 +86,7 @@ export function Composer({
   const [color, setColor] = useState<NoteColor>("default");
   const [pinned, setPinned] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const format = useFormatToggle();
   const bodyRef = useRef("");
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -118,6 +120,7 @@ export function Composer({
     setTitle("");
     setColor("default");
     setPinned(false);
+    format.setOpen(false);
     bodyRef.current = "";
     editor?.commands.clearContent();
     setOpen(false);
@@ -237,7 +240,7 @@ export function Composer({
         </button>
         <button
           type="button"
-          className={cn(IB, "size-11 md:size-9")}
+          className={IB}
           aria-label="Yeni yapılacaklar notu"
           title="Yapılacaklar notu"
           onClick={() => {
@@ -245,16 +248,16 @@ export function Composer({
             setOpen(true);
           }}
         >
-          <SquareCheckBig className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <SquareCheckBig strokeWidth={1.75} aria-hidden="true" />
         </button>
         <button
           type="button"
           disabled
-          className={cn(IB, "size-11 md:size-9")}
+          className={IB}
           aria-label="Görsel ekleyerek not başlat"
           title="Görsel, not kaydedilince açık notta eklenir"
         >
-          <ImageIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <ImageIcon strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
     );
@@ -303,15 +306,16 @@ export function Composer({
           aria-pressed={pinned}
           onClick={() => setPinned((p) => !p)}
         >
-          <Pin className="size-[18px]" fill={pinned ? "currentColor" : "none"} aria-hidden="true" />
+          <Pin fill={pinned ? "currentColor" : "none"} aria-hidden="true" />
         </button>
       </div>
       {mode === "text" ? (
         <>
-          <FormattingToolbar editor={editor} className="px-3 py-0.5" />
           <div data-grow="" className="px-[18px] pt-1.5 pb-2">
             <NoteEditorContent editor={editor} />
           </div>
+          {/* Biçimlendirme Aa'nın arkasında (tasarım v2): alt çubuğun hemen üstünde açılır. */}
+          <FormatPanel format={format} editor={editor} className="px-2.5" />
         </>
       ) : (
         <div
@@ -365,7 +369,7 @@ export function Composer({
         <Popover open={paletteOpen} onOpenChange={setPaletteOpen}>
           <PopoverTrigger asChild>
             <button type="button" className={IB} aria-label="Renk" title="Renk">
-              <Palette className="size-[18px]" aria-hidden="true" />
+              <Palette aria-hidden="true" />
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto rounded-xl p-2.5">
@@ -379,7 +383,7 @@ export function Composer({
           aria-label="Not hatırlatıcısı"
           title="Not hatırlatıcısı, not kaydedilince açık notta kurulur"
         >
-          <Bell className="size-[18px]" aria-hidden="true" />
+          <Bell aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -388,8 +392,9 @@ export function Composer({
           aria-label="Dosya ekle"
           title="Dosya, not kaydedilince açık notta eklenir"
         >
-          <Paperclip className="size-[18px]" aria-hidden="true" />
+          <Paperclip aria-hidden="true" />
         </button>
+        {mode === "text" && <FormatToggleButton format={format} className={IB} />}
         {mode === "text" ? (
           <button
             type="button"
@@ -398,7 +403,7 @@ export function Composer({
             title="Yapılacaklar notuna dönüştür"
             onClick={() => switchMode("todo")}
           >
-            <ListChecks className="size-[18px]" aria-hidden="true" />
+            <ListChecks aria-hidden="true" />
           </button>
         ) : (
           <button
@@ -408,7 +413,7 @@ export function Composer({
             title="Metin notuna dönüştür"
             onClick={() => switchMode("text")}
           >
-            <FileText className="size-[18px]" aria-hidden="true" />
+            <FileText aria-hidden="true" />
           </button>
         )}
         <span className="flex-1 px-3 text-right text-xs text-muted-foreground max-sm:hidden">

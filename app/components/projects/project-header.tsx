@@ -63,9 +63,9 @@ export function ProjectHeader({
         to={`${base}/ayarlar`}
         aria-label="Proje ayarları"
         title="Proje ayarları"
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 md:size-10"
+        className="ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <Settings className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        <Settings strokeWidth={1.75} aria-hidden="true" />
       </Link>
     </>
   );

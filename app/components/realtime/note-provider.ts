@@ -7,6 +7,12 @@
  * değişiklikleri anında gönderilir; sunucudan gelenler belgeye / farkındalığa uygulanır.
  * Belge kimliği değişirse (sunucu belgeyi sıfırladı) `onReset` çağrılır: elindeki belgeyi
  * birleştirmek içeriği çoğaltır, bu yüzden çağıran yeni bir sağlayıcı kurar.
+ *
+ * Tohum (`initial`, açık notun loader'ından; bkz. `collab-seed.ts`): belge odadaki durumla
+ * başlar ve belge kimliği bilinir; `seeded` olur, düzenleyici bağlantıyı beklemeden
+ * düzenlenebilir. Hoş geldinden önce yazılanlar belgede bekler (gönderilmez); hoş geldinde
+ * sunucunun adım 1'ine verilen adım 2 yanıtıyla gider. Hoş geldindeki kimlik tohumunkinden
+ * farklıysa (oda arada sıfırlandı) ikili ileti işlenmeden `onReset` çağrılır.
  */
 import * as decoding from "lib0/decoding";
 import * as encoding from "lib0/encoding";
@@ -18,6 +24,7 @@ import {
 } from "y-protocols/awareness";
 import * as syncProtocol from "y-protocols/sync";
 import * as Y from "yjs";
+import { decodeCollabSeed, type NoteCollabSeed } from "~/domain/realtime/collab-seed";
 import { mergePresence, samePeers, type Peer, type PresenceUser } from "~/domain/realtime/presence";
 import {
   MESSAGE_AWARENESS,
@@ -34,6 +41,8 @@ export type NoteSyncSnapshot = {
   status: LiveStatus;
   /** Metin notunda ilk eşitleme tamamlandı (yapılacaklarda hoş geldin yeterli). */
   synced: boolean;
+  /** Belge loader tohumuyla başladı: eşitlemeden önce de düzenlenebilir. */
+  seeded: boolean;
   /** Sunucuyla son eşitlenme anı (ms): eşitleme, yayın ya da gönderim sonrası. */
   lastSyncedAt: number | null;
   /** D1 kopyasının son yazıldığı an (ms; `kaydedildi`). */
@@ -53,6 +62,10 @@ export type NoteSyncProviderOptions = {
   me: PresenceUser;
   /** Başlangıçta biliniyorsa salt okunurluk (sunucu `hosgeldin`'de kesinleştirir). */
   readOnly?: boolean;
+  /** Odadaki belgenin loader'dan gelen durumu (metin notu). */
+  initial?: NoteCollabSeed | null;
+  /** false: bağlantı `start()` ile açılır (varsayılan: hemen). */
+  autoStart?: boolean;
   onTasks?: (state: TaskBroadcast) => void;
   onMeta?: (meta: NoteMetaPatch & { by: string }) => void;
   /** Sunucu belgeyi sıfırladı: yeni sağlayıcı kurulmalı. */
@@ -72,14 +85,28 @@ export class NoteSyncProvider {
   private welcomed = false;
   private resetting = false;
   private destroyed = false;
+  private started = false;
   private saveWaiters: (() => void)[] = [];
+  /** Hoş geldinden önce yapılmış, sunucuya henüz gitmemiş yerel değişiklik var. */
+  private unsent = false;
+  private deliveryWaiters: (() => void)[] = [];
 
   constructor(private readonly options: NoteSyncProviderOptions) {
     this.awareness = new Awareness(this.doc);
     this.awareness.setLocalState({ user: options.me, focus: null });
+    const seed = options.kind === "text" ? decodeCollabSeed(options.initial) : null;
+    if (seed) {
+      try {
+        Y.applyUpdate(this.doc, seed.state, this);
+        this.docId = seed.docId;
+      } catch {
+        // Bozuk tohum: belge boş kalır, ilk eşitleme beklenir.
+      }
+    }
     this.snapshot = {
       status: "baglaniyor",
       synced: false,
+      seeded: this.docId !== null,
       lastSyncedAt: null,
       lastSavedAt: null,
       readOnly: options.readOnly ?? false,
@@ -99,7 +126,18 @@ export class NoteSyncProvider {
       onClose: () => this.onSocketClose(),
       onStatus: () => this.refresh(),
     });
+    if (options.autoStart !== false) this.start();
+  }
+
+  /** Bağlantıyı açar (bir kez; `autoStart: false` ile kurulduysa). */
+  start() {
+    if (this.started || this.destroyed) return;
+    this.started = true;
     this.socket.start();
+  }
+
+  get isDestroyed() {
+    return this.destroyed;
   }
 
   /* --------------------------- abonelik --------------------------- */
@@ -143,8 +181,12 @@ export class NoteSyncProvider {
   }
 
   private onDocUpdate = (update: Uint8Array, origin: unknown) => {
-    if (origin === this || this.destroyed) return;
-    if (!this.welcomed || this.snapshot.readOnly) return;
+    if (origin === this || this.destroyed || this.snapshot.readOnly) return;
+    // Hoş geldinden önce: belgede bekler, hoş geldindeki adım 2 yanıtıyla gider.
+    if (!this.welcomed) {
+      this.unsent = true;
+      return;
+    }
     const sent = this.sendBinary((e) => {
       encoding.writeVarUint(e, MESSAGE_SYNC);
       syncProtocol.writeUpdate(e, update);
@@ -192,7 +234,13 @@ export class NoteSyncProvider {
       encoding.writeVarUint(encoder, MESSAGE_SYNC);
       const step = syncProtocol.readSyncMessage(decoder, encoder, this.doc, this);
       if (encoding.length(encoder) > 1 && !this.snapshot.readOnly) {
-        this.socket.send(encoding.toUint8Array(encoder));
+        // Sunucunun adım 1'ine adım 2: sunucuda olmayan her şey (bağlantıdan önce yazılanlar
+        // dahil) gider.
+        if (
+          this.socket.send(encoding.toUint8Array(encoder)) &&
+          step === syncProtocol.messageYjsSyncStep1
+        )
+          this.delivered();
       }
       this.update({
         lastSyncedAt: Date.now(),
@@ -268,6 +316,24 @@ export class NoteSyncProvider {
     this.options.onReset?.();
   }
 
+  private delivered() {
+    this.unsent = false;
+    const waiters = this.deliveryWaiters;
+    this.deliveryWaiters = [];
+    waiters.forEach((w) => w());
+  }
+
+  /** Bağlantıdan önce yazılanlar gidene kadar (en çok `timeoutMs`) bekler. */
+  private waitForDelivery(timeoutMs: number): Promise<void> {
+    return new Promise((resolve) => {
+      const timer = setTimeout(resolve, timeoutMs);
+      this.deliveryWaiters.push(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
+  }
+
   private announce() {
     if (!this.awareness.getLocalState()) return;
     this.sendBinary((e) => {
@@ -326,11 +392,18 @@ export class NoteSyncProvider {
     this.doc.destroy();
     this.saveWaiters.forEach((w) => w());
     this.saveWaiters = [];
+    this.deliveryWaiters.forEach((w) => w());
+    this.deliveryWaiters = [];
     this.listeners.clear();
   }
 
-  /** Bekleyen kaydı isteyip (en çok `timeoutMs`) kapatır: not kapanırken. */
-  async close(timeoutMs = 2000) {
+  /**
+   * Bekleyen kaydı isteyip (en çok `timeoutMs`) kapatır: not kapanırken. Bağlantı kurulmadan
+   * yazılmış değişiklik varsa önce onun gitmesi beklenir (en çok `deliveryMs`; bağlantı
+   * arka planda kurulmaya devam eder).
+   */
+  async close(timeoutMs = 2000, deliveryMs = 8000) {
+    if (this.unsent) await this.waitForDelivery(deliveryMs);
     await this.flush(timeoutMs);
     this.destroy();
   }

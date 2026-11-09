@@ -85,7 +85,7 @@ test.describe("algılanan hız", () => {
     const kapat =
       gorunum(test.info()) === "mobil"
         ? dialog.getByRole("button", { name: "Geri" })
-        : dialog.getByRole("button", { name: "Kapat" }).last();
+        : dialog.getByRole("button", { name: "Kapat" });
     await kapat.click();
     await expect(dialog).toHaveCount(0);
     await expect(page).toHaveURL(/\/$/);

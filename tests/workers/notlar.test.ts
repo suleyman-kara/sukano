@@ -62,6 +62,20 @@ describe("not listeleme", () => {
     expect(note.preview).toBe("Modemin altındaki etiket, misafirler için ayrı ağ aç.");
   });
 
+  it("metin kartı biçimli, güvenli önizleme de taşır; yapılacaklar kartı taşımaz", async () => {
+    const id = await newNote(
+      "Biçimli",
+      '<h2>Mutfak</h2><p><strong>Salon</strong> <a href="https://x.y">teklif</a></p><ol><li><p>bir</p></li></ol><p onclick="x()">son<script>alert(1)</script></p>',
+    );
+    const list = await svc().list("notlar");
+    const card = list.find((n) => n.id === id)!;
+    expect(card.previewHtml).toBe(
+      '<p class="pv-h">Mutfak</p><p><strong>Salon</strong> <span class="pv-a">teklif</span></p><ol><li>bir</li></ol><p>son</p>',
+    );
+    expect(card.preview).toBe("Mutfak\nSalon teklif\nbir\nson");
+    expect(list.find((n) => n.id === "haftalik-plan")!.previewHtml).toBeUndefined();
+  });
+
   it("arşiv ve çöp görünümleri kendi notlarını verir", async () => {
     expect((await svc().list("arsiv")).map((n) => n.id)).toEqual(["eski-alisveris-listesi"]);
     expect((await svc().list("cop")).map((n) => n.id)).toContain("silinecek-taslak");

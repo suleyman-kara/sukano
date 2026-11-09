@@ -1,3 +1,4 @@
+import { LogoMark } from "~/components/logo";
 import { GridLiveStatus } from "~/components/realtime/live-status";
 import type { LiveChannelState } from "~/components/realtime/use-live-channel";
 import { AppShell } from "~/components/shell/app-shell";
@@ -46,23 +47,32 @@ export function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Boş durum (States): simge, başlık, açıklama, isteğe bağlı eylemler. */
+/**
+ * Boş durum (States): simge, başlık, açıklama, isteğe bağlı eylemler. `icon="logo"`: not
+ * alanının boş hali, Sukano işaretinin kareleri sırayla belirir (MicroMotion 10).
+ */
 export function EmptyState({
   icon,
   title,
   children,
   actions,
 }: {
-  icon: React.ReactNode;
+  icon: React.ReactNode | "logo";
   title: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center md:py-24">
-      <span className="empty-in inline-flex size-16 items-center justify-center rounded-[18px] bg-primary-soft text-primary [&_svg]:size-[30px]">
-        {icon}
-      </span>
+      {icon === "logo" ? (
+        <span className="inline-flex size-16 items-center justify-center" data-bos-logo="">
+          <LogoMark size={52} className="empty-logo" />
+        </span>
+      ) : (
+        <span className="empty-in inline-flex size-16 items-center justify-center rounded-[18px] bg-primary-soft text-primary [&_svg]:size-[30px]">
+          {icon}
+        </span>
+      )}
       <h2 className="empty-in-late m-0 text-lg font-semibold">{title}</h2>
       {children && (
         <p className="empty-in-late m-0 max-w-[320px] text-muted-foreground">{children}</p>

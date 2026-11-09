@@ -17,6 +17,8 @@ import type { NoteIntent } from "~/domain/notes/validation";
 import type { ProjectIntent } from "~/domain/projects/validation";
 import type { ChannelEventBody } from "~/domain/realtime/grid-events";
 import { channelName, type ChannelKey, type NoteMetaPatch } from "~/domain/realtime/protocol";
+import type { NoteCollabSeed } from "~/domain/realtime/collab-seed";
+import { simulatedTrip } from "./db-timing.server";
 import { collabVersionWriteOps, runBatch } from "./note-store.server";
 import { bodyTextOf } from "./notes.server";
 
@@ -151,6 +153,39 @@ export async function notifyNoteRoom(
     await env.NOTE_ROOM.getByName(noteId).noteChanged(change);
   } catch (error) {
     console.error("[canlı] not odası bildirimi başarısız:", error);
+  }
+}
+
+/** Loader'ın oda tohumunu en çok bu kadar bekler (ms); aşılırsa tohumsuz açılır. */
+export const COLLAB_SEED_TIMEOUT_MS = 1500;
+
+/**
+ * Açık notun belge tohumu (`NoteRoom.collabSeed`; erişim çağıranda denetlenmiş olmalı).
+ * Oda yanıt vermez, hata verir ya da geç kalırsa `null`: not yine açılır, metin
+ * düzenleyicisi eskisi gibi ilk eşitlemeyi bekler.
+ */
+export async function noteCollabSeed(
+  env: Pick<Env, "NOTE_ROOM">,
+  noteId: string,
+  timeoutMs = COLLAB_SEED_TIMEOUT_MS,
+): Promise<NoteCollabSeed | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      (async () => {
+        // Yerel ölçüm: Durable Object gidişi ve (ilk açılışta) D1'den doldurma.
+        await simulatedTrip(2);
+        return env.NOTE_ROOM.getByName(noteId).collabSeed(noteId);
+      })(),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+  } catch (error) {
+    console.error("[canlı] not odası tohumu alınamadı:", error);
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

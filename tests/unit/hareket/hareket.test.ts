@@ -7,6 +7,8 @@ import {
   EASE,
   exitTransition,
   INSTANT,
+  REDUCED_FADE,
+  TOAST_MS,
   isMotionPreference,
   isReducedMotion,
   motionAttribute,
@@ -54,12 +56,20 @@ describe("geçiş yardımcıları", () => {
     expect(exitTransition("micro", false)).toEqual({ duration: 0.12, ease: EASE.in });
   });
 
-  it("azaltılmış harekette giriş ve çıkış anındadır", () => {
+  it("azaltılmış harekette giriş ve çıkış 120 ms saydamlık olur, gecikme ve yay yok", () => {
     for (const size of ["micro", "small", "medium", "large"] as const) {
-      expect(motionTransition(size, true)).toEqual(INSTANT);
-      expect(motionTransition(size, true, "spring", 0.2)).toEqual({ duration: 0 });
-      expect(exitTransition(size, true)).toEqual({ duration: 0 });
+      expect(motionTransition(size, true)).toEqual(REDUCED_FADE);
+      expect(motionTransition(size, true, "spring", 0.2)).toEqual({
+        duration: 0.12,
+        ease: EASE.out,
+      });
+      expect(exitTransition(size, true)).toEqual({ duration: 0.12, ease: EASE.in });
     }
+    expect(INSTANT).toEqual({ duration: 0 });
+  });
+
+  it("toast süresi her yerde 6 sn", () => {
+    expect(TOAST_MS).toBe(6000);
   });
 });
 

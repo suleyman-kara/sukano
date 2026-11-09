@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { hesaplar } from "../fixtures/hesaplar";
 import { OTURUMSUZ } from "./ortam";
-import { ac, gorunum } from "./yardimcilar";
+import { ac, gorunum, menuDugmesi } from "./yardimcilar";
 
 /**
  * Projeler (Aşama 3b-1) uçtan uca, iki hesapla: Süleyman proje açar, Ayşe'yi davet
@@ -39,7 +39,7 @@ async function sunucuyaGitsin(page: Page, yol: string, eylem: () => Promise<unkn
 
 async function gezinmeyiAc(page: Page) {
   if (gorunum(test.info()) !== "masaustu") {
-    await page.getByRole("button", { name: "Gezinme menüsü" }).click();
+    await menuDugmesi(page).click();
     return page.getByRole("dialog", { name: "Ana gezinme" });
   }
   return page.getByRole("complementary");

@@ -2,6 +2,7 @@ import { LogOut, Trash2, TriangleAlert } from "lucide-react";
 import { AlertDialog } from "radix-ui";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { TOAST_MS } from "~/lib/motion";
 import { ConfirmDialog } from "~/components/notes/confirm-dialog";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "~/components/ui/dialog";
@@ -117,7 +118,7 @@ export function DeleteProjectDialog({
     const res = await request.send(projectAction(project.id), { intent: "delete" });
     if (!res.ok) return;
     toast(`${project.name} silindi · 7 gün içinde Silinmiş projeler'den geri getirebilirsin`, {
-      duration: 8000,
+      duration: TOAST_MS,
     });
     await navigate("/");
     await request.refresh();

@@ -6,6 +6,7 @@ import {
   OctagonXIcon,
   Loader2Icon,
 } from "lucide-react";
+import { TOAST_MS } from "~/lib/motion";
 import { useTheme } from "~/lib/theme";
 
 // Sukano: next-themes yerine app/lib/theme.ts kullanılır; toast sol altta (PLAN §10).
@@ -33,6 +34,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         } as React.CSSProperties
       }
       toastOptions={{
+        // Tasarım v2.1: tüm toast'lar 6 sn (Geri al toast'ları da; bkz. withDurationBar).
+        duration: TOAST_MS,
         classNames: {
           toast: "cn-toast",
         },

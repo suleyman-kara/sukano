@@ -132,7 +132,7 @@ describe("toast yığını ve Ctrl+Z", () => {
 
 describe("toast süresi", () => {
   it(`${TOAST_MS / 1000} sn; üzerine gelince kalan süre saklanır, devamda en az ${TOAST_MIN_LEFT / 1000} sn`, () => {
-    expect(pausedLeft(TOAST_MS, 1_000, 3_000)).toBe(6_000);
+    expect(pausedLeft(TOAST_MS, 1_000, 3_000)).toBe(4_000);
     expect(pausedLeft(1_000, 0, 5_000)).toBe(0);
     expect(resumeDelay(6_000)).toBe(6_000);
     expect(resumeDelay(500)).toBe(TOAST_MIN_LEFT);

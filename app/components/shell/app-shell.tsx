@@ -3,7 +3,7 @@ import { SkipLink } from "~/components/skip-link";
 import { Avatar } from "~/components/avatar";
 import { NewProjectDialog } from "~/components/projects/new-project-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/ui/sheet";
-import { DESKTOP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
+import { DESKTOP_QUERY, TABLET_UP_QUERY, useMediaQuery } from "~/hooks/use-media-query";
 import { useRouteFade } from "~/hooks/use-route-fade";
 import { useNavMode } from "~/lib/nav-state";
 import { Sidebar, SidebarNav } from "./sidebar";
@@ -23,10 +23,11 @@ type AppShellProps = ShellData & {
 
 /**
  * Uygulama kabuğu.
- * - ≥ 1024 px: kalıcı sol panel, hamburger 248 ↔ 72 px arasında geçiş yapar
- *   (localStorage'da saklanır).
- * - 768–1023 px: ray varsayılan; hamburger açık paneli çekmece olarak açar.
- * - < 768 px: panel gizli; hamburger çekmeceyi (Sheet) açar.
+ * - ≥ 1024 px: kalıcı sol panel; sol üstteki logo menü düğmesidir (üzerine gelince
+ *   hamburgere döner) ve paneli 248 ↔ 72 px arasında geçirir (localStorage'da saklanır).
+ * - 768–1023 px: ray varsayılan; logo açık paneli çekmece olarak açar, çekmecedeki logo
+ *   kapatır.
+ * - < 768 px: panel gizli; üst çubuktaki hamburger çekmeceyi (Sheet) açar.
  */
 export function AppShell({
   user,
@@ -40,6 +41,7 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
+  const isTabletUp = useMediaQuery(TABLET_UP_QUERY, true);
   const { mode, toggle } = useNavMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const mainRef = useRouteFade<HTMLElement>();
@@ -62,6 +64,8 @@ export function AppShell({
         pendingInviteCount={pendingInviteCount}
         deletedProjectCount={deletedProjectCount}
         onNewProject={openNewProject}
+        onMenuToggle={onMenuClick}
+        menuExpanded={isDesktop ? mode === "open" : drawerOpen}
       />
       <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} />
 
@@ -82,6 +86,9 @@ export function AppShell({
             deletedProjectCount={deletedProjectCount}
             onNewProject={openNewProject}
             onNavigate={() => setDrawerOpen(false)}
+            {...(isTabletUp
+              ? { onMenuToggle: () => setDrawerOpen(false), menuExpanded: true }
+              : {})}
           />
           <div className="mt-2 flex items-center gap-3 border-t border-line px-3.5 pt-3.5">
             <Avatar name={user.name} color={user.avatarColor} src={user.avatarUrl} size={36} />

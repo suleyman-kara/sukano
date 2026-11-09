@@ -4,8 +4,9 @@
  *
  * - `htmlToNoteDoc(html)`: D1 HTML'i → editör şemasına uygun ProseMirror düğümü. Tiptap'in
  *   ürettiği sınırlı HTML (p, h2, ul/li, strong, em, a, br) ve eski kayıtlar için
- *   hoşgörülü küçük bir ayrıştırıcıdır: bilinmeyen etiketlerin metni korunur, h1–h6
- *   başlık (H2), ol madde listesi, b/i kalın/italik olur.
+ *   hoşgörülü küçük bir ayrıştırıcıdır (`notes/html.ts`): bilinmeyen etiketlerin metni
+ *   korunur; h1–h2 başlık (H2), h3–h6 alt başlık (H3), b/i kalın/italik, del/strike üstü
+ *   çizili olur.
  * - `noteDocToHtml(doc)`: düğüm → HTML; editörün `getHTML()` çıktısıyla aynı biçim
  *   (Tiptap statik oluşturucusu, aynı eklentilerin `renderHTML`'i). Boş belge → "".
  * - `seedNoteYDoc(ydoc, html)`: boş Yjs belgesini HTML'den doldurur (oda ilk açılışta).
@@ -17,123 +18,24 @@ import { renderToHTMLString } from "@tiptap/static-renderer/pm/html-string";
 import { prosemirrorJSONToYXmlFragment, yXmlFragmentToProseMirrorRootNode } from "@tiptap/y-tiptap";
 import type * as Y from "yjs";
 import { noteExtensions, noteSchema } from "~/domain/notes/editor-schema";
-import { htmlToText } from "~/domain/notes/html";
+import {
+  BLOCK_TAGS as BLOCKS,
+  decodeEntities,
+  htmlToText,
+  parseHtmlTree,
+  type HtmlChild as Child,
+  type HtmlElement as El,
+} from "~/domain/notes/html";
 
 import { NOTE_FRAGMENT } from "./protocol";
 
-export { NOTE_FRAGMENT };
-
-/* ------------------------------------------------------------------ */
-/* HTML ayrıştırıcı                                                     */
-/* ------------------------------------------------------------------ */
-
-type El = { tag: string; attrs: Record<string, string>; children: Child[] };
-type Child = El | string;
-
-const VOID = new Set(["br", "hr", "img", "input", "meta", "link", "wbr", "col", "area", "source"]);
-const SKIP = new Set(["script", "style", "template", "head", "title"]);
-const BLOCKS = new Set([
-  "p",
-  "div",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "ul",
-  "ol",
-  "li",
-  "blockquote",
-  "pre",
-  "section",
-  "article",
-  "header",
-  "footer",
-  "table",
-  "tr",
-  "hr",
-]);
-
-const ENTITIES: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-};
-
-export function decodeEntities(s: string): string {
-  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, code: string) => {
-    if (code[0] === "#") {
-      const hex = code[1] === "x" || code[1] === "X";
-      const n = hex ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
-      return Number.isFinite(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : m;
-    }
-    return ENTITIES[code.toLowerCase()] ?? m;
-  });
-}
-
-function parseAttrs(source: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-  for (const m of source.matchAll(re)) {
-    attrs[m[1]!.toLowerCase()] = decodeEntities(m[2] ?? m[3] ?? m[4] ?? "");
-  }
-  return attrs;
-}
-
-/** HTML → basit öğe ağacı (kapanmayan etiketler hoşgörüyle kapatılır). */
-export function parseHtmlTree(html: string): El {
-  const root: El = { tag: "#root", attrs: {}, children: [] };
-  const stack: El[] = [root];
-  const top = () => stack[stack.length - 1]!;
-  const re =
-    /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<![^>]*>|<(\/?)([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>|([^<]+|<)/g;
-  let skipping: string | null = null;
-  for (const m of html.matchAll(re)) {
-    const [, closing, rawTag, rest, text] = m;
-    if (text !== undefined) {
-      if (!skipping) top().children.push(decodeEntities(text));
-      continue;
-    }
-    if (!rawTag) continue; // yorum, doctype
-    const tag = rawTag.toLowerCase();
-    if (skipping) {
-      if (closing && tag === skipping) skipping = null;
-      continue;
-    }
-    if (closing) {
-      const at = stack.map((e) => e.tag).lastIndexOf(tag);
-      if (at > 0) stack.length = at;
-      continue;
-    }
-    if (SKIP.has(tag)) {
-      if (!/\/\s*$/.test(rest ?? "")) skipping = tag;
-      continue;
-    }
-    // <li> ve <p> açıkken aynı türden yenisi öncekini kapatır (HTML kuralı, yaklaşık).
-    if (tag === "li" || tag === "p") {
-      const at = stack.map((e) => e.tag).lastIndexOf(tag);
-      const listAt = Math.max(
-        stack.map((e) => e.tag).lastIndexOf("ul"),
-        stack.map((e) => e.tag).lastIndexOf("ol"),
-      );
-      if (at > 0 && (tag === "p" || at > listAt)) stack.length = at;
-    }
-    const el: El = { tag, attrs: parseAttrs(rest ?? ""), children: [] };
-    top().children.push(el);
-    if (!VOID.has(tag) && !/\/\s*$/.test(rest ?? "")) stack.push(el);
-  }
-  return root;
-}
+export { NOTE_FRAGMENT, decodeEntities, parseHtmlTree };
 
 /* ------------------------------------------------------------------ */
 /* Öğe ağacı → ProseMirror JSON                                         */
 /* ------------------------------------------------------------------ */
 
-type Mark = { type: "bold" | "italic" | "link"; attrs?: Record<string, string> };
+type Mark = { type: "bold" | "italic" | "strike" | "link"; attrs?: Record<string, string> };
 
 const UNSAFE_HREF = /^\s*(javascript|vbscript|data):/i;
 
@@ -157,6 +59,8 @@ function inlineContent(children: readonly Child[], marks: readonly Mark[] = []):
     let next = marks;
     if (c.tag === "strong" || c.tag === "b") next = withMark(marks, { type: "bold" });
     else if (c.tag === "em" || c.tag === "i") next = withMark(marks, { type: "italic" });
+    else if (c.tag === "s" || c.tag === "del" || c.tag === "strike")
+      next = withMark(marks, { type: "strike" });
     else if (c.tag === "a" && c.attrs.href && !UNSAFE_HREF.test(c.attrs.href))
       next = withMark(
         marks.filter((m) => m.type !== "link"),
@@ -217,7 +121,8 @@ function blockNode(el: El): JSONContent[] {
     case "h5":
     case "h6": {
       const content = trimInline(inlineContent(el.children));
-      return [{ type: "heading", attrs: { level: 2 }, ...(content.length ? { content } : {}) }];
+      const level = el.tag === "h1" || el.tag === "h2" ? 2 : 3;
+      return [{ type: "heading", attrs: { level }, ...(content.length ? { content } : {}) }];
     }
     case "ul":
     case "ol": {
@@ -226,7 +131,8 @@ function blockNode(el: El): JSONContent[] {
         if (typeof c === "string" && !c.trim()) continue;
         items.push(listItem(typeof c !== "string" && c.tag === "li" ? c.children : [c]));
       }
-      return items.length ? [{ type: "bulletList", content: items }] : [];
+      if (!items.length) return [];
+      return [{ type: el.tag === "ol" ? "orderedList" : "bulletList", content: items }];
     }
     case "li":
       return [{ type: "bulletList", content: [listItem(el.children)] }];

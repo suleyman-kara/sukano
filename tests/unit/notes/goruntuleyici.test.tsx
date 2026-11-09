@@ -111,7 +111,8 @@ describe("görüntüleyici, salt okunur not", () => {
       expect(within(dialog).queryByRole("button", { name })).not.toBeInTheDocument();
     }
     expect(within(dialog).getByRole("button", { name: "Sürüm geçmişi" })).toBeEnabled();
-    expect(within(dialog).getAllByRole("button", { name: "Kapat" })).toHaveLength(2);
+    // Tasarım v2: ✕ yok; yalnızca alt çubuktaki "Kapat".
+    expect(within(dialog).getAllByRole("button", { name: "Kapat" })).toHaveLength(1);
   });
 
   it("klavyeyle satırlar arasında gezilir ama Enter görev açmaz, Ctrl+Enter işaretlemez", async () => {
@@ -159,8 +160,10 @@ describe("proje notu ayrıntısı", () => {
     ]);
     expect(within(dialog).getAllByRole("checkbox").length).toBeGreaterThan(0);
     expect(within(dialog).getAllByRole("button", { name: "Kişiye ata" }).length).toBeGreaterThan(0);
-    expect(within(dialog).queryByRole("button", { name: "Taşı veya kopyala…" })).toBeNull();
-    await user.click(within(dialog).getByRole("button", { name: "Kopyala…" }));
+    await user.click(within(dialog).getByRole("button", { name: "Diğer" }));
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).queryByRole("menuitem", { name: "Taşı veya kopyala…" })).toBeNull();
+    await user.click(within(menu).getByRole("menuitem", { name: "Kopyala…" }));
     const copy = await screen.findByRole("dialog", { name: "Notu kopyala" });
     expect(
       within(copy)
@@ -177,7 +180,8 @@ describe("proje notu ayrıntısı", () => {
     );
     expect(within(dialog).queryByTestId("not-yazarlari")).not.toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "Kişiye ata" })).not.toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Taşı veya kopyala…" }));
+    await user.click(within(dialog).getByRole("button", { name: "Diğer" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Taşı veya kopyala…" }));
     expect(await screen.findByRole("dialog", { name: "Notu projeye taşı" })).toBeVisible();
   });
 });

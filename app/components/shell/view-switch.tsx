@@ -1,6 +1,7 @@
 import { Archive, FileText, Trash2 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { cn } from "cn";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { usePendingSectionPath } from "~/hooks/use-pending-section";
 
 export type View = "notlar" | "arsiv" | "cop";
@@ -24,7 +25,11 @@ function viewOf(pathname: string, base: string): View {
 /**
  * "Notlar · Arşiv · Çöp" görünüm kapsülü (kişisel alan: `/`, `/arsiv`, `/cop`; proje:
  * `/proje/:id`, `/proje/:id/arsiv`, `/proje/:id/cop`).
- * Etiketler: masaüstünde hepsi, tablette yalnızca seçili, mobilde hiçbiri.
+ *
+ * Tasarım v2: yalnızca etkin öğe etiketini gösterir, diğerleri yalnızca ikon (üzerine gelince
+ * ya da odakta 500 ms sonra ipucu). Etkin öğe değişince etiket yenisinde açılır, eskisinde
+ * kapanır: genişlik 180 ms ease-in-out, yeni etiket 60 ms gecikmeli 120 ms saydamlık
+ * (`.vs-label`, app.css). Mobilde etiket yok. Erişilebilir ad her zaman `aria-label`.
  */
 export function ViewSwitch({
   current,
@@ -48,25 +53,38 @@ export function ViewSwitch({
         ({ id, label, path, icon: Icon }) => {
           const on = id === active;
           const to = base + path || "/";
-          return (
+          const link = (
             <Link
-              key={id}
               to={to}
               prefetch="intent"
-              title={label}
               aria-label={label}
               aria-current={on ? "page" : undefined}
+              data-etkin={on ? "" : undefined}
               className={cn(
-                "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 font-medium text-muted-foreground no-underline transition-colors outline-none hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50",
+                "vs-item inline-flex h-(--vs-h) min-w-(--vs-h) items-center justify-center rounded-lg px-[calc((var(--vs-h)-var(--vs-icon))/2)] font-medium text-muted-foreground no-underline outline-none hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:h-11 pointer-coarse:min-w-11",
                 on &&
                   "bg-surface text-primary shadow-[0_1px_2px_rgba(0,0,0,.08)] hover:text-primary",
               )}
             >
-              <Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              <span className={cn("text-[13px]", on ? "hidden md:inline" : "hidden lg:inline")}>
-                {label}
+              <Icon className="size-(--vs-icon) shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <span className="vs-label max-md:hidden" aria-hidden="true">
+                <span className="overflow-hidden">
+                  <span className="block pr-1 pl-1.5 text-[13px] whitespace-nowrap">{label}</span>
+                </span>
               </span>
             </Link>
+          );
+          // Öğe etkinleşince aynı düğüm kalır (etiketin genişlik geçişi oynar); ipucu
+          // yalnızca etiketi görünmeyen öğelerde.
+          return (
+            <Tooltip key={id} delayDuration={500}>
+              <TooltipTrigger asChild>{link}</TooltipTrigger>
+              {!on && (
+                <TooltipContent side="bottom" sideOffset={8}>
+                  {label}
+                </TooltipContent>
+              )}
+            </Tooltip>
           );
         },
       )}

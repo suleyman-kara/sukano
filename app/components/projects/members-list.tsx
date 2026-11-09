@@ -146,9 +146,9 @@ function MemberItem({
             onClick={onRemove}
             aria-label={`${m.name}: projeden çıkar`}
             title="Projeden çıkar"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 md:size-9"
+            className="ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            <X className="size-5" aria-hidden="true" />
+            <X aria-hidden="true" />
           </button>
         ) : null}
       </span>

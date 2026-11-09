@@ -42,7 +42,7 @@ export function AccountMenu({ user }: { user: ShellUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className="gap-3 px-2.5 py-2 font-medium">
-            <Palette className="size-[18px] text-muted-foreground" aria-hidden="true" />
+            <Palette className="size-(--menu-icon) text-muted-foreground" aria-hidden="true" />
             Tema
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-40">
@@ -51,7 +51,7 @@ export function AccountMenu({ user }: { user: ShellUser }) {
         </DropdownMenuSub>
         <DropdownMenuItem asChild className="gap-3 px-2.5 py-2 font-medium">
           <Link to="/ayarlar">
-            <Settings className="size-[18px] text-muted-foreground" aria-hidden="true" />
+            <Settings className="size-(--menu-icon) text-muted-foreground" aria-hidden="true" />
             Ayarlar
           </Link>
         </DropdownMenuItem>
@@ -59,7 +59,7 @@ export function AccountMenu({ user }: { user: ShellUser }) {
           className="gap-3 px-2.5 py-2 font-medium"
           onSelect={() => signOutForm.current?.requestSubmit()}
         >
-          <LogOut className="size-[18px] text-muted-foreground" aria-hidden="true" />
+          <LogOut className="size-(--menu-icon) text-muted-foreground" aria-hidden="true" />
           Çıkış yap
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -9,12 +9,14 @@ import {
   FolderInput,
   FolderOutput,
   History,
+  Keyboard,
   ListChecks,
   ListX,
   Palette,
   Pin,
   Trash2,
 } from "lucide-react";
+import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenuContent,
@@ -25,7 +27,8 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "~/components/
 import type { NoteColor } from "~/db/schema";
 import { ColorPalette } from "./color-palette";
 
-const ITEM = "gap-3 px-2.5 py-2 font-medium [&_svg]:size-[18px] [&_svg]:text-muted-foreground";
+const ITEM =
+  "gap-3 px-2.5 py-2 font-medium pointer-coarse:min-h-11 [&_svg]:size-(--menu-icon) [&_svg]:text-muted-foreground";
 
 /** Yapılacaklar notunun en üstteki komutları (PLAN §10 kanonik sıra). */
 export type TodoMenuHandlers = {
@@ -47,6 +50,19 @@ export type NoteMenuHandlers = {
   moveCopy?: MoveCopyEntry | null;
 };
 
+/** ⋯ menüsünün sonu: ince ayraçtan sonra kırmızı "Sil" (onaysız çöpe atar, Geri al toast'ı). */
+export function TrashMenuItem({ onTrash }: { onTrash: () => void }) {
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem variant="destructive" className={ITEM} onSelect={onTrash}>
+        <Trash2 aria-hidden="true" />
+        Sil
+      </DropdownMenuItem>
+    </>
+  );
+}
+
 export type MoveCopyEntry = { label: "Taşı veya kopyala…" | "Kopyala…"; onSelect: () => void };
 
 function MoveCopyIcon({ label }: { label: MoveCopyEntry["label"] }) {
@@ -61,9 +77,9 @@ export const convertLabel = (kind: "text" | "todo") =>
   kind === "text" ? "Yapılacaklar notuna dönüştür" : "Metin notuna dönüştür";
 
 /**
- * Masaüstü "Diğer" (⋯) menüsü; kanonik sıra (PLAN §10). Kartta, kart çubuğunda duran
- * eylemler tekrarlanmaz. Açık yapılacaklar notunda en üstte Tümünü aç / Tümünü kapat /
- * Tamamlananları sil, sonda Sürüm geçmişi, Arşivle ve Çöpe at (`dialog`) yer alır.
+ * Masaüstü "Diğer" (⋯) menüsü; kanonik sıra (PLAN §10, tasarım v2): [yapılacaklar
+ * komutları] · Taşı veya kopyala… / Kopyala… · Kopyasını oluştur · Sürüm geçmişi ·
+ * Dönüştür · Klavye kısayolları (yalnızca açık not) · ─ · Sil (kırmızı, en sonda).
  */
 export function NoteMoreMenuContent({
   onDuplicate,
@@ -73,17 +89,27 @@ export function NoteMoreMenuContent({
   moveCopy,
   kind,
   todo,
-  dialog,
+  onShortcuts,
+  onTrash,
+  side,
+  align = "end",
 }: NoteMenuHandlers & {
   kind: "text" | "todo";
   todo?: TodoMenuHandlers;
-  dialog?: { archived: boolean; onArchive: () => void; onTrash: () => void };
+  /** "Klavye kısayolları (Ctrl+/)" (açık not, klavyeli cihaz). */
+  onShortcuts?: () => void;
+  /** Verilirse menünün sonunda ayraçtan sonra kırmızı "Sil". */
+  onTrash?: () => void;
+  /** Açılma yönü: açık notun alt çubuğunda düğmenin sol üstünden yukarı (v2.1). */
+  side?: "top" | "bottom";
+  align?: "start" | "end";
 }) {
   return (
     <DropdownMenuContent
-      align="end"
+      align={align}
+      side={side}
       sideOffset={6}
-      className="w-[260px] rounded-xl p-1.5"
+      className="w-(--menu-w) rounded-xl p-1.5"
       aria-label="Not işlemleri"
     >
       {todo && (
@@ -124,23 +150,14 @@ export function NoteMoreMenuContent({
         {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
         {convertLabel(kind)}
       </DropdownMenuItem>
-      {dialog && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className={ITEM} onSelect={dialog.onArchive}>
-            {dialog.archived ? (
-              <ArchiveRestore aria-hidden="true" />
-            ) : (
-              <Archive aria-hidden="true" />
-            )}
-            {dialog.archived ? "Arşivden çıkar" : "Arşivle"}
-          </DropdownMenuItem>
-          <DropdownMenuItem className={ITEM} onSelect={dialog.onTrash}>
-            <Trash2 aria-hidden="true" />
-            Çöpe at
-          </DropdownMenuItem>
-        </>
+      {onShortcuts && (
+        <DropdownMenuItem className={ITEM} onSelect={onShortcuts}>
+          <Keyboard aria-hidden="true" />
+          Klavye kısayolları
+          <kbd className="ml-auto font-sans text-xs text-muted-foreground">Ctrl+/</kbd>
+        </DropdownMenuItem>
       )}
+      {onTrash && <TrashMenuItem onTrash={onTrash} />}
     </DropdownMenuContent>
   );
 }
@@ -148,12 +165,18 @@ export function NoteMoreMenuContent({
 type NoteSheetProps = NoteMenuHandlers & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * "card": kartın ⋯ sayfası (renk, sabitle, hatırlatıcı, … Arşivle, Sil). "open": açık
+   * notun ⋯ sayfası (MNoteMenu, MTodoMenu): Sabitle, Arşivle ve Hatırlatıcı üst/alt
+   * çubukta olduğundan sayfada yok; renk yalnızca `onColor` verilirse.
+   */
+  variant?: "card" | "open";
   title: string;
   kind: "text" | "todo";
   color: NoteColor;
   pinned: boolean;
   archived: boolean;
-  onColor: (color: NoteColor) => void;
+  onColor?: (color: NoteColor) => void;
   onPin: () => void;
   onArchive: () => void;
   onTrash: () => void;
@@ -164,13 +187,17 @@ type NoteSheetProps = NoteMenuHandlers & {
   onReminder?: () => void;
 };
 
-const ROW =
-  "flex min-h-12 w-full items-center gap-4 rounded-[10px] px-2.5 text-left text-[15px] font-medium outline-none hover:bg-hover focus-visible:bg-hover disabled:opacity-45 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
+const ROW_BASE =
+  "flex min-h-12 w-full items-center gap-4 rounded-[10px] px-2.5 text-left text-[15px] font-medium outline-none disabled:opacity-45 [&>svg]:size-5 [&>svg]:shrink-0";
+const ROW = `${ROW_BASE} hover:bg-hover focus-visible:bg-hover [&>svg]:text-muted-foreground`;
+/** Yıkıcı satır ("Sil"): kırmızı metin ve ikon. */
+const DANGER_ROW = `${ROW_BASE} text-danger hover:bg-danger-soft focus-visible:bg-danger-soft [&>svg]:text-danger`;
 
 /** Dokunmatik "⋯": alttan açılan sayfa (MNoteMenu, MTodoMenu). Renk anında uygulanır ("Bitti"). */
 export function NoteSheet({
   open,
   onOpenChange,
+  variant = "card",
   title,
   kind,
   color,
@@ -189,6 +216,7 @@ export function NoteSheet({
   footer,
   onReminder,
 }: NoteSheetProps) {
+  const card = variant === "card";
   const act = (fn: () => void) => () => {
     onOpenChange(false);
     fn();
@@ -219,15 +247,17 @@ export function NoteSheet({
         <SheetDescription className="sr-only">
           Renk, sabitleme, kopya, sürümler, arşiv ve çöp
         </SheetDescription>
+        {(todo || !onColor) && (
+          <div className="-my-1 flex items-center gap-2">
+            <span className="min-w-0 truncate rounded-full bg-line px-[7px] py-0.5 text-xs text-muted-foreground">
+              {title || "Başlıksız not"}
+            </span>
+            <span className="flex-1" />
+            {done}
+          </div>
+        )}
         {todo && (
           <>
-            <div className="-my-1 flex items-center gap-2">
-              <span className="min-w-0 truncate rounded-full bg-line px-[7px] py-0.5 text-xs text-muted-foreground">
-                {title || "Başlıksız not"}
-              </span>
-              <span className="flex-1" />
-              {done}
-            </div>
             <div role="menu" aria-label="Görev işlemleri" className="flex flex-col">
               <button type="button" role="menuitem" className={ROW} onClick={act(todo.onExpandAll)}>
                 <ChevronsUpDown aria-hidden="true" />
@@ -254,41 +284,47 @@ export function NoteSheet({
             </div>
           </>
         )}
-        <div
-          className={
-            todo
-              ? "flex items-center gap-2 border-t border-line pt-2"
-              : "-mb-1 flex items-center gap-2"
-          }
-        >
-          <Palette className="size-[22px] text-muted-foreground" aria-hidden="true" />
-          <span className="flex-1 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase">
-            Not rengi
-          </span>
-          {!todo && done}
-        </div>
-        <ColorPalette value={color} onChange={onColor} layout="grid" />
+        {onColor && (
+          <>
+            <div
+              className={
+                todo
+                  ? "flex items-center gap-2 border-t border-line pt-2"
+                  : "-mb-1 flex items-center gap-2"
+              }
+            >
+              <Palette className="size-[22px] text-muted-foreground" aria-hidden="true" />
+              <span className="flex-1 text-[11px] font-semibold tracking-[.08em] text-muted-foreground uppercase">
+                Not rengi
+              </span>
+              {!todo && done}
+            </div>
+            <ColorPalette value={color} onChange={onColor} layout="grid" />
+          </>
+        )}
         <div
           role="menu"
           aria-label="Not işlemleri"
-          className="flex flex-col border-t border-line pt-1.5"
+          className={cn("flex flex-col", (todo || onColor) && "border-t border-line pt-1.5")}
         >
-          {!archived && (
+          {card && !archived && (
             <button type="button" role="menuitem" className={ROW} onClick={act(onPin)}>
               <Pin aria-hidden="true" />
               {pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
             </button>
           )}
-          <button
-            type="button"
-            role="menuitem"
-            className={ROW}
-            disabled={!onReminder}
-            onClick={onReminder ? act(onReminder) : undefined}
-          >
-            <Bell aria-hidden="true" />
-            Not hatırlatıcısı
-          </button>
+          {card && (
+            <button
+              type="button"
+              role="menuitem"
+              className={ROW}
+              disabled={!onReminder}
+              onClick={onReminder ? act(onReminder) : undefined}
+            >
+              <Bell aria-hidden="true" />
+              Not hatırlatıcısı
+            </button>
+          )}
           {moveCopy ? (
             <button type="button" role="menuitem" className={ROW} onClick={act(moveCopy.onSelect)}>
               <MoveCopyIcon label={moveCopy.label} />
@@ -326,14 +362,19 @@ export function NoteSheet({
             {kind === "text" ? <ListChecks aria-hidden="true" /> : <FileText aria-hidden="true" />}
             {convertLabel(kind)}
           </button>
+          {card && (
+            <>
+              <div className="my-1 h-px bg-line" role="separator" />
+              <button type="button" role="menuitem" className={ROW} onClick={act(onArchive)}>
+                {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
+                {archived ? "Arşivden çıkar" : "Arşivle"}
+              </button>
+            </>
+          )}
           <div className="my-1 h-px bg-line" role="separator" />
-          <button type="button" role="menuitem" className={ROW} onClick={act(onArchive)}>
-            {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
-            {archived ? "Arşivden çıkar" : "Arşivle"}
-          </button>
-          <button type="button" role="menuitem" className={ROW} onClick={act(onTrash)}>
+          <button type="button" role="menuitem" className={DANGER_ROW} onClick={act(onTrash)}>
             <Trash2 aria-hidden="true" />
-            Çöpe at
+            Sil
           </button>
         </div>
         {footer}

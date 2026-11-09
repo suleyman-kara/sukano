@@ -8,10 +8,13 @@ import { desc, eq } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createDb } from "~/db/client";
 import { notes, noteVersions } from "~/db/schema";
-import { NOTE_FRAGMENT } from "~/domain/realtime/note-doc";
+import * as Y from "yjs";
+import { decodeCollabSeed } from "~/domain/realtime/collab-seed";
+import { NOTE_FRAGMENT, noteYDocToHtml } from "~/domain/realtime/note-doc";
 import type { NoteServerMessage, TaskBroadcast } from "~/domain/realtime/protocol";
 import { noteAccess } from "~/lib/note-access.server";
-import { verifiedUser } from "./kimlik-yardimcilar";
+import { noteCollabSeed } from "~/lib/realtime.server";
+import { get, verifiedUser } from "./kimlik-yardimcilar";
 import { joinNote, type LiveClient, sleep, upgrade } from "./canli-yardimcilar";
 import { cookies, form, ID, ops, seed, uuid, WEB } from "./proje-yardimcilar";
 
@@ -317,6 +320,36 @@ describe("metin notu: ortak düzenleme", () => {
     await form("/api/notlar", { intent: "delete", id }, jar.suleyman);
     await a.until(() => a.closed !== null, 3000, "kapanış");
     expect(a.closed!.code).toBe(4404);
+  });
+});
+
+describe("açık notun belge tohumu (düzenleyici bağlantıyı beklemeden açılır)", () => {
+  it("loader odadaki belgenin durumunu ve kimliğini taşır; hoş geldin aynı belgeyle gelir", async () => {
+    const id = await textNote("<p>tohum</p>");
+    const res = await get(`/not/${id}.data?_routes=routes/not`, { cookie: jar.mehmet });
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    const seed = decodeCollabSeed(await noteCollabSeed(env, id))!;
+    expect(body).toContain(seed.docId);
+    const doc = new Y.Doc();
+    Y.applyUpdate(doc, seed.state);
+    expect(noteYDocToHtml(doc)).toBe("<p>tohum</p>");
+    const a = await join(id, "mehmet");
+    expect((a.json[0] as { docId: string }).docId).toBe(seed.docId);
+    // Tohumdan kurulan belgeyle eşitleme içeriği çoğaltmaz.
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(a.doc));
+    expect(noteYDocToHtml(doc)).toBe("<p>tohum</p>");
+  });
+
+  it("yapılacaklar notunda tohum yok; oda yanıt vermezse not tohumsuz açılır", async () => {
+    const { id } = await todoNote();
+    expect(await noteCollabSeed(env, id)).toBeNull();
+    const hang = { NOTE_ROOM: { getByName: () => ({ collabSeed: () => new Promise(() => {}) }) } };
+    expect(await noteCollabSeed(hang as never, id, 10)).toBeNull();
+    const broken = {
+      NOTE_ROOM: { getByName: () => ({ collabSeed: () => Promise.reject(new Error("yok")) }) },
+    };
+    expect(await noteCollabSeed(broken as never, id)).toBeNull();
   });
 });
 

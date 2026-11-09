@@ -3,7 +3,7 @@ import { expect, test, type Browser, type Page, type TestInfo } from "@playwrigh
 import { mkdirSync } from "node:fs";
 import { hesaplar } from "../fixtures/hesaplar";
 import { OTURUMSUZ } from "./ortam";
-import { ac, gorunum, type Gorunum } from "./yardimcilar";
+import { ac, gorunum, menuDugmesi, type Gorunum } from "./yardimcilar";
 
 /**
  * Aşama 6a: PWA (manifest, service worker, kurulabilirlik, kurulum ipucu), çevrimdışı okuma
@@ -205,8 +205,7 @@ test.describe("PWA", () => {
     await page.context().setOffline(true);
     const git = async (ad: RegExp) => {
       const link = page.getByRole("link", { name: ad }).first();
-      if (!(await link.isVisible()))
-        await page.getByRole("button", { name: "Gezinme menüsü" }).click();
+      if (!(await link.isVisible())) await menuDugmesi(page).click();
       await link.click();
     };
     try {

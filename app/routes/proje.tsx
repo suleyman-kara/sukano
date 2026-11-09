@@ -1,4 +1,4 @@
-import { Archive, Info, LayoutGrid, Trash2, X } from "lucide-react";
+import { Archive, Info, Trash2, X } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { data, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -227,7 +227,7 @@ function NotesView({ loaderData, notes, base, live }: ViewProps) {
       )}
       {notes.length === 0 ? (
         <EmptyState
-          icon={<LayoutGrid strokeWidth={1.75} aria-hidden="true" />}
+          icon="logo"
           title="Bu projede henüz not yok"
           actions={
             canWrite ? (

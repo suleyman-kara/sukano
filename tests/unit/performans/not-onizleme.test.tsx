@@ -1,10 +1,13 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, Link, Outlet, RouterProvider, useLoaderData } from "react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { noteIdFromPath } from "~/components/notes/note-links";
 import { PendingNotePreview } from "~/components/notes/note-preview";
 import type { NoteCardData } from "~/domain/notes/optimistic";
+
+const preloadCollab = vi.hoisted(() => vi.fn());
+vi.mock("~/components/realtime/collab-loader", () => ({ preloadCollab }));
 
 const kart = (o: Partial<NoteCardData> = {}): NoteCardData => ({
   id: "market",
@@ -57,6 +60,8 @@ describe("not önizlemesi (yükleme sürerken)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Market" });
     expect(dialog).toHaveAttribute("aria-busy", "true");
     expect(dialog).toHaveTextContent("Süt, ekmek");
+    // Ortak düzenleme parçası loader'la paralel inmeye başlar (editör beklemeden kurulsun).
+    expect(preloadCollab).toHaveBeenCalled();
     await finish("market");
     expect(await screen.findByText("Düzenleyici: market")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

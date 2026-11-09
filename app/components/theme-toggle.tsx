@@ -40,14 +40,14 @@ export function ThemeToggle({ className }: { className?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50",
+          "ib inline-flex items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50",
           className,
         )}
         aria-label="Tema"
         title="Tema"
       >
-        <Sun className="size-5 dark:hidden" aria-hidden="true" />
-        <Moon className="hidden size-5 dark:block" aria-hidden="true" />
+        <Sun className="dark:hidden" aria-hidden="true" />
+        <Moon className="hidden dark:block" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuLabel>Tema</DropdownMenuLabel>

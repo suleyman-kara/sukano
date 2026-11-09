@@ -9,6 +9,7 @@ import { userSettings } from "~/lib/notifications.server";
 import { noteReminders } from "~/lib/reminders.server";
 import { NoteNotFoundError } from "~/lib/notes.server";
 import { projectsService } from "~/lib/projects.server";
+import { noteCollabSeed } from "~/lib/realtime.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/not";
 import { revalidateNote } from "~/lib/offline-revalidate";
@@ -32,7 +33,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   try {
     const projects = projectsService(env, user.id);
     // Birbirinden bağımsız okumalar paralel (her D1 turu birincil veritabanına bir yolculuk):
-    // erişim, hedef projeler, hatırlatıcılar ve saat dilimi aynı anda; sonra not ve üyeler.
+    // erişim, hedef projeler, hatırlatıcılar ve saat dilimi aynı anda; sonra not, üyeler ve
+    // not odasının belge tohumu (erişim doğrulandıktan sonra: oda yalnızca o zaman açılır).
     // Hatırlatıcılar erişim denetiminden önce okunur ama erişim yoksa hiçbir şey dönmez.
     const [{ scope, notes }, sidebar, reminders, { timeZone }] = await Promise.all([
       noteAccess(env, user.id).forNote(params.id),
@@ -40,9 +42,10 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
       noteReminders(env, params.id),
       userSettings(env, user.id),
     ]);
-    const [note, members] = await Promise.all([
+    const [note, members, collab] = await Promise.all([
       notes.get(params.id),
       scope.kind === "project" ? projects.members(scope.projectId, { verified: true }) : null,
+      noteCollabSeed(env, params.id),
     ]);
     if (note.trashedAt) throw data(null, { status: 404 });
     const targets: MoveTarget[] = sidebar.projects.map((p) => ({
@@ -72,7 +75,15 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
         })),
       };
     }
-    return { note, access, targets, reminders, timeZone };
+    // Tohum metin notunda gelir: düzenleyici not odasına bağlanmayı beklemeden düzenlenir.
+    return {
+      note,
+      access,
+      targets,
+      reminders,
+      timeZone,
+      collab: note.kind === "text" ? collab : null,
+    };
   } catch (error) {
     if (error instanceof NoteNotFoundError) throw data(null, { status: 404 });
     throw error;
@@ -100,6 +111,7 @@ export default function NoteRoute({ loaderData }: Route.ComponentProps) {
       reminders={loaderData.reminders}
       timeZone={loaderData.timeZone}
       initialReminderOpen={params.has("hatirlatici")}
+      collabSeed={loaderData.collab}
     />
   );
 }

@@ -1,6 +1,6 @@
 /**
  * Tamamlama geri alma (PLAN §10): her tamamlama not içinde "X tamamlandı · Geri al"
- * toast'ı açar (8 sn, üzerine gelince durur, en çok 2 satır yığılır) ve Ctrl+Z
+ * toast'ı açar (6 sn, üzerine gelince durur, en çok 2 satır yığılır) ve Ctrl+Z
  * yığınına girer; Ctrl+Z son tamamlamayı geri alır. Başlık yazılınca Ctrl+Z metne
  * aittir: yığın boşalır (toast'taki Geri al çalışmaya devam eder).
  *
@@ -12,7 +12,8 @@ import type { Task } from "./model";
 
 /** Tamamlanan satırın "Tamamlananlar" grubuna inmeden önce yerinde kaldığı süre. */
 export const SETTLE_MS = 1200;
-export const TOAST_MS = 8000;
+/** Toast süresi (tasarım v2.1: uygulamadaki tüm toast'lar 6 sn; `lib/motion.ts` TOAST_MS). */
+export const TOAST_MS = 6000;
 export const TOAST_MAX = 2;
 /** Üzerinden çıkınca toast en az bu kadar daha görünür. */
 export const TOAST_MIN_LEFT = 2000;

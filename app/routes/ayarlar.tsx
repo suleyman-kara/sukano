@@ -469,7 +469,10 @@ export default function Ayarlar({ loaderData }: Route.ComponentProps) {
 
   return (
     <AppShell {...shell}>
-      <section className="flex w-full max-w-[1000px] flex-col gap-5 px-4 pt-2 pb-12 md:px-7 md:pt-3 lg:px-8">
+      <section
+        data-ayarlar=""
+        className="mx-auto flex w-full flex-col gap-5 px-4 pt-2 pb-12 md:max-w-[680px] md:px-7 md:pt-3 lg:max-w-[880px] lg:px-8"
+      >
         <h1 className="m-0 text-[22px] font-bold tracking-[-0.01em] md:text-2xl">Ayarlar</h1>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <nav

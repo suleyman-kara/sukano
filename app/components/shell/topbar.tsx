@@ -37,15 +37,16 @@ export function Topbar({
         className,
       )}
     >
+      {/* Yalnızca mobilde; masaüstü ve tablette menü düğmesi sol üstteki logodur. */}
       <button
         type="button"
         onClick={onMenuClick}
         aria-label="Gezinme menüsü"
         aria-expanded={menuExpanded}
         title="Gezinme menüsü"
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 lg:size-9"
+        className="ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-hover hover:text-fg focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
       >
-        <Menu className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        <Menu strokeWidth={1.75} aria-hidden="true" />
       </button>
 
       <form

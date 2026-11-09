@@ -67,7 +67,7 @@ describe("NoteCard", () => {
     );
   });
 
-  it("eylem çubuğu: arşivle, çöpe at ve sabitle ilgili eylemi çağırır; hatırlatıcı açık, taşı devre dışı", async () => {
+  it("eylem çubuğu: arşivle ve sabitle çağrılır; çöp düğmesi yok, hatırlatıcı açık, taşı devre dışı", async () => {
     const actions = fakeActions();
     const user = userEvent.setup();
     inRouter(
@@ -81,8 +81,7 @@ describe("NoteCard", () => {
     );
     await user.click(screen.getByRole("button", { name: "Arşivle" }));
     expect(actions.archive).toHaveBeenCalledWith("n1");
-    await user.click(screen.getByRole("button", { name: "Çöpe at" }));
-    expect(actions.trash).toHaveBeenCalledWith("n1");
+    expect(screen.queryByRole("button", { name: "Çöpe at" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Sabitle" }));
     expect(actions.setPinned).toHaveBeenCalledWith("n1", true);
     expect(screen.getByRole("button", { name: "Not hatırlatıcısı" })).toBeEnabled();
@@ -106,9 +105,10 @@ describe("NoteCard", () => {
     expect(actions.setColor).toHaveBeenCalledWith("n1", "mor");
   });
 
-  it("⋯ menüsü kanonik sırayla: Kopyasını oluştur, Sürüm geçmişi, Dönüştür (onaylı)", async () => {
+  it("⋯ menüsü kanonik sırayla; Sil en sonda ayraçtan sonra kırmızı ve onaysız çöpe atar", async () => {
     const actions = fakeActions();
     const onVersions = vi.fn();
+    const onMoveCopy = vi.fn();
     const user = userEvent.setup();
     inRouter(
       <NoteCard
@@ -117,21 +117,56 @@ describe("NoteCard", () => {
         href="/not/n1"
         actions={actions}
         onVersions={onVersions}
+        onMoveCopy={onMoveCopy}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Diğer" }));
-    const items = await screen.findAllByRole("menuitem");
+    const menu = await screen.findByRole("menu");
+    const items = within(menu).getAllByRole("menuitem");
     expect(items.map((i) => i.textContent)).toEqual([
+      "Taşı veya kopyala…",
       "Kopyasını oluştur",
       "Sürüm geçmişi",
       "Yapılacaklar notuna dönüştür",
+      "Sil",
     ]);
-    expect(items[2]).not.toHaveAttribute("data-disabled");
-    await user.click(items[0]!);
+    expect(items[3]).not.toHaveAttribute("data-disabled");
+    const sil = items.at(-1)!;
+    expect(sil).toHaveAttribute("data-variant", "destructive");
+    expect(sil.previousElementSibling).toHaveAttribute("role", "separator");
+    // Kartta "Klavye kısayolları" yok (yalnızca açık notta).
+    expect(within(menu).queryByRole("menuitem", { name: /Klavye kısayolları/ })).toBeNull();
+    await user.click(sil);
+    expect(actions.trash).toHaveBeenCalledWith("n1");
+    await user.click(screen.getByRole("button", { name: "Diğer" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Kopyasını oluştur" }));
     expect(actions.duplicate).toHaveBeenCalledWith("n1");
     await user.click(screen.getByRole("button", { name: "Diğer" }));
     await user.click(await screen.findByRole("menuitem", { name: "Sürüm geçmişi" }));
     expect(onVersions).toHaveBeenCalledWith("n1");
+  });
+
+  it("biçimli önizleme kalın, liste ve başlığı gösterir; 10 satırla sınırlı", () => {
+    inRouter(
+      <NoteCard
+        note={note({
+          preview: "Mutfak\nDolap",
+          previewHtml:
+            '<p class="pv-h">Mutfak</p><p><strong>Salon:</strong> gri</p><ul><li>Dolap</li></ul><p>Bkz. <span class="pv-a">teklif</span></p>',
+        })}
+        view="notlar"
+        href="/not/n1"
+        actions={fakeActions()}
+        onVersions={vi.fn()}
+      />,
+    );
+    const preview = document.querySelector<HTMLElement>("[data-onizleme]")!;
+    expect(preview).toHaveClass("card-preview");
+    expect(within(preview).getByText("Salon:").tagName).toBe("STRONG");
+    expect(within(preview).getByRole("listitem")).toHaveTextContent("Dolap");
+    // Bağlantı kartta gezinmez: odaklanılabilir bir bağlantı değildir.
+    expect(within(preview).queryByRole("link")).toBeNull();
+    expect(within(preview).getByText("teklif")).toHaveClass("pv-a");
   });
 
   it("Alt+ok klavye ile taşır", async () => {
@@ -229,6 +264,34 @@ describe("NoteCard", () => {
     await user.click(within(sheet).getByRole("menuitem", { name: "Arşivle" }));
     expect(actions.archive).toHaveBeenCalledWith("n1");
   });
+
+  it("dokunmatik sayfada Arşivle'den sonra ayraç ve en sonda kırmızı Sil var; Sil çöpe atar", async () => {
+    setMedia({ width: 834, coarse: true });
+    const actions = fakeActions();
+    const user = userEvent.setup();
+    inRouter(
+      <NoteCard
+        note={note()}
+        view="notlar"
+        href="/not/n1"
+        actions={actions}
+        onVersions={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Ev tadilatı fikirleri: işlemler" }));
+    const sheet = await screen.findByRole("dialog");
+    const items = within(within(sheet).getByRole("menu", { name: "Not işlemleri" })).getAllByRole(
+      "menuitem",
+    );
+    expect(items.at(-2)).toHaveTextContent("Arşivle");
+    const sil = items.at(-1)!;
+    expect(sil).toHaveTextContent("Sil");
+    expect(sil).toHaveClass("text-danger");
+    expect(sil.previousElementSibling).toHaveAttribute("role", "separator");
+    expect(within(sheet).queryByRole("menuitem", { name: "Çöpe at" })).toBeNull();
+    await user.click(sil);
+    expect(actions.trash).toHaveBeenCalledWith("n1");
+  });
 });
 
 describe("ColorPalette", () => {
@@ -316,6 +379,52 @@ describe("Composer", () => {
     await user.click(screen.getByRole("button", { name: "Kapat" }));
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     expect(onSave.mock.calls[0]![0].bodyHtml).toContain("Gövde metni");
+  });
+
+  it("biçimlendirme çubuğu varsayılan gizli; Aa açar ve kapatır, kalın uygulanır", async () => {
+    const onSave = vi.fn();
+    const user = userEvent.setup();
+    render(<Composer onSave={onSave} />);
+    await user.click(screen.getByRole("button", { name: "Not al…" }));
+    const aa = screen.getByRole("button", { name: "Biçimlendirme" });
+    expect(aa).toHaveAttribute("aria-expanded", "false");
+    const panel = document.getElementById(aa.getAttribute("aria-controls")!)!;
+    expect(panel).toHaveAttribute("inert");
+    expect(within(panel).getByRole("toolbar", { name: "Biçimlendirme" })).toBeInTheDocument();
+    await user.click(aa);
+    expect(aa).toHaveAttribute("aria-expanded", "true");
+    expect(panel).not.toHaveAttribute("inert");
+    expect(panel).toHaveAttribute("data-open");
+    const names = within(panel)
+      .getAllByRole("button")
+      .map((b) => b.getAttribute("aria-label"));
+    expect(names).toEqual([
+      "Kalın",
+      "İtalik",
+      "Üstü çizili",
+      "Başlık",
+      "Alt başlık",
+      "Madde listesi",
+      "Numaralı liste",
+      "Bağlantı",
+      "Biçimi temizle",
+    ]);
+    const body = await screen.findByRole("textbox", { name: "Not" });
+    await user.click(body);
+    await user.click(within(panel).getByRole("button", { name: "Kalın" }));
+    await user.type(body, "kalın");
+    await user.click(aa);
+    expect(aa).toHaveAttribute("aria-expanded", "false");
+    await user.click(screen.getByRole("button", { name: "Kapat" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0]![0].bodyHtml).toContain("<strong>kalın</strong>");
+  });
+
+  it("yapılacaklar modunda Aa düğmesi yok", async () => {
+    const user = userEvent.setup();
+    render(<Composer onSave={vi.fn()} />);
+    await user.click(screen.getByRole("button", { name: "Yeni yapılacaklar notu" }));
+    expect(screen.queryByRole("button", { name: "Biçimlendirme" })).not.toBeInTheDocument();
   });
 });
 

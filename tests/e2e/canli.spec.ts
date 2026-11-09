@@ -70,7 +70,7 @@ test.describe("gerçek zamanlı", () => {
     await expect(ayseGovde).toContainText("canlı yazı ve yanıt", { timeout: 1000 });
 
     // Kapatınca D1 kopyası yazılır; kart güncel gövdeyi gösterir.
-    await mehmetNot.getByRole("button", { name: "Kapat" }).first().click();
+    await mehmetNot.getByRole("button", { name: "Kapat" }).click();
     await expect(mehmet.locator("article", { hasText: baslik })).toContainText("ve yanıt", {
       timeout: 5000,
     });

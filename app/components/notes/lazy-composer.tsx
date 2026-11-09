@@ -49,8 +49,7 @@ export function LazyComposer(props: ComposerProps) {
   );
 }
 
-const IB =
-  "inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground md:size-9";
+const IB = "ib inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground";
 
 /** Kapalı "Not al" alanının etkileşimsiz kopyası (düzen kaymasın). */
 function ComposerPlaceholder({
@@ -72,10 +71,10 @@ function ComposerPlaceholder({
         {label}
       </button>
       <span className={IB} aria-hidden="true">
-        <SquareCheckBig className="size-5" strokeWidth={1.75} />
+        <SquareCheckBig strokeWidth={1.75} />
       </span>
       <span className={cn(IB, "opacity-45")} aria-hidden="true">
-        <ImageIcon className="size-5" strokeWidth={1.75} />
+        <ImageIcon strokeWidth={1.75} />
       </span>
     </div>
   );
