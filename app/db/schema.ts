@@ -1,5 +1,5 @@
 /**
- * Sukano veri modeli (D1 / SQLite, Drizzle ORM). Bkz. docs/PLAN.md §6.
+ * Sukano veri modeli (D1 / SQLite, Drizzle ORM).
  *
  * Kurallar:
  * - Kimlikler metin (UUID, `crypto.randomUUID()`); Better Auth da metin kimlik üretir.
