@@ -24,7 +24,7 @@
     "VAPID_SUBJECT": "mailto:suleymankara600@gmail.com",
   },
   // Gizli değişken adları: `Env` tipi bunlardan üretilir (CI'da `.dev.vars` olmasa da)
-  // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. README.
+  // ve `npm run dev` eksik olanlar için uyarır. Değerler için bkz. docs/TEKNIK.md.
   "secrets": {
     "required": [
       "BETTER_AUTH_SECRET",
@@ -89,7 +89,7 @@
     },
   ],
   // Not başına bir oda (ortak düzenleme, varlık, görev sırası) ve proje / kişisel alan
-  // başına bir yayın kanalı (canlı ızgara). Bkz. README → Gerçek zamanlı.
+  // başına bir yayın kanalı (canlı ızgara). Bkz. docs/TEKNIK.md → Gerçek zamanlı.
   "durable_objects": {
     "bindings": [
       {

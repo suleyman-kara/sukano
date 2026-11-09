@@ -1,7 +1,8 @@
 # Sukano · Operasyon
 
-Yayına alma, gizli değişkenler, güvenlik ve performans notları. Geliştirme kurulumu için
-[`README.md`](../README.md); ürün planı için [`PLAN.md`](PLAN.md).
+Yayına alma, gizli değişkenler, güvenlik, performans ve yayından kaldırma notları. Genel tanıtım
+ve hızlı başlangıç için [`README.md`](../README.md); geliştirme ayrıntıları için
+[`TEKNIK.md`](TEKNIK.md); ürün planı için [`PLAN.md`](PLAN.md).
 
 ## 1. Yayın öncesi kontrol listesi (Workers Paid)
 
@@ -57,6 +58,10 @@ ile yapılır. Kutucuklar sırayla işaretlenmeli; bir adım atlanırsa dağıt�
       önizleme adresine karşı).
 
 ## 2. Dağıtım
+
+> **Not (yayından kaldırma):** `deploy.yml`'nin `workflow_run` tetikleyicisi kaldırıldı; iş akışı
+> artık yalnızca elle (`workflow_dispatch`, Actions → Dağıtım → Run workflow) çalışır. Otomatik
+> dağıtımı geri açmak için dosyanın başındaki yorumdaki tetikleyici geri eklenir.
 
 **CI ile (önerilen).** `.github/workflows/deploy.yml`, CI başarıyla bitince koşar:
 
@@ -231,3 +236,135 @@ Bunlar `tests/workers/performans.test.ts`'te denetlenir.
 masaüstü). Erişilebilirlik < 95 işi düşürür. Lighthouse 12+ "PWA" kategorisini kaldırdı;
 kurulabilirlik `tests/e2e/pwa.spec.ts`'te Chromium'un `Page.getInstallabilityErrors` denetimiyle
 doğrulanır.
+
+## 6. Yayından kaldırma
+
+Üretimi temiz biçimde kapatmak için sıralı kontrol listesi. Komutlar `wrangler login` ile ya da
+`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` ortam değişkenleriyle, depo kökünde çalıştırılır.
+Hiçbir adımda gizli değer yazılmaz; silinen kaynaklar **geri getirilemez**, bu yüzden sıra önemlidir
+(özellikle R2 nesne listesi D1 silinmeden önce alınır).
+
+- [ ] **0. Envanter (salt okunur).** Neyin silineceğini not et:
+
+  ```sh
+  npx wrangler whoami
+  npx wrangler deployments list --name sukano
+  npx wrangler secret list --name sukano
+  npx wrangler d1 list
+  npx wrangler r2 bucket list
+  gh secret list
+  ```
+
+- [ ] **1. Dağıtım iş akışını kapat.** `deploy.yml` artık yalnızca elle tetiklenir (bkz.
+      [2. bölüm](#2-dağıtım)); yanlışlıkla çalıştırılıp Worker'ı yeniden oluşturmasın diye iş
+      akışını tümden devre dışı bırak:
+
+  ```sh
+  gh workflow disable deploy.yml
+  gh workflow disable ci.yml   # isteğe bağlı; depo yalnızca arşiv olarak kalacaksa
+  ```
+
+- [ ] **2. (İsteğe bağlı) Veriyi dışa aktar.** Dışa aktarım kişisel veri içerir (ad, e-posta, not
+      içerikleri, şifre özetleri): şifreli bir yerde sakla ya da işin bitince sil.
+
+  ```sh
+  mkdir -p yedek/r2
+  # D1: şema + veri, tek SQL dosyası
+  npx wrangler d1 export sukano --remote --output yedek/sukano.sql
+  # R2 nesne anahtarları ekler tablosundadır (kova dışında nesne yazılmaz)
+  npx wrangler d1 execute sukano --remote --json \
+    --command "SELECT r2_key FROM attachments" > yedek/r2-anahtarlar.json
+  # Her nesneyi indir (jq gerekir)
+  jq -r '.[0].results[].r2_key' yedek/r2-anahtarlar.json | while read -r key; do
+    mkdir -p "yedek/r2/$(dirname "$key")"
+    npx wrangler r2 object get "sukano-files/$key" --remote --file "yedek/r2/$key"
+  done
+  ```
+
+  Çok sayıda nesnede tek tek indirme yavaştır; R2 panelinden bir S3 API anahtarı (yalnızca okuma,
+  bu kovayla sınırlı) oluşturup `rclone copy` / `aws s3 sync` ile toplu indirmek daha hızlıdır.
+  İş bitince o anahtarı da sil.
+
+- [ ] **3. Worker'ı sil.** Worker, sürümleri ve önizleme takma adları, gizli değişkenleri
+      (`BETTER_AUTH_SECRET`, `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `VAPID_*`, `GOOGLE_*`),
+      cron tetikleyicisi, hız sınırı bağlamaları ve Durable Object'lerin (`NoteRoom`,
+      `ProjectRoom`) depolaması birlikte silinir:
+
+  ```sh
+  npx wrangler delete sukano
+  ```
+
+  Ardından panelde **Workers & Pages → (liste)** ve **Websites → suleymankara.com → Workers
+  Routes** altında `sukano.suleymankara.com` için özel alan adı ya da rota kalmadığını doğrula;
+  kaldıysa sil.
+
+- [ ] **4. R2 kovasını boşalt ve sil.** Kova boş değilse silinmez. Adım 2'deki anahtar listesiyle
+      (ya da aynı sorguyu şimdi çalıştırarak):
+
+  ```sh
+  jq -r '.[0].results[].r2_key' yedek/r2-anahtarlar.json | while read -r key; do
+    npx wrangler r2 object delete "sukano-files/$key" --remote
+  done
+  npx wrangler r2 bucket delete sukano-files
+  ```
+
+  Kova yine de boş değil hatası verirse (sahipsiz nesne): panelde **R2 → sukano-files →
+  Objects**'ten kalanları seçip sil ya da bir günlük süre dolum kuralı ekleyip ertesi gün sil
+  (`npx wrangler r2 bucket lifecycle add sukano-files` etkileşimli olarak sorar). Adım 2'de bir S3
+  API anahtarı oluşturduysan onu da **R2 → Manage R2 API Tokens**'tan sil.
+
+- [ ] **5. D1 veritabanını sil.**
+
+  ```sh
+  npx wrangler d1 delete sukano
+  ```
+
+- [ ] **6. Turnstile.** Panel → **Turnstile** → Sukano widget'ı → **Delete**. (Site anahtarı
+      `wrangler.jsonc → vars.TURNSTILE_SITE_KEY`'de gizli değildir; widget silinince işe yaramaz.)
+
+- [ ] **7. Resend.** Resend paneli → **API Keys** → Sukano anahtarını **Revoke**; **Domains** →
+      `sukano.suleymankara.com` → **Delete**. Hesap başka iş için kullanılmıyorsa hesabı kapat.
+
+- [ ] **8. DNS kayıtları** (Cloudflare → suleymankara.com → DNS → Records):
+  - `sukano` (özel alan adı kaydı; Worker silinince genellikle kendiliğinden kalkar, kaldıysa sil).
+  - Resend'in eklettiği kayıtlar: `send.sukano` MX ve SPF TXT, `resend._domainkey.sukano` DKIM TXT,
+    eklendiyse `_dmarc.sukano` TXT. Resend panelindeki alan adı sayfasında listelenen adlarla
+    karşılaştır.
+  - Doğrulama: `dig +short sukano.suleymankara.com` ve `dig +short TXT resend._domainkey.sukano.suleymankara.com`
+    boş dönmeli.
+
+- [ ] **9. GitHub ve Cloudflare API anahtarı.**
+
+  ```sh
+  gh secret delete CLOUDFLARE_API_TOKEN
+  gh secret delete CLOUDFLARE_ACCOUNT_ID
+  ```
+
+  Cloudflare panel → **My Profile → API Tokens** → dağıtım için oluşturulan anahtar → **Delete**
+  (secret'ı GitHub'dan silmek anahtarı geçersiz kılmaz). Yerelde: `npx wrangler logout`.
+
+- [ ] **10. Google OAuth** (oluşturulduysa): Google Cloud Console → **APIs & Services →
+      Credentials** → Sukano OAuth istemcisi → **Delete**; **OAuth consent screen** başka uygulama
+      için kullanılmıyorsa proje de kapatılabilir (**IAM & Admin → Settings → Shut down**).
+
+- [ ] **11. VAPID anahtarları.** Özel anahtar yalnızca Worker gizli değişkenindeydi ve adım 3'te
+      silindi; yerelde ya da parola yöneticisinde üretim çiftinin kopyası varsa sil. Tarayıcılardaki
+      push abonelikleri uç nokta olmadan işlevsizdir, ayrıca işlem gerekmez.
+      (`.dev.vars.example`'daki çift herkese açık yerel test çiftidir, üretimde kullanılmamıştır.)
+
+- [ ] **12. Plan ve faturalama.** Hesapta başka Worker yoksa **Workers Paid** aboneliğini iptal et
+      (Manage Account → Billing → Subscriptions); R2 kullanılmayacaksa R2 aboneliğini de kapat.
+
+- [ ] **13. Son denetim.**
+
+  ```sh
+  curl -sSI https://sukano.suleymankara.com/health   # bağlantı kurulamamalı / 404
+  npx wrangler d1 list                                # sukano yok
+  npx wrangler r2 bucket list                         # sukano-files yok
+  gh secret list                                      # CLOUDFLARE_* yok
+  ```
+
+- [ ] **14. Depo.** README'deki durum notu güncel; isteğe bağlı olarak depoyu salt okunur yap:
+      `gh repo archive`. `wrangler.jsonc`'deki `database_id` artık var olmayan bir veritabanını
+      gösterir; yeniden yayınlamak isteyen, [1. bölümdeki](#1-yayın-öncesi-kontrol-listesi-workers-paid)
+      adımlarla kendi kaynaklarını oluşturur.
